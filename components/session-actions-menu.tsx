@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
-import { authBackend } from '../services/auth-backend';
+import { authService } from '@/services/auth-service';
 
 export default function SessionActionsMenu() {
   const [isOpen, setIsOpen] = useState(false);
@@ -23,7 +23,7 @@ export default function SessionActionsMenu() {
         onPress: async () => {
           try {
             setIsLoggingOut(true);
-            await authBackend.logout();
+            await authService.logout();
             router.replace('/login');
           } catch (error) {
             Alert.alert('Error', 'No se pudo cerrar sesión');

@@ -1,15 +1,42 @@
+import { supabase } from '@/lib/supabase';
+import { authService } from '@/services/auth-service';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { authBackend, demoCredentials } from '../services/auth-backend';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const checkSession = async () => {
+      const session = await authService.getSession();
+      if (isMounted && session) {
+        router.replace('/(tabs)/order');
+      }
+    };
+
+    checkSession();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (isMounted && session) {
+        router.replace('/(tabs)/order');
+      }
+    });
+
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
+  }, []);
 
   const handleContinue = async () => {
     if (!email.trim() || !password.trim()) {
@@ -21,14 +48,10 @@ export default function LoginScreen() {
     setErrorMessage(null);
 
     try {
-      const result = await authBackend.login({ email, password });
-
-      if (!result.ok) {
-        setErrorMessage(result.error);
-        return;
-      }
-
+      await authService.login({ email, password });
       router.replace('/(tabs)/order');
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : 'Error al iniciar sesión');
     } finally {
       setIsLoading(false);
     }
@@ -85,9 +108,7 @@ export default function LoginScreen() {
 
           {errorMessage && <Text style={styles.errorText}>{errorMessage}</Text>}
 
-          <Text style={styles.helperText}>
-            Demo: {demoCredentials.email} / {demoCredentials.password}
-          </Text>
+          <Text style={styles.helperText}>Ingresa con tus credenciales de vendedor</Text>
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>

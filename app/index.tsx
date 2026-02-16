@@ -1,7 +1,8 @@
+import { supabase } from '@/lib/supabase';
+import { authService } from '@/services/auth-service';
 import { Redirect } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
-import { authBackend } from '../services/auth-backend';
 
 export default function IndexScreen() {
   const [targetRoute, setTargetRoute] = useState<'/login' | '/(tabs)/order' | null>(null);
@@ -10,7 +11,7 @@ export default function IndexScreen() {
     let isMounted = true;
 
     const resolveSession = async () => {
-      const session = await authBackend.getSession();
+      const session = await authService.getSession();
       if (!isMounted) {
         return;
       }
@@ -18,10 +19,21 @@ export default function IndexScreen() {
       setTargetRoute(session ? '/(tabs)/order' : '/login');
     };
 
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!isMounted) {
+        return;
+      }
+
+      setTargetRoute(session ? '/(tabs)/order' : '/login');
+    });
+
     resolveSession();
 
     return () => {
       isMounted = false;
+      subscription.unsubscribe();
     };
   }, []);
 
