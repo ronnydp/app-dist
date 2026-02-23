@@ -68,7 +68,7 @@ export const authService = {
         };
     }
     ,
-    // Función para recuperar la sesión guardada
+    // Función para recuperar la sesión guardada desde AsyncStorage
     async getSession(): Promise<AuthSession | null> {
         try {
             const {

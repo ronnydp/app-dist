@@ -13,7 +13,7 @@ export const unstable_settings = {
 export default function RootLayout() {
   const colorScheme = useColorScheme();
   const pathname = usePathname();
-  const hiddenSessionMenuRoutes = new Set(['/login', '/', '/newProduct', '/newCustomer', '/newOrder']);
+  const hiddenSessionMenuRoutes = new Set(['/login', '/', '/profile', '/newProduct', '/newCustomer', '/newOrder']);
   const showSessionMenu = !hiddenSessionMenuRoutes.has(pathname);
 
   return (
@@ -21,6 +21,7 @@ export default function RootLayout() {
       <Stack>
         <Stack.Screen name="login" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="profile" options={{ title: 'Perfil' }} />
         <Stack.Screen name="newProduct" options={{ presentation: 'modal', title: 'Nuevo Producto' }} />
         <Stack.Screen name="newCustomer" options={{ presentation: 'modal', title: 'Nuevo Cliente' }} />
         <Stack.Screen name="newOrder" options={{ presentation: 'modal', title: 'Nuevo Pedido' }} />

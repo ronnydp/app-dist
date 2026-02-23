@@ -1,12 +1,17 @@
+import { authService } from '@/services/auth-service';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
-import { authService } from '@/services/auth-service';
 
 export default function SessionActionsMenu() {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  const handleViewProfile = () => {
+    setIsOpen(false);
+    router.push('/profile');
+  };
 
   useEffect(() => {
     if (isLoggingOut) {
@@ -50,6 +55,14 @@ export default function SessionActionsMenu() {
       <View style={styles.anchor}>
         {isOpen && (
           <View style={styles.menuCard}>
+            <Pressable
+              style={styles.profileMenuItem}
+              onPress={handleViewProfile}
+            >
+              <Ionicons name="person-outline" size={16} color="#2563eb" />
+              <Text style={styles.profileMenuItemText}>Ver perfil</Text>
+            </Pressable>
+
             <Pressable
               style={[styles.menuItem, isLoggingOut && styles.menuItemDisabled]}
               onPress={handleLogout}
@@ -127,6 +140,21 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 8,
     backgroundColor: '#fef2f2',
+  },
+  profileMenuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 10,
+    marginBottom: 6,
+    borderRadius: 8,
+    backgroundColor: '#eff6ff',
+  },
+  profileMenuItemText: {
+    color: '#2563eb',
+    fontSize: 14,
+    fontWeight: '700',
   },
   menuItemDisabled: {
     opacity: 0.7,

@@ -65,3 +65,14 @@ export interface NewOrder {
     sub_total: number;
   }[];
 }
+
+export interface User {
+  id: string;
+  email: string;
+  name: string;
+  role: string;
+  phone: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}

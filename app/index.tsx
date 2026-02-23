@@ -11,6 +11,7 @@ export default function IndexScreen() {
     let isMounted = true;
 
     const resolveSession = async () => {
+      // Recuperamos la sesión guardada en AsyncStorage
       const session = await authService.getSession();
       if (!isMounted) {
         return;
