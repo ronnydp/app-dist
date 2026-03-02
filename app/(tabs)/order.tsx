@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
-import { Alert, FlatList, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, Platform, SectionList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AppSearchBar from '../../components/app-search-bar';
 import FloatingActionButton from '../../components/floating-action-button';
@@ -84,8 +84,27 @@ export default function OrderScreen() {
         setSelectedDate(null);
     };
 
+    // Agrupar pedidos filtrados por vendedor
+    const sections = useMemo(() => {
+        const groups: Record<string, OrderWithDetails[]> = {};
+        for (const order of filteredOrders) {
+            const seller = order.seller_name || 'Sin vendedor';
+            if (!groups[seller]) groups[seller] = [];
+            groups[seller].push(order);
+        }
+        return Object.entries(groups).map(([title, data]) => ({ title, data }));
+    }, [filteredOrders]);
+
     const renderOrder = ({ item }: { item: OrderWithDetails }) => (
         <OrderCard item={item} />
+    );
+
+    const renderSectionHeader = ({ section }: { section: { title: string; data: OrderWithDetails[] } }) => (
+        <View style={styles.sectionHeader}>
+            <Ionicons name="person-outline" size={16} color="#2563eb" />
+            <Text style={styles.sectionTitle}>{section.title}</Text>
+            <Text style={styles.sectionCount}>{section.data.length} pedido{section.data.length !== 1 ? 's' : ''}</Text>
+        </View>
     );
 
     return (
@@ -133,15 +152,17 @@ export default function OrderScreen() {
                 />
             )}
 
-            <FlatList
-                data={filteredOrders}
+            <SectionList
+                sections={sections}
                 renderItem={renderOrder}
+                renderSectionHeader={renderSectionHeader}
                 keyExtractor={(item) => item.id}
                 refreshing={refreshing}
                 onRefresh={loadOrders}
                 initialNumToRender={8}
                 windowSize={21}
                 removeClippedSubviews={true}
+                stickySectionHeadersEnabled={false}
                 ListEmptyComponent={
                     <View style={styles.empty}>
                         <Ionicons name="receipt-outline" size={64} color="#d1d5db" />
@@ -149,7 +170,7 @@ export default function OrderScreen() {
                         <Text style={styles.emptySubtext}>Presiona el botón + para agregar uno</Text>
                     </View>
                 }
-                contentContainerStyle={filteredOrders.length === 0 ? styles.emptyContainer : styles.listContent}
+                contentContainerStyle={sections.length === 0 ? styles.emptyContainer : styles.listContent}
             />
 
             <FloatingActionButton onPress={() => router.push('/newOrder')} />
@@ -289,6 +310,27 @@ const styles = StyleSheet.create({
         marginTop: 8,
         fontSize: 14,
         color: '#9ca3af',
+    },
+    sectionHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#e0e7ff',
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+        borderRadius: 8,
+        marginBottom: 8,
+        gap: 6,
+    },
+    sectionTitle: {
+        fontSize: 14,
+        fontWeight: '700',
+        color: '#1e40af',
+        flex: 1,
+    },
+    sectionCount: {
+        fontSize: 12,
+        fontWeight: '600',
+        color: '#3b82f6',
     },
     dateFilterContainer: {
         flexDirection: 'row',

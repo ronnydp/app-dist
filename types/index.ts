@@ -24,6 +24,7 @@ export interface Product {
 export interface Order {
   id: string; // uuid
   customer_id: string; // uuid referencia a customers
+  seller_id: string // uuid referencia a users (vendedor)
   total: number; // numeric
   date: string; // timestamp
   note?: string;
@@ -45,6 +46,7 @@ export interface OrderWithDetails extends Order {
   customer_address: string; // dirección del cliente
   customer_district: string; // distrito del cliente
   customer_cod: number; // código del cliente
+  seller_name: string; // nombre del vendedor
   products: ProductOrderWithDetails[]; // productos del pedido
 }
 
@@ -55,6 +57,7 @@ export interface ProductOrderWithDetails extends ProductOrder {
 // Tipo para crear un nuevo pedido (antes de tener ID)
 export interface NewOrder {
   customer_id: string;
+  seller_id: string; // uuid referencia a users (vendedor)
   total: number;
   date: string;
   note?: string;

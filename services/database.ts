@@ -179,6 +179,7 @@ export const getOrders = async () => {
       .select(`
         *,
         customers (name, address, district, cod_customer),
+        users!seller_id (name),
         product_orders (*)
       `)
       .order('date', { ascending: false });
@@ -202,6 +203,7 @@ export const getOrders = async () => {
       customer_address: order.customers?.address || '',
       customer_district: order.customers?.district || '',
       customer_cod: order.customers?.cod_customer || 0,
+      seller_name: order.users?.name || '',
       products: (order.product_orders || []).map((po: any) => ({
         ...po,
         product_name: productMap.get(po.product_id) || 'Producto desconocido',
@@ -225,6 +227,7 @@ export const createOrder = async (order: NewOrder): Promise<Order> => {
       .from('orders')
       .insert({
         customer_id: order.customer_id,
+        seller_id: order.seller_id,
         total: order.total,
         date: order.date || new Date().toISOString(),
         note: order.note,

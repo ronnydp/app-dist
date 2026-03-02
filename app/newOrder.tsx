@@ -16,6 +16,7 @@ import {
 } from 'react-native';
 import { createOrder, getCustomers, getProducts } from '../services/database';
 import { Customer, Product } from '../types';
+import { authService } from '@/services/auth-service';
 
 export default function NewOrderScreen() {
     const [customers, setCustomers] = useState<Customer[]>([]);
@@ -160,8 +161,15 @@ export default function NewOrderScreen() {
 
         setLoading(true);
         try {
+            const session = await authService.getSession(); 
+            if (!session?.user?.id) {
+                Alert.alert('Error', 'No hay sesión activa');
+                setLoading(false);
+                return;
+            }
             await createOrder({
                 customer_id: selectedCustomer.id,
+                seller_id: session.user.id, // Asumiendo que el ID del vendedor está en sessionStorage
                 total,
                 date: new Date().toISOString(),
                 note: note.trim() || undefined,
