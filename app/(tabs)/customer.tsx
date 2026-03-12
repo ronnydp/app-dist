@@ -1,43 +1,67 @@
 // app/(tabs)/customers.tsx
 import { Ionicons } from '@expo/vector-icons';
 import { router, useFocusEffect } from 'expo-router';
-import { useCallback, useMemo, useState } from 'react';
-import { Alert, FlatList, Modal, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
+import { useCallback, useRef, useState } from 'react';
+import { ActivityIndicator, Alert, FlatList, Modal, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AppSearchBar from '../../components/app-search-bar';
 import CustomerCard from '../../components/CustomerCard';
 import FloatingActionButton from '../../components/floating-action-button';
 import { useDebouncedValue } from '../../hooks/use-debounced-value';
-import { normalizeString } from '../../lib/utils/string';
-import { deleteCustomer, getCustomers } from '../../services/database';
+import { deleteCustomer, getCustomersPaginated } from '../../services/database';
 import { Customer } from '../../types';
+
+const PAGE_SIZE = 30;
 
 export default function CustomerScreen() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [refreshing, setRefreshing] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const pageRef = useRef(0);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
 
-  const loadCustomers = useCallback(async () => {
-    setRefreshing(true);
+  const debouncedQuery = useDebouncedValue(searchQuery.trim(), 300);
+
+  const loadCustomers = useCallback(async (reset = true) => {
+    if (reset) {
+      setRefreshing(true);
+      pageRef.current = 0;
+    } else {
+      setLoadingMore(true);
+    }
     try {
-      const data = await getCustomers();
-      setCustomers(data);
+      const search = debouncedQuery || undefined;
+      const result = await getCustomersPaginated(pageRef.current, PAGE_SIZE, search);
+      if (reset) {
+        setCustomers(result.data);
+      } else {
+        setCustomers((prev) => [...prev, ...result.data]);
+      }
+      setHasMore(result.hasMore);
     } catch (error) {
       Alert.alert('Error', 'No se pudieron cargar los customers');
       console.error(error);
     } finally {
       setRefreshing(false);
+      setLoadingMore(false);
     }
-  }, []);
+  }, [debouncedQuery]);
 
-  // Recargar cuando la pantalla recibe foco
+  // Recargar cuando la pantalla recibe foco o cambia la búsqueda
   useFocusEffect(
     useCallback(() => {
-      loadCustomers();
+      loadCustomers(true);
     }, [loadCustomers])
   );
+
+  const loadMore = useCallback(() => {
+    if (loadingMore || !hasMore) return;
+    pageRef.current += 1;
+    loadCustomers(false);
+  }, [loadingMore, hasMore, loadCustomers]);
 
   const handleDelete = useCallback((id: string, nombre: string) => {
     Alert.alert(
@@ -51,7 +75,7 @@ export default function CustomerScreen() {
           onPress: async () => {
             try {
               await deleteCustomer(id);
-              await loadCustomers();
+              await loadCustomers(true);
               Alert.alert('Éxito', 'Customer eliminado correctamente');
             } catch (error) {
               Alert.alert('Error', 'No se pudo eliminar el customer');
@@ -77,22 +101,6 @@ export default function CustomerScreen() {
 
   const emptyIfMissing = (value: any) => (value || value === 0 ? String(value) : 'no tiene');
 
-  const debouncedQuery = useDebouncedValue(searchQuery.trim(), 250);
-
-  const filteredCustomers = useMemo(() => {
-    const q = debouncedQuery;
-    if (!q) return customers;
-    const qNorm = normalizeString(q);
-    const qDigits = q.replace(/\D/g, '');
-    return customers.filter((c) => {
-      const name = c.name ? normalizeString(c.name) : '';
-      const cod = String(c.cod_customer ?? '');
-      if (name.includes(qNorm)) return true;
-      if (qDigits && cod.includes(qDigits)) return true;
-      return false;
-    });
-  }, [debouncedQuery, customers]);
-
   return (
     <SafeAreaView style={styles.container}>
       <AppSearchBar
@@ -102,14 +110,23 @@ export default function CustomerScreen() {
       />
 
       <FlatList
-        data={filteredCustomers}
+        data={customers}
         renderItem={renderCustomer}
         keyExtractor={(item) => item.id}
         refreshing={refreshing}
-        onRefresh={loadCustomers}
+        onRefresh={() => loadCustomers(true)}
+        onEndReached={loadMore}
+        onEndReachedThreshold={0.3}
         initialNumToRender={8}
         windowSize={21}
         removeClippedSubviews={true}
+        ListFooterComponent={
+          loadingMore ? (
+            <View style={styles.loadingMore}>
+              <ActivityIndicator size="small" color="#2563eb" />
+            </View>
+          ) : null
+        }
         ListEmptyComponent={
           <View style={styles.empty}>
             <Ionicons name="people-outline" size={64} color="#d1d5db" />
@@ -253,6 +270,10 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     justifyContent: 'center',
     padding: 16,
+  },
+  loadingMore: {
+    paddingVertical: 16,
+    alignItems: 'center',
   },
   emptyText: {
     marginTop: 16,

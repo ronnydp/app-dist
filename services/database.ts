@@ -25,6 +25,79 @@ export const getCustomers = async (): Promise<Customer[]> => {
 };
 
 /**
+ * Obtiene clientes paginados
+ */
+export const getCustomersPaginated = async (
+  page: number,
+  pageSize: number = 30,
+  search?: string
+): Promise<{ data: Customer[]; hasMore: boolean }> => {
+  try {
+    let query = supabase
+      .from('customers')
+      .select('*', { count: 'exact' });
+
+    if (search && search.trim()) {
+      const term = search.trim();
+      const isNumeric = /^\d+$/.test(term);
+      if (isNumeric) {
+        query = query.or(`name.ilike.%${term}%,cod_customer.eq.${term}`);
+      } else {
+        query = query.ilike('name', `%${term}%`);
+      }
+    }
+
+    const from = page * pageSize;
+    const to = from + pageSize - 1;
+
+    const { data, error, count } = await query
+      .order('created_at', { ascending: false })
+      .range(from, to);
+
+    if (error) throw error;
+    return {
+      data: data || [],
+      hasMore: (count ?? 0) > to + 1,
+    };
+  } catch (error) {
+    console.error('Error al obtener clientes paginados:', error);
+    throw error;
+  }
+};
+
+/**
+ * Busca clientes por nombre o código (para modales de selección)
+ */
+export const searchCustomers = async (
+  term: string,
+  limit: number = 50
+): Promise<Customer[]> => {
+  try {
+    const trimmed = term.trim();
+    if (!trimmed) return [];
+
+    let query = supabase.from('customers').select('*');
+
+    const isNumeric = /^\d+$/.test(trimmed);
+    if (isNumeric) {
+      query = query.or(`name.ilike.%${trimmed}%,cod_customer.eq.${trimmed}`);
+    } else {
+      query = query.ilike('name', `%${trimmed}%`);
+    }
+
+    const { data, error } = await query
+      .order('name', { ascending: true })
+      .limit(limit);
+
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    console.error('Error al buscar clientes:', error);
+    throw error;
+  }
+};
+
+/**
  * Crea o actualiza un cliente
  */
 export const saveCustomer = async (customer: Partial<Customer>): Promise<Customer> => {

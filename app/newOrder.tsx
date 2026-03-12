@@ -1,7 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
+    ActivityIndicator,
     Alert,
     KeyboardAvoidingView,
     Modal,
@@ -14,12 +15,13 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
-import { createOrder, getCustomers, getProducts } from '../services/database';
+import { createOrder, getProducts, searchCustomers } from '../services/database';
 import { Customer, Product } from '../types';
 import { authService } from '@/services/auth-service';
 
 export default function NewOrderScreen() {
     const [customers, setCustomers] = useState<Customer[]>([]);
+    const [searchingCustomers, setSearchingCustomers] = useState(false);
     const [products, setProducts] = useState<Product[]>([]);
     const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
     const [orderItems, setOrderItems] = useState<
@@ -29,17 +31,37 @@ export default function NewOrderScreen() {
     const [loading, setLoading] = useState(false);
     const [showCustomerModal, setShowCustomerModal] = useState(false);
     const [showProductModal, setShowProductModal] = useState(false);
-    const [selectedProductForModal, setSelectedProductForModal] = useState<Product | null>(null);
-    const [productAmount, setProductAmount] = useState('1');
     const [quantityInputs, setQuantityInputs] = useState<Record<string, string>>({});
     const [searchCustomer, setSearchCustomer] = useState('');
     const [searchProduct, setSearchProduct] = useState('');
+    const customerSearchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    // Buscar clientes desde Supabase con debounce
+    useEffect(() => {
+        if (!searchCustomer.trim()) {
+            setCustomers([]);
+            return;
+        }
+        setSearchingCustomers(true);
+        if (customerSearchTimer.current) clearTimeout(customerSearchTimer.current);
+        customerSearchTimer.current = setTimeout(async () => {
+            try {
+                const results = await searchCustomers(searchCustomer);
+                setCustomers(results);
+            } catch (error) {
+                console.error(error);
+            } finally {
+                setSearchingCustomers(false);
+            }
+        }, 350);
+        return () => {
+            if (customerSearchTimer.current) clearTimeout(customerSearchTimer.current);
+        };
+    }, [searchCustomer]);
 
     const loadData = async () => {
         try {
-            const customersData = await getCustomers();
             const productsData = await getProducts();
-            setCustomers(customersData);
             setProducts(productsData);
         } catch (error) {
             Alert.alert('Error', 'No se pudieron cargar los datos');
@@ -54,58 +76,44 @@ export default function NewOrderScreen() {
             .replace(/[\u0300-\u036f]/g, '');
     };
 
-    const filteredCustomers = customers.filter((customer) =>
-        normalizeText(customer.name).includes(normalizeText(searchCustomer)) ||
-        customer.cod_customer.toString().includes(searchCustomer)
-    );
+    const filteredCustomers = customers;
 
     const filteredProducts = products.filter((product) =>
         normalizeText(product.name).includes(normalizeText(searchProduct))
     );
 
-    const handleAddProduct = () => {
-        if (!selectedProductForModal) return;
-
-        const amount = parseInt(productAmount) || 1;
-        if (amount <= 0) {
-            Alert.alert('Error', 'La cantidad debe ser mayor a 0');
-            return;
-        }
-
-        const existingItem = orderItems.find((item) => item.product.id === selectedProductForModal.id);
+    const handleAddProduct = (product: Product) => {
+        const existingItem = orderItems.find((item) => item.product.id === product.id);
 
         if (existingItem) {
             setOrderItems(
                 orderItems.map((item) =>
-                    item.product.id === selectedProductForModal.id
-                        ? { ...item, amount: item.amount + amount }
+                    item.product.id === product.id
+                        ? { ...item, amount: item.amount + 1 }
                         : item
                 )
             );
             setQuantityInputs((prev) => ({
                 ...prev,
-                [selectedProductForModal.id]: String(
-                    (existingItem.amount || 0) + amount
-                ),
+                [product.id]: String((existingItem.amount || 0) + 1),
             }));
         } else {
             setOrderItems([
                 ...orderItems,
                 {
-                    product: selectedProductForModal,
-                    amount,
-                    unitPrice: selectedProductForModal.price,
+                    product,
+                    amount: 1,
+                    unitPrice: product.price,
                 },
             ]);
             setQuantityInputs((prev) => ({
                 ...prev,
-                [selectedProductForModal.id]: String(amount),
+                [product.id]: '1',
             }));
         }
 
-        setProductAmount('1');
-        setSelectedProductForModal(null);
         setShowProductModal(false);
+        setSearchProduct('');
     };
 
     const handleRemoveItem = (productId: string) => {
@@ -354,7 +362,14 @@ export default function NewOrderScreen() {
                             onChangeText={setSearchCustomer}
                         />
                         <ScrollView style={styles.modalList}>
-                            {filteredCustomers.length > 0 ? (
+                            {searchCustomer.trim().length === 0 ? (
+                                <Text style={styles.noResults}>Escriba para buscar clientes...</Text>
+                            ) : searchingCustomers ? (
+                                <View style={styles.searchingContainer}>
+                                    <ActivityIndicator size="small" color="#2563eb" />
+                                    <Text style={styles.noResults}>Buscando...</Text>
+                                </View>
+                            ) : filteredCustomers.length > 0 ? (
                                 filteredCustomers.map((customer) => (
                                     <TouchableOpacity
                                         key={customer.id}
@@ -414,64 +429,29 @@ export default function NewOrderScreen() {
                             onChangeText={setSearchProduct}
                         />
                         <ScrollView style={styles.modalList}>
-                            {filteredProducts.length > 0 ? (
+                            {searchProduct.trim().length === 0 ? (
+                                <Text style={styles.noResults}>Escriba para buscar productos...</Text>
+                            ) : filteredProducts.length > 0 ? (
                                 filteredProducts.map((product) => (
                                     <TouchableOpacity
                                         key={product.id}
-                                        style={[
-                                            styles.modalOption,
-                                            selectedProductForModal?.id === product.id &&
-                                            styles.modalOptionSelected,
-                                        ]}
-                                        onPress={() => setSelectedProductForModal(product)}
+                                        style={styles.modalOption}
+                                        onPress={() => handleAddProduct(product)}
                                     >
                                         <View>
-                                            <Text
-                                                style={[
-                                                    styles.modalOptionText,
-                                                    selectedProductForModal?.id === product.id &&
-                                                    styles.modalOptionTextSelected,
-                                                ]}
-                                            >
+                                            <Text style={styles.modalOptionText}>
                                                 {product.name}
                                             </Text>
                                             <Text style={styles.modalOptionSubtext}>
                                                 S/ {product.price.toFixed(2)}
                                             </Text>
                                         </View>
-                                        {selectedProductForModal?.id === product.id && (
-                                            <Ionicons name="checkmark" size={20} color="#2563eb" />
-                                        )}
                                     </TouchableOpacity>
                                 ))
                             ) : (
                                 <Text style={styles.noResults}>No se encontraron productos</Text>
                             )}
                         </ScrollView>
-
-                        {selectedProductForModal && (
-                            <View style={styles.modalFooter}>
-                                <View style={styles.amountSelector}>
-                                    <Text style={styles.amountLabel}>Cantidad:</Text>
-                                    <TextInput
-                                        style={styles.amountInputModal}
-                                        value={productAmount}
-                                        onChangeText={setProductAmount}
-                                        keyboardType="numeric"
-                                        placeholder="1"
-                                    />
-                                </View>
-                                <TouchableOpacity
-                                    style={styles.addProductButton}
-                                    onPress={() => {
-                                        handleAddProduct();
-                                        setSearchProduct('');
-                                    }}
-                                >
-                                    <Text style={styles.addProductButtonText}>Agregar</Text>
-                                </TouchableOpacity>
-                            </View>
-                        )}
                     </View>
                 </Pressable>
             </Modal>
@@ -762,6 +742,11 @@ const styles = StyleSheet.create({
         color: '#9ca3af',
         textAlign: 'center',
         paddingVertical: 20,
+    },
+    searchingContainer: {
+        alignItems: 'center',
+        paddingVertical: 20,
+        gap: 8,
     },
     selectedAddress: {
         marginTop: 8,
