@@ -25,44 +25,41 @@ export const getCustomers = async (): Promise<Customer[]> => {
 };
 
 /**
- * Obtiene clientes paginados
+ * Obtiene clientes paginados con búsqueda server-side
  */
 export const getCustomersPaginated = async (
   page: number,
-  pageSize: number = 30,
+  pageSize: number,
   search?: string
 ): Promise<{ data: Customer[]; hasMore: boolean }> => {
-  try {
-    let query = supabase
-      .from('customers')
-      .select('*', { count: 'exact' });
+  // Esperar a que la sesión esté lista (evita error al arrancar la app)
+  await supabase.auth.getSession();
 
-    if (search && search.trim()) {
-      const term = search.trim();
-      const isNumeric = /^\d+$/.test(term);
-      if (isNumeric) {
-        query = query.or(`name.ilike.%${term}%,cod_customer.eq.${term}`);
-      } else {
-        query = query.ilike('name', `%${term}%`);
-      }
+  let query = supabase
+    .from('customers')
+    .select('*', { count: 'exact' });
+
+  if (search && search.trim()) {
+    const term = search.trim();
+    if (/^\d+$/.test(term)) {
+      query = query.or(`name.ilike.%${term}%,cod_customer.eq.${term}`);
+    } else {
+      query = query.ilike('name', `%${term}%`);
     }
-
-    const from = page * pageSize;
-    const to = from + pageSize - 1;
-
-    const { data, error, count } = await query
-      .order('created_at', { ascending: false })
-      .range(from, to);
-
-    if (error) throw error;
-    return {
-      data: data || [],
-      hasMore: (count ?? 0) > to + 1,
-    };
-  } catch (error) {
-    console.error('Error al obtener clientes paginados:', error);
-    throw error;
   }
+
+  const from = page * pageSize;
+  const to = from + pageSize - 1;
+
+  const { data, error, count } = await query
+    .order('created_at', { ascending: false })
+    .range(from, to);
+
+  if (error) throw error;
+  return {
+    data: data || [],
+    hasMore: (count ?? 0) > to + 1,
+  };
 };
 
 /**
@@ -179,6 +176,38 @@ export const getProducts = async (): Promise<Product[]> => {
     console.error('Error al obtener productos:', error);
     throw error;
   }
+};
+
+/**
+ * Obtiene productos paginados con búsqueda server-side
+ */
+export const getProductsPaginated = async (
+  page: number,
+  pageSize: number,
+  search?: string
+): Promise<{ data: Product[]; hasMore: boolean }> => {
+  await supabase.auth.getSession();
+
+  let query = supabase
+    .from('products')
+    .select('*', { count: 'exact' });
+
+  if (search && search.trim()) {
+    query = query.ilike('name', `%${search.trim()}%`);
+  }
+
+  const from = page * pageSize;
+  const to = from + pageSize - 1;
+
+  const { data, error, count } = await query
+    .order('name', { ascending: true })
+    .range(from, to);
+
+  if (error) throw error;
+  return {
+    data: data || [],
+    hasMore: (count ?? 0) > to + 1,
+  };
 };
 
 /**

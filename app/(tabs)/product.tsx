@@ -1,42 +1,69 @@
-import { deleteProduct, getProducts } from "@/services/database";
+import { deleteProduct, getProductsPaginated } from "@/services/database";
 import { Product } from "@/types";
 import { Ionicons } from "@expo/vector-icons";
 import { router, useFocusEffect } from "expo-router";
-import React, { useCallback, useMemo, useState } from "react";
-import { Alert, FlatList, StyleSheet, Text, View } from "react-native";
+import React, { useCallback, useRef, useState } from "react";
+import { ActivityIndicator, Alert, FlatList, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AppSearchBar from '../../components/app-search-bar';
 import FloatingActionButton from '../../components/floating-action-button';
 import ProductCard from '../../components/ProductCard';
 import { useDebouncedValue } from '../../hooks/use-debounced-value';
-import { normalizeString } from '../../lib/utils/string';
+
+const PAGE_SIZE = 30;
 
 export default function ProductScreen() {
 
     const [products, setProducts] = useState<Product[]>([]);
     const [refreshing, setRefreshing] = useState(false);
+    const [loadingMore, setLoadingMore] = useState(false);
+    const [hasMore, setHasMore] = useState(true);
+    const pageRef = useRef(0);
     const [searchQuery, setSearchQuery] = useState('');
-    const debouncedQuery = useDebouncedValue(searchQuery.trim(), 250);
-    // modal removed: no modal state required
+    const debouncedQuery = useDebouncedValue(searchQuery.trim(), 300);
 
-    const loadProducts = useCallback(async () => {
-        setRefreshing(true);
+    const loadProducts = useCallback(async (reset = true) => {
+        if (reset) {
+            setRefreshing(true);
+            pageRef.current = 0;
+        } else {
+            setLoadingMore(true);
+        }
         try {
-            const data = await getProducts();
-            setProducts(data);
+            const search = debouncedQuery || undefined;
+            const result = await getProductsPaginated(pageRef.current, PAGE_SIZE, search);
+            if (reset) {
+                setProducts(result.data);
+            } else {
+                setProducts((prev) => {
+                    const existingIds = new Set(prev.map((p) => p.id));
+                    const newItems = result.data.filter((p) => !existingIds.has(p.id));
+                    return [...prev, ...newItems];
+                });
+            }
+            setHasMore(result.hasMore);
         } catch (error) {
-            Alert.alert('Error', 'No se pudieron cargar los productos');
-            console.error(error);
+            if (products.length > 0 || pageRef.current > 0) {
+                Alert.alert('Error', 'No se pudieron cargar los productos');
+            }
+            console.warn('Error cargando productos:', error);
         } finally {
             setRefreshing(false);
+            setLoadingMore(false);
         }
-    }, []);
+    }, [debouncedQuery]);
 
     useFocusEffect(
         useCallback(() => {
-            loadProducts();
+            loadProducts(true);
         }, [loadProducts])
     );
+
+    const loadMore = useCallback(() => {
+        if (loadingMore || !hasMore) return;
+        pageRef.current += 1;
+        loadProducts(false);
+    }, [loadingMore, hasMore, loadProducts]);
 
     const handleDelete = useCallback((id: string, nombre: string) => {
         Alert.alert(
@@ -50,7 +77,7 @@ export default function ProductScreen() {
                     onPress: async () => {
                         try {
                             await deleteProduct(id);
-                            await loadProducts();
+                            await loadProducts(true);
                             Alert.alert('Éxito', 'Producto eliminado correctamente');
                         } catch (error) {
                             Alert.alert('Error', 'No se pudo eliminar el producto');
@@ -69,16 +96,6 @@ export default function ProductScreen() {
         />
     );
 
-    const filteredProducts = useMemo(() => {
-        const q = debouncedQuery;
-        if (!q) return products; // si no hay busqueda, mostrar todo
-        const qNorm = normalizeString(q);
-        return products.filter((p) => {
-            const name = p.name ? normalizeString(p.name) : '';
-            return name.includes(qNorm);
-        });
-    }, [debouncedQuery, products]);
-
     return (
         <SafeAreaView style={styles.container}>
             <AppSearchBar
@@ -88,14 +105,20 @@ export default function ProductScreen() {
             />
 
             <FlatList
-                data={filteredProducts}
+                data={products}
                 renderItem={renderProduct}
                 keyExtractor={(item) => item.id}
                 refreshing={refreshing}
-                onRefresh={loadProducts}
-                initialNumToRender={10}
-                windowSize={21}
-                removeClippedSubviews={true}
+                onRefresh={() => loadProducts(true)}
+                onEndReached={loadMore}
+                onEndReachedThreshold={0.3}
+                ListFooterComponent={
+                    loadingMore ? (
+                        <View style={styles.loadingMore}>
+                            <ActivityIndicator size="small" color="#2563eb" />
+                        </View>
+                    ) : null
+                }
                 ListEmptyComponent={
                     <View style={styles.empty}>
                         <Ionicons name="cube-outline" size={64} color="#d1d5db" />
@@ -168,6 +191,10 @@ const styles = StyleSheet.create({
         flexGrow: 1,
         justifyContent: 'center',
         padding: 16,
+    },
+    loadingMore: {
+        paddingVertical: 16,
+        alignItems: 'center',
     },
     emptyText: {
         marginTop: 16,

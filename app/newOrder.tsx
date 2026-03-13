@@ -1,3 +1,4 @@
+import { authService } from '@/services/auth-service';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
@@ -17,7 +18,6 @@ import {
 } from 'react-native';
 import { createOrder, getProducts, searchCustomers } from '../services/database';
 import { Customer, Product } from '../types';
-import { authService } from '@/services/auth-service';
 
 export default function NewOrderScreen() {
     const [customers, setCustomers] = useState<Customer[]>([]);
@@ -175,11 +175,13 @@ export default function NewOrderScreen() {
                 setLoading(false);
                 return;
             }
+            const now = new Date();
+            const localDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
             await createOrder({
                 customer_id: selectedCustomer.id,
                 seller_id: session.user.id, // Asumiendo que el ID del vendedor está en sessionStorage
                 total,
-                date: new Date().toISOString(),
+                date: localDate,
                 note: note.trim() || undefined,
                 products: orderItems.map((item) => ({
                     product_id: item.product.id,

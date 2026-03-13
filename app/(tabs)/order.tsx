@@ -47,7 +47,7 @@ export default function OrderScreen() {
 
         // Filtro por fecha
         if (activeDate) {
-            const dateStr = activeDate.toISOString().split('T')[0]; // "2026-02-11"
+            const dateStr = `${activeDate.getFullYear()}-${String(activeDate.getMonth() + 1).padStart(2, '0')}-${String(activeDate.getDate()).padStart(2, '0')}`;
             result = result.filter(order => order.date.startsWith(dateStr));
         }
 

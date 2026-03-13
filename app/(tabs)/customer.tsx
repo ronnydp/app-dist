@@ -38,19 +38,25 @@ export default function CustomerScreen() {
       if (reset) {
         setCustomers(result.data);
       } else {
-        setCustomers((prev) => [...prev, ...result.data]);
+        setCustomers((prev) => {
+          const existingIds = new Set(prev.map((c) => c.id));
+          const newItems = result.data.filter((c) => !existingIds.has(c.id));
+          return [...prev, ...newItems];
+        });
       }
       setHasMore(result.hasMore);
     } catch (error) {
-      Alert.alert('Error', 'No se pudieron cargar los customers');
-      console.error(error);
+      // Solo mostrar alerta si ya hay datos cargados (no es el arranque inicial)
+      if (customers.length > 0 || pageRef.current > 0) {
+        Alert.alert('Error', 'No se pudieron cargar los clientes');
+      }
+      console.warn('Error cargando clientes:', error);
     } finally {
       setRefreshing(false);
       setLoadingMore(false);
     }
   }, [debouncedQuery]);
 
-  // Recargar cuando la pantalla recibe foco o cambia la búsqueda
   useFocusEffect(
     useCallback(() => {
       loadCustomers(true);
@@ -117,9 +123,6 @@ export default function CustomerScreen() {
         onRefresh={() => loadCustomers(true)}
         onEndReached={loadMore}
         onEndReachedThreshold={0.3}
-        initialNumToRender={8}
-        windowSize={21}
-        removeClippedSubviews={true}
         ListFooterComponent={
           loadingMore ? (
             <View style={styles.loadingMore}>
