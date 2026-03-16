@@ -30,7 +30,8 @@ export const getCustomers = async (): Promise<Customer[]> => {
 export const getCustomersPaginated = async (
   page: number,
   pageSize: number,
-  search?: string
+  search?: string,
+  role?: string
 ): Promise<{ data: Customer[]; hasMore: boolean }> => {
   // Esperar a que la sesión esté lista (evita error al arrancar la app)
   await supabase.auth.getSession();
@@ -38,6 +39,10 @@ export const getCustomersPaginated = async (
   let query = supabase
     .from('customers')
     .select('*', { count: 'exact' });
+
+  if (role !== 'admin') {
+    query = query.eq('is_active', true);
+  }
 
   if (search && search.trim()) {
     const term = search.trim();
@@ -73,7 +78,8 @@ export const searchCustomers = async (
     const trimmed = term.trim();
     if (!trimmed) return [];
 
-    let query = supabase.from('customers').select('*');
+    let query = supabase.from('customers').select('*')
+      .eq('is_active', true);
 
     const isNumeric = /^\d+$/.test(trimmed);
     if (isNumeric) {
@@ -140,18 +146,35 @@ export const saveCustomer = async (customer: Partial<Customer>): Promise<Custome
 };
 
 /**
- * Elimina un cliente
+ * Inhabilita un cliente (soft delete)
  */
 export const deleteCustomer = async (id: string): Promise<void> => {
   try {
     const { error } = await supabase
       .from('customers')
-      .delete()
+      .update({ is_active: false, updated_at: new Date().toISOString() })
       .eq('id', id);
 
     if (error) throw error;
   } catch (error) {
-    console.error('Error al eliminar cliente:', error);
+    console.error('Error al inhabilitar cliente:', error);
+    throw error;
+  }
+};
+
+/**
+ * Habilita un cliente dado de baja
+ */
+export const activateCustomer = async (id: string): Promise<void> => {
+  try {
+    const { error } = await supabase
+      .from('customers')
+      .update({ is_active: true, updated_at: new Date().toISOString() })
+      .eq('id', id);
+
+    if (error) throw error;
+  } catch (error) {
+    console.error('Error al habilitar cliente:', error);
     throw error;
   }
 };
@@ -168,6 +191,7 @@ export const getProducts = async (): Promise<Product[]> => {
     const { data, error } = await supabase
       .from('products')
       .select('*')
+      .eq('is_active', true)
       .order('name', { ascending: true });
 
     if (error) throw error;
@@ -184,13 +208,18 @@ export const getProducts = async (): Promise<Product[]> => {
 export const getProductsPaginated = async (
   page: number,
   pageSize: number,
-  search?: string
+  search?: string,
+  role?: string
 ): Promise<{ data: Product[]; hasMore: boolean }> => {
   await supabase.auth.getSession();
 
   let query = supabase
     .from('products')
     .select('*', { count: 'exact' });
+
+  if (role !== 'admin') {
+    query = query.eq('is_active', true);
+  }
 
   if (search && search.trim()) {
     query = query.ilike('name', `%${search.trim()}%`);
@@ -250,18 +279,35 @@ export const saveProduct = async (product: Partial<Product>): Promise<Product> =
 };
 
 /**
- * Elimina un producto
+ * Inhabilita un producto (soft delete)
  */
 export const deleteProduct = async (id: string): Promise<void> => {
   try {
     const { error } = await supabase
       .from('products')
-      .delete()
+      .update({ is_active: false })
       .eq('id', id);
 
     if (error) throw error;
   } catch (error) {
-    console.error('Error al eliminar producto:', error);
+    console.error('Error al inhabilitar producto:', error);
+    throw error;
+  }
+};
+
+/**
+ * Habilita un producto dado de baja
+ */
+export const activateProduct = async (id: string): Promise<void> => {
+  try {
+    const { error } = await supabase
+      .from('products')
+      .update({ is_active: true })
+      .eq('id', id);
+
+    if (error) throw error;
+  } catch (error) {
+    console.error('Error al habilitar producto:', error);
     throw error;
   }
 };

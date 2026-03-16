@@ -7,6 +7,7 @@ export interface Customer {
   district: string;
   phone?: string;
   cod_customer: number; // auto-generado
+  is_active: boolean;
   created_at: string; // timestamp
   updated_at: string; // timestamp
 }
@@ -17,6 +18,7 @@ export interface Product {
   name: string;
   price: number; // numeric
   image_url?: string;
+  is_active: boolean;
   created_at: string; // timestamp
 }
 

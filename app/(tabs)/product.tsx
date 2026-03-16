@@ -1,5 +1,5 @@
 import { useAuth } from "@/hooks/useAuth";
-import { deleteProduct, getProductsPaginated } from "@/services/database";
+import { activateProduct, deleteProduct, getProductsPaginated } from "@/services/database";
 import { Product } from "@/types";
 import { Ionicons } from "@expo/vector-icons";
 import { router, useFocusEffect } from "expo-router";
@@ -33,7 +33,7 @@ export default function ProductScreen() {
         }
         try {
             const search = debouncedQuery || undefined;
-            const result = await getProductsPaginated(pageRef.current, PAGE_SIZE, search);
+            const result = await getProductsPaginated(pageRef.current, PAGE_SIZE, search, role ?? undefined);
             if (reset) {
                 setProducts(result.data);
             } else {
@@ -53,7 +53,7 @@ export default function ProductScreen() {
             setRefreshing(false);
             setLoadingMore(false);
         }
-    }, [debouncedQuery]);
+    }, [debouncedQuery, role]);
 
     useFocusEffect(
         useCallback(() => {
@@ -67,28 +67,51 @@ export default function ProductScreen() {
         loadProducts(false);
     }, [loadingMore, hasMore, loadProducts]);
 
-    const handleDelete = useCallback((id: string, nombre: string) => {
-        Alert.alert(
-            'Eliminar Producto',
-            `¿Estás seguro de eliminar ${nombre}?`,
-            [
-                { text: 'Cancelar', style: 'cancel' },
-                {
-                    text: 'Eliminar',
-                    style: 'destructive',
-                    onPress: async () => {
-                        try {
-                            await deleteProduct(id);
-                            await loadProducts(true);
-                            Alert.alert('Éxito', 'Producto eliminado correctamente');
-                        } catch (error) {
-                            Alert.alert('Error', 'No se pudo eliminar el producto');
-                            console.error(error);
-                        }
+    const handleToggleActive = useCallback((id: string, nombre: string, isActive: boolean) => {
+        if (isActive) {
+            Alert.alert(
+                'Dar de baja',
+                `¿Estás seguro de dar de baja ${nombre}?`,
+                [
+                    { text: 'Cancelar', style: 'cancel' },
+                    {
+                        text: 'Dar de baja',
+                        style: 'destructive',
+                        onPress: async () => {
+                            try {
+                                await deleteProduct(id);
+                                await loadProducts(true);
+                                Alert.alert('Éxito', 'Producto dado de baja correctamente');
+                            } catch (error) {
+                                Alert.alert('Error', 'No se pudo dar de baja el producto');
+                                console.error(error);
+                            }
+                        },
                     },
-                },
-            ]
-        );
+                ]
+            );
+        } else {
+            Alert.alert(
+                'Habilitar producto',
+                `¿Quieres volver a habilitar ${nombre}?`,
+                [
+                    { text: 'Cancelar', style: 'cancel' },
+                    {
+                        text: 'Habilitar',
+                        onPress: async () => {
+                            try {
+                                await activateProduct(id);
+                                await loadProducts(true);
+                                Alert.alert('Éxito', 'Producto habilitado correctamente');
+                            } catch (error) {
+                                Alert.alert('Error', 'No se pudo habilitar el producto');
+                                console.error(error);
+                            }
+                        },
+                    },
+                ]
+            );
+        }
     }, [loadProducts]);
 
     const handleEdit = useCallback((p: Product) => {
@@ -107,7 +130,7 @@ export default function ProductScreen() {
         <ProductCard
             item={item}
             onEdit={role === 'admin' ? handleEdit : undefined}
-            onDelete={role === 'admin' ? handleDelete : undefined}
+            onToggleActive={role === 'admin' ? handleToggleActive : undefined}
         />
     );
 

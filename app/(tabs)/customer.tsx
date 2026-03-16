@@ -9,7 +9,7 @@ import AppSearchBar from '../../components/app-search-bar';
 import CustomerCard from '../../components/CustomerCard';
 import FloatingActionButton from '../../components/floating-action-button';
 import { useDebouncedValue } from '../../hooks/use-debounced-value';
-import { deleteCustomer, getCustomersPaginated } from '../../services/database';
+import { activateCustomer, deleteCustomer, getCustomersPaginated } from '../../services/database';
 import { Customer } from '../../types';
 
 const PAGE_SIZE = 30;
@@ -35,7 +35,7 @@ export default function CustomerScreen() {
     }
     try {
       const search = debouncedQuery || undefined;
-      const result = await getCustomersPaginated(pageRef.current, PAGE_SIZE, search);
+      const result = await getCustomersPaginated(pageRef.current, PAGE_SIZE, search, role ?? undefined);
       if (reset) {
         setCustomers(result.data);
       } else {
@@ -56,7 +56,7 @@ export default function CustomerScreen() {
       setRefreshing(false);
       setLoadingMore(false);
     }
-  }, [debouncedQuery]);
+  }, [debouncedQuery, role]);
 
   useFocusEffect(
     useCallback(() => {
@@ -70,28 +70,51 @@ export default function CustomerScreen() {
     loadCustomers(false);
   }, [loadingMore, hasMore, loadCustomers]);
 
-  const handleDelete = useCallback((id: string, nombre: string) => {
-    Alert.alert(
-      'Eliminar Customer',
-      `¿Estás seguro de eliminar a ${nombre}?`,
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Eliminar',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await deleteCustomer(id);
-              await loadCustomers(true);
-              Alert.alert('Éxito', 'Customer eliminado correctamente');
-            } catch (error) {
-              Alert.alert('Error', 'No se pudo eliminar el customer');
-              console.error(error);
-            }
+  const handleToggleActive = useCallback((id: string, nombre: string, isActive: boolean) => {
+    if (isActive) {
+      Alert.alert(
+        'Dar de baja',
+        `¿Estás seguro de dar de baja a ${nombre}?`,
+        [
+          { text: 'Cancelar', style: 'cancel' },
+          {
+            text: 'Dar de baja',
+            style: 'destructive',
+            onPress: async () => {
+              try {
+                await deleteCustomer(id);
+                await loadCustomers(true);
+                Alert.alert('Éxito', 'Cliente dado de baja correctamente');
+              } catch (error) {
+                Alert.alert('Error', 'No se pudo dar de baja el cliente');
+                console.error(error);
+              }
+            },
           },
-        },
-      ]
-    );
+        ]
+      );
+    } else {
+      Alert.alert(
+        'Habilitar cliente',
+        `¿Quieres volver a habilitar a ${nombre}?`,
+        [
+          { text: 'Cancelar', style: 'cancel' },
+          {
+            text: 'Habilitar',
+            onPress: async () => {
+              try {
+                await activateCustomer(id);
+                await loadCustomers(true);
+                Alert.alert('Éxito', 'Cliente habilitado correctamente');
+              } catch (error) {
+                Alert.alert('Error', 'No se pudo habilitar el cliente');
+                console.error(error);
+              }
+            },
+          },
+        ]
+      );
+    }
   }, [loadCustomers]);
 
   // abre un modal con detalles del customer seleccionado
@@ -117,7 +140,7 @@ export default function CustomerScreen() {
   // use shared `CustomerCard` component from components/
 
   const renderCustomer = ({ item }: { item: Customer }) => (
-    <CustomerCard item={item} onOpen={openCustomer} onEdit={handleEdit} onDelete={role === 'admin' ? handleDelete : undefined} />
+    <CustomerCard item={item} onOpen={openCustomer} onEdit={handleEdit} onToggleActive={role === 'admin' ? handleToggleActive : undefined} />
   );
 
   const emptyIfMissing = (value: any) => (value || value === 0 ? String(value) : 'no tiene');

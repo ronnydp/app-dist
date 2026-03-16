@@ -8,12 +8,13 @@ type Props = {
   item: Customer;
   onOpen: (c: Customer) => void;
   onEdit?: (c: Customer) => void;
-  onDelete?: (id: string, nombre: string) => void; // opcional, solo muestra botón si se pasa la función, linea 40
+  onToggleActive?: (id: string, nombre: string, isActive: boolean) => void;
 };
 
-export default memo(function CustomerCard({ item, onOpen, onEdit, onDelete }: Props) {
+export default memo(function CustomerCard({ item, onOpen, onEdit, onToggleActive }: Props) {
+  const inactive = !item.is_active;
   return (
-    <View style={cardStyles.card}>
+    <View style={[cardStyles.card, inactive && { opacity: 0.5 }]}>
       <TouchableOpacity style={{ flex: 1 }} onPress={() => onOpen(item)}>
         <View style={cardStyles.cardContent}>
           <View style={cardStyles.header}>
@@ -44,9 +45,9 @@ export default memo(function CustomerCard({ item, onOpen, onEdit, onDelete }: Pr
             <Ionicons name="create-outline" size={20} color="#cfbb09" />
           </TouchableOpacity>
         )}
-        {onDelete && (
-          <TouchableOpacity style={cardStyles.deleteBtn} onPress={() => onDelete(item.id, item.name)}>
-            <Ionicons name="trash" size={20} color="#ef4444" />
+        {onToggleActive && (
+          <TouchableOpacity style={cardStyles.deleteBtn} onPress={() => onToggleActive(item.id, item.name, item.is_active)}>
+            <Ionicons name={inactive ? 'checkmark-circle-outline' : 'ban-outline'} size={20} color={inactive ? '#16a34a' : '#ef4444'} />
           </TouchableOpacity>
         )}
       </View>
@@ -58,7 +59,8 @@ export default memo(function CustomerCard({ item, onOpen, onEdit, onDelete }: Pr
     prev.item.name === next.item.name &&
     prev.item.ruc === next.item.ruc &&
     prev.item.phone === next.item.phone &&
-    prev.item.address === next.item.address
+    prev.item.address === next.item.address &&
+    prev.item.is_active === next.item.is_active
   );
 });
 
