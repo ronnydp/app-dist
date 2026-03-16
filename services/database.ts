@@ -52,7 +52,7 @@ export const getCustomersPaginated = async (
   const to = from + pageSize - 1;
 
   const { data, error, count } = await query
-    .order('created_at', { ascending: false })
+    .order('name', { ascending: true })
     .range(from, to);
 
   if (error) throw error;
