@@ -47,6 +47,11 @@ export default function ProfileScreen() {
           <Text style={styles.label}>Correo</Text>
           <Text style={styles.value}>{session?.user?.email || 'Sin correo'}</Text>
         </View>
+
+        <View style={styles.row}>
+          <Text style={styles.label}>Rol</Text>
+          <Text style={styles.value}>{session?.user?.role || 'Sin rol'}</Text>
+        </View>
       </View>
     </SafeAreaView>
   );

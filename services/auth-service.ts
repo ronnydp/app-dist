@@ -76,13 +76,19 @@ export const authService = {
             } = await supabase.auth.getSession();
 
             if (session?.user) {
+                const { data: userData } = await supabase
+                    .from('users')
+                    .select('role')
+                    .eq('id', session.user.id)
+                    .single();
+                    
                 const mappedSession: AuthSession = {
                     token: session.access_token,
                     user: {
                         id: session.user.id,
                         email: session.user.email || "",
                         name: session.user.user_metadata?.name || "",
-                        role: session.user.user_metadata?.role || "",
+                        role: userData?.role || "",
                     },
                     issuedAt: new Date().toISOString(),
                 };
