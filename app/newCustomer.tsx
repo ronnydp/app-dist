@@ -1,7 +1,7 @@
 // app/nuevo-cliente.tsx
 import { Ionicons } from '@expo/vector-icons';
-import { router } from 'expo-router';
-import { useState } from 'react';
+import { router, useLocalSearchParams, useNavigation } from 'expo-router';
+import { useLayoutEffect, useState } from 'react';
 import {
     Alert,
     KeyboardAvoidingView,
@@ -20,13 +20,30 @@ import { getCustomers, saveCustomer } from '../services/database';
 const DISTRITOS = ['Chimbote', 'Nuevo Chimbote'];
 
 export default function NuevoClienteScreen() {
-    const [nombre, setNombre] = useState('');
-    const [ruc, setRuc] = useState('');
-    const [direccion, setDireccion] = useState('');
-    const [distrito, setDistrito] = useState('Chimbote'); // Por defecto Chimbote
-    const [telefono, setTelefono] = useState('');
+    const params = useLocalSearchParams<{
+        id?: string;
+        name?: string;
+        ruc?: string;
+        address?: string;
+        district?: string;
+        phone?: string;
+    }>();
+    const isEditing = !!params.id;
+    const navigation = useNavigation();
+
+    const [nombre, setNombre] = useState(params.name || '');
+    const [ruc, setRuc] = useState(params.ruc || '');
+    const [direccion, setDireccion] = useState(params.address || '');
+    const [distrito, setDistrito] = useState(params.district || 'Chimbote');
+    const [telefono, setTelefono] = useState(params.phone || '');
     const [loading, setLoading] = useState(false);
     const [showDistritoModal, setShowDistritoModal] = useState(false);
+
+    useLayoutEffect(() => {
+        navigation.setOptions({
+            title: isEditing ? 'Editar Cliente' : 'Nuevo Cliente',
+        });
+    }, [isEditing, navigation]);
 
     const handleSubmit = async () => {
         // Validaciones
@@ -50,14 +67,16 @@ export default function NuevoClienteScreen() {
         }
 
         // Dentro de handleSubmit, antes de setLoading(true):
-        const clientesExistentes = await getCustomers();
-        const nombreExiste = clientesExistentes.some(
-            (c) => c.name.toLowerCase() === nombre.trim().toLowerCase()
-        );
+        if (!isEditing) {
+            const clientesExistentes = await getCustomers();
+            const nombreExiste = clientesExistentes.some(
+                (c) => c.name.toLowerCase() === nombre.trim().toLowerCase()
+            );
 
-        if (nombreExiste) {
-            Alert.alert('Error', 'Ya existe un cliente con ese nombre');
-            return;
+            if (nombreExiste) {
+                Alert.alert('Error', 'Ya existe un cliente con ese nombre');
+                return;
+            }
         }
 
 
@@ -65,6 +84,7 @@ export default function NuevoClienteScreen() {
 
         try {
             await saveCustomer({
+                ...(isEditing ? { id: params.id } : {}),
                 name: nombre.trim().toUpperCase(),
                 ruc: ruc.trim() || undefined,
                 address: direccion.trim(),
@@ -72,7 +92,7 @@ export default function NuevoClienteScreen() {
                 phone: telefono.trim() || undefined,
             });
 
-            Alert.alert('Éxito', 'Cliente guardado correctamente', [
+            Alert.alert('Éxito', isEditing ? 'Cliente actualizado correctamente' : 'Cliente guardado correctamente', [
                 {
                     text: 'OK',
                     onPress: () => router.back(),
@@ -169,7 +189,7 @@ export default function NuevoClienteScreen() {
                         disabled={loading}
                     >
                         <Text style={styles.submitButtonText}>
-                            {loading ? 'Guardando...' : 'Guardar'}
+                            {loading ? 'Guardando...' : isEditing ? 'Actualizar' : 'Guardar'}
                         </Text>
                     </TouchableOpacity>
                 </View>

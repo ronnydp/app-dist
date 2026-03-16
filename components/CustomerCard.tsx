@@ -7,10 +7,11 @@ import cardStyles from './ui/cardStyles';
 type Props = {
   item: Customer;
   onOpen: (c: Customer) => void;
-  onDelete: (id: string, nombre: string) => void;
+  onEdit?: (c: Customer) => void;
+  onDelete?: (id: string, nombre: string) => void; // opcional, solo muestra botón si se pasa la función, linea 40
 };
 
-export default memo(function CustomerCard({ item, onOpen, onDelete }: Props) {
+export default memo(function CustomerCard({ item, onOpen, onEdit, onDelete }: Props) {
   return (
     <View style={cardStyles.card}>
       <TouchableOpacity style={{ flex: 1 }} onPress={() => onOpen(item)}>
@@ -37,9 +38,18 @@ export default memo(function CustomerCard({ item, onOpen, onDelete }: Props) {
           </View>
         </View>
       </TouchableOpacity>
-      <TouchableOpacity style={cardStyles.deleteBtn} onPress={() => onDelete(item.id, item.name)}>
-        <Ionicons name="trash" size={20} color="#ef4444" />
-      </TouchableOpacity>
+      <View style={{ alignItems: 'center', gap: 8 }}>
+        {onEdit && (
+          <TouchableOpacity style={cardStyles.deleteBtn} onPress={() => onEdit(item)}>
+            <Ionicons name="create-outline" size={20} color="#cfbb09" />
+          </TouchableOpacity>
+        )}
+        {onDelete && (
+          <TouchableOpacity style={cardStyles.deleteBtn} onPress={() => onDelete(item.id, item.name)}>
+            <Ionicons name="trash" size={20} color="#ef4444" />
+          </TouchableOpacity>
+        )}
+      </View>
     </View>
   );
 }, (prev, next) => {

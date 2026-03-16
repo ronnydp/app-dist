@@ -16,14 +16,17 @@ export const useAuth = () => {
                 setSession(session);
                 setIsAuthenticated(true);
             }
+            if(isMounted) setIsLoading(false); // Oculta el LoginScreen
         };
         checkSession();
 
         const {
             data: { subscription },
-        } = supabase.auth.onAuthStateChange((_event, authSession) => {
+        } = supabase.auth.onAuthStateChange(async (_event, authSession) => {
             if (authSession) {
+                const fullSession = await authService.getSession();
                 setIsAuthenticated(true);
+                setSession(fullSession)
             } else {
                 setSession(null);
                 setIsAuthenticated(false);
@@ -41,6 +44,9 @@ export const useAuth = () => {
         setError(null);
         try {
             await authService.login({ email, password });
+            const fullSession = await authService.getSession();
+            setSession(fullSession);
+            setIsAuthenticated(true);
         } catch (err) {
             const message = err instanceof Error ? err.message : 'Error al iniciar sesión';
             setError(message);
@@ -50,6 +56,6 @@ export const useAuth = () => {
 
     };
     return {
-        login
+        login, session, role: session?.user?.role, isAuthenticated, isLoading, error
     }
 };

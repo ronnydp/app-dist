@@ -1,3 +1,4 @@
+import { useAuth } from "@/hooks/useAuth";
 import { deleteProduct, getProductsPaginated } from "@/services/database";
 import { Product } from "@/types";
 import { Ionicons } from "@expo/vector-icons";
@@ -20,6 +21,7 @@ export default function ProductScreen() {
     const [hasMore, setHasMore] = useState(true);
     const pageRef = useRef(0);
     const [searchQuery, setSearchQuery] = useState('');
+    const { role } = useAuth(); // para asegurar que la sesión esté lista antes de cargar productos (evita error al arrancar la app)
     const debouncedQuery = useDebouncedValue(searchQuery.trim(), 300);
 
     const loadProducts = useCallback(async (reset = true) => {
@@ -89,10 +91,23 @@ export default function ProductScreen() {
         );
     }, [loadProducts]);
 
+    const handleEdit = useCallback((p: Product) => {
+        router.push({
+            pathname: '/newProduct',
+            params: {
+                id: p.id,
+                name: p.name,
+                price: String(p.price),
+                image_url: p.image_url || '',
+            },
+        });
+    }, []);
+
     const renderProduct = ({ item }: { item: Product }) => (
         <ProductCard
             item={item}
-            onDelete={handleDelete}
+            onEdit={role === 'admin' ? handleEdit : undefined}
+            onDelete={role === 'admin' ? handleDelete : undefined}
         />
     );
 

@@ -1,4 +1,5 @@
 // app/(tabs)/customers.tsx
+import { useAuth } from '@/hooks/useAuth';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
@@ -22,7 +23,7 @@ export default function CustomerScreen() {
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-
+  const { role } = useAuth(); // para asegurar que la sesión esté lista antes de cargar clientes (evita error al arrancar la app)
   const debouncedQuery = useDebouncedValue(searchQuery.trim(), 300);
 
   const loadCustomers = useCallback(async (reset = true) => {
@@ -99,10 +100,24 @@ export default function CustomerScreen() {
     setModalVisible(true);
   }, []);
 
+  const handleEdit = useCallback((c: Customer) => {
+    router.push({
+      pathname: '/newCustomer',
+      params: {
+        id: c.id,
+        name: c.name,
+        ruc: c.ruc || '',
+        address: c.address,
+        district: c.district,
+        phone: c.phone || '',
+      },
+    });
+  }, []);
+
   // use shared `CustomerCard` component from components/
 
   const renderCustomer = ({ item }: { item: Customer }) => (
-    <CustomerCard item={item} onOpen={openCustomer} onDelete={handleDelete} />
+    <CustomerCard item={item} onOpen={openCustomer} onEdit={handleEdit} onDelete={role === 'admin' ? handleDelete : undefined} />
   );
 
   const emptyIfMissing = (value: any) => (value || value === 0 ? String(value) : 'no tiene');
@@ -133,7 +148,7 @@ export default function CustomerScreen() {
         ListEmptyComponent={
           <View style={styles.empty}>
             <Ionicons name="people-outline" size={64} color="#d1d5db" />
-            <Text style={styles.emptyText}>No hay customers registrados</Text>
+            <Text style={styles.emptyText}>No hay clientes registrados</Text>
             <Text style={styles.emptySubtext}>Presiona el botón + para agregar uno</Text>
           </View>
         }
@@ -146,11 +161,11 @@ export default function CustomerScreen() {
         onRequestClose={() => setModalVisible(false)}
       >
         <Pressable style={styles.modalOverlay} onPress={() => setModalVisible(false)}>
-          <TouchableWithoutFeedback onPress={() => {}}>
+          <TouchableWithoutFeedback onPress={() => { }}>
             <View style={styles.modalContent}>
               <View style={styles.modalHeader}>
                 <View style={styles.modalTitleRow}>
-                  <Ionicons name="person-circle-outline" size={28} color="#2563eb" style={{marginRight: 8}} />
+                  <Ionicons name="person-circle-outline" size={28} color="#2563eb" style={{ marginRight: 8 }} />
                   <Text style={styles.modalTitle} numberOfLines={1} ellipsizeMode="tail">
                     {selectedCustomer ? selectedCustomer.name : 'Customer'}
                   </Text>
@@ -193,7 +208,7 @@ export default function CustomerScreen() {
           </TouchableWithoutFeedback>
         </Pressable>
       </Modal>
-      
+
       <FloatingActionButton onPress={() => router.push('/newCustomer')} />
     </SafeAreaView>
   );

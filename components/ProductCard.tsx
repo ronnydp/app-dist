@@ -6,10 +6,11 @@ import cardStyles from './ui/cardStyles';
 
 type Props = {
   item: Product;
-  onDelete: (id: string, nombre: string) => void;
+  onEdit?: (p: Product) => void;
+  onDelete?: (id: string, nombre: string) => void;
 };
 
-export default memo(function ProductCard({ item, onDelete }: Props) {
+export default memo(function ProductCard({ item, onEdit, onDelete }: Props) {
   return (
     <View style={cardStyles.card}>
       <View style={{ flex: 1 }}>
@@ -19,9 +20,20 @@ export default memo(function ProductCard({ item, onDelete }: Props) {
           {item.image_url ? <Text style={cardStyles.info}>{item.image_url}</Text> : null}
         </View>
       </View>
-      <TouchableOpacity style={cardStyles.deleteBtn} onPress={() => onDelete(item.id, item.name)}>
-        <Ionicons name="trash" size={20} color="#ef4444" />
-      </TouchableOpacity>
+      {(onEdit || onDelete) && (
+        <View style={{ alignItems: 'center', gap: 8 }}>
+          {onEdit && (
+            <TouchableOpacity style={cardStyles.deleteBtn} onPress={() => onEdit(item)}>
+              <Ionicons name="create-outline" size={20} color="#cfbb09" />
+            </TouchableOpacity>
+          )}
+          {onDelete && (
+            <TouchableOpacity style={cardStyles.deleteBtn} onPress={() => onDelete(item.id, item.name)}>
+              <Ionicons name="trash" size={20} color="#ef4444" />
+            </TouchableOpacity>
+          )}
+        </View>
+      )}
     </View>
   );
 }, (prev, next) => {

@@ -1,7 +1,6 @@
-import { router } from 'expo-router';
-import { useState } from 'react';
-import { getProducts, saveProduct } from '../services/database';
-import{
+import { router, useLocalSearchParams, useNavigation } from 'expo-router';
+import { useLayoutEffect, useState } from 'react';
+import {
     Alert,
     KeyboardAvoidingView,
     Platform,
@@ -12,12 +11,28 @@ import{
     TouchableOpacity,
     View,
 } from 'react-native';
+import { getProducts, saveProduct } from '../services/database';
 
 export default function NewProductScreen() {
-    const [name, setName] = useState('');
-    const [price, setPrice] = useState('');
-    const [imageUrl, setImageUrl] = useState('');
+    const params = useLocalSearchParams<{
+        id?: string;
+        name?: string;
+        price?: string;
+        image_url?: string;
+    }>();
+    const isEditing = !!params.id;
+    const navigation = useNavigation();
+
+    const [name, setName] = useState(params.name || '');
+    const [price, setPrice] = useState(params.price || '');
+    const [imageUrl, setImageUrl] = useState(params.image_url || '');
     const [loading, setLoading] = useState(false);
+
+    useLayoutEffect(() => {
+        navigation.setOptions({
+            title: isEditing ? 'Editar Producto' : 'Nuevo Producto',
+        });
+    }, [isEditing, navigation]);
 
     const handleSubmit = async () => {
         // Validaciones
@@ -34,26 +49,29 @@ export default function NewProductScreen() {
             return;
         }
 
-        const productsExistentes = await getProducts();
-        const nombreExiste = productsExistentes.some(
-            (p) => p.name.toLowerCase() === name.trim().toLowerCase()
-        );
+        if (!isEditing) {
+            const productsExistentes = await getProducts();
+            const nombreExiste = productsExistentes.some(
+                (p) => p.name.toLowerCase() === name.trim().toLowerCase()
+            );
 
-        if (nombreExiste) {
-            Alert.alert('Error', 'Ya existe un producto con ese nombre');
-            return;
+            if (nombreExiste) {
+                Alert.alert('Error', 'Ya existe un producto con ese nombre');
+                return;
+            }
         }
 
         setLoading(true);
 
         try {
             await saveProduct({
+                ...(isEditing ? { id: params.id } : {}),
                 name: name.trim(),
                 price: parseFloat(price),
                 image_url: imageUrl.trim() || undefined,
             });
 
-            Alert.alert('Éxito', 'Producto guardado correctamente', [
+            Alert.alert('Éxito', isEditing ? 'Producto actualizado correctamente' : 'Producto guardado correctamente', [
                 {
                     text: 'OK',
                     onPress: () => router.back(),
@@ -124,7 +142,7 @@ export default function NewProductScreen() {
                         disabled={loading}
                     >
                         <Text style={styles.submitButtonText}>
-                            {loading ? 'Guardando...' : 'Guardar'}
+                            {loading ? 'Guardando...' : isEditing ? 'Actualizar' : 'Guardar'}
                         </Text>
                     </TouchableOpacity>
                 </View>

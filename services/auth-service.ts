@@ -78,7 +78,7 @@ export const authService = {
             if (session?.user) {
                 const { data: userData } = await supabase
                     .from('users')
-                    .select('role')
+                    .select('name, role')
                     .eq('id', session.user.id)
                     .single();
                     
@@ -87,7 +87,7 @@ export const authService = {
                     user: {
                         id: session.user.id,
                         email: session.user.email || "",
-                        name: session.user.user_metadata?.name || "",
+                        name: userData?.name || "",
                         role: userData?.role || "",
                     },
                     issuedAt: new Date().toISOString(),
