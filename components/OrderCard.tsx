@@ -24,8 +24,14 @@ export default memo(function OrderCard({ item, onOpen }: Props) {
 
           <View style={cardStyles.infoRow}>
             <Ionicons name="location-outline" size={14} color="#2563eb" style={cardStyles.infoIcon} />
-            <Text style={cardStyles.info}>{item.customer_address}, {item.customer_district}</Text>
+            <Text style={cardStyles.info}>{item.customer_address}</Text>
           </View>
+          {item.customer_phone && (
+            <View style={cardStyles.infoRow}>
+              <Ionicons name="call-outline" size={14} color="#2563eb" style={cardStyles.infoIcon} />  
+              <Text style={cardStyles.info}>{item.customer_phone}</Text>
+            </View>
+          )}
 
           <View style={cardStyles.divider} />
 
@@ -57,6 +63,7 @@ export default memo(function OrderCard({ item, onOpen }: Props) {
   return (
     prev.item.id === next.item.id &&
     prev.item.total === next.item.total &&
-    prev.item.note === next.item.note
+    prev.item.note === next.item.note &&
+    prev.item.customer_phone === next.item.customer_phone
   );
 });

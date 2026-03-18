@@ -360,6 +360,7 @@ export default function NewOrderScreen() {
                             style={styles.searchInput}
                             placeholder="Buscar cliente..."
                             placeholderTextColor="#9ca3af"
+                            autoFocus
                             value={searchCustomer}
                             onChangeText={setSearchCustomer}
                         />
@@ -427,6 +428,7 @@ export default function NewOrderScreen() {
                             style={styles.searchInput}
                             placeholder="Buscar producto..."
                             placeholderTextColor="#9ca3af"
+                            autoFocus
                             value={searchProduct}
                             onChangeText={setSearchProduct}
                         />

@@ -326,7 +326,7 @@ export const getOrders = async () => {
       .from('orders')
       .select(`
         *,
-        customers (name, address, district, cod_customer),
+        customers (name, address, district, cod_customer, phone),
         users!seller_id (name),
         product_orders (*)
       `)
@@ -351,6 +351,7 @@ export const getOrders = async () => {
       customer_address: order.customers?.address || '',
       customer_district: order.customers?.district || '',
       customer_cod: order.customers?.cod_customer || 0,
+      customer_phone: order.customers?.phone || '',
       seller_name: order.users?.name || '',
       products: (order.product_orders || []).map((po: any) => ({
         ...po,

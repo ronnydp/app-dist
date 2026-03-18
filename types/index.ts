@@ -48,6 +48,7 @@ export interface OrderWithDetails extends Order {
   customer_address: string; // dirección del cliente
   customer_district: string; // distrito del cliente
   customer_cod: number; // código del cliente
+  customer_phone?: string; // teléfono del cliente
   seller_name: string; // nombre del vendedor
   products: ProductOrderWithDetails[]; // productos del pedido
 }
