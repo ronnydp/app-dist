@@ -60,7 +60,9 @@ export default memo(function CustomerCard({ item, onOpen, onEdit, onToggleActive
     prev.item.ruc === next.item.ruc &&
     prev.item.phone === next.item.phone &&
     prev.item.address === next.item.address &&
-    prev.item.is_active === next.item.is_active
+    prev.item.is_active === next.item.is_active &&
+    !!prev.onEdit === !!next.onEdit &&
+    !!prev.onToggleActive === !!next.onToggleActive
   );
 });
 

@@ -139,9 +139,9 @@ export default function CustomerScreen() {
 
   // use shared `CustomerCard` component from components/
 
-  const renderCustomer = ({ item }: { item: Customer }) => (
+  const renderCustomer = useCallback(({ item }: { item: Customer }) => (
     <CustomerCard item={item} onOpen={openCustomer} onEdit={handleEdit} onToggleActive={role === 'admin' ? handleToggleActive : undefined} />
-  );
+  ), [role, openCustomer, handleEdit, handleToggleActive]);
 
   const emptyIfMissing = (value: any) => (value || value === 0 ? String(value) : 'no tiene');
 

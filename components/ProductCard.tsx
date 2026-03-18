@@ -43,6 +43,8 @@ export default memo(function ProductCard({ item, onEdit, onToggleActive }: Props
     prev.item.name === next.item.name &&
     prev.item.price === next.item.price &&
     prev.item.image_url === next.item.image_url &&
-    prev.item.is_active === next.item.is_active
+    prev.item.is_active === next.item.is_active &&
+    !!prev.onEdit === !!next.onEdit &&
+    !!prev.onToggleActive === !!next.onToggleActive
   );
 });

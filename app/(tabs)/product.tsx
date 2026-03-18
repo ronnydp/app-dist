@@ -126,13 +126,13 @@ export default function ProductScreen() {
         });
     }, []);
 
-    const renderProduct = ({ item }: { item: Product }) => (
+    const renderProduct = useCallback(({ item }: { item: Product }) => (
         <ProductCard
             item={item}
             onEdit={role === 'admin' ? handleEdit : undefined}
             onToggleActive={role === 'admin' ? handleToggleActive : undefined}
         />
-    );
+    ), [role, handleEdit, handleToggleActive]);
 
     return (
         <SafeAreaView style={styles.container}>
