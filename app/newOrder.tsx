@@ -140,6 +140,14 @@ export default function NewOrderScreen() {
 
     const handleQuantityInputChange = (productId: string, text: string) => {
         setQuantityInputs((prev) => ({ ...prev, [productId]: text }));
+        const num = parseInt(text);
+        if (!isNaN(num) && num > 0) {
+            setOrderItems((prev) =>
+                prev.map((item) =>
+                    item.product.id === productId ? { ...item, amount: num } : item
+                )
+            );
+        }
     };
 
     const commitQuantityInput = (productId: string) => {
@@ -212,14 +220,18 @@ export default function NewOrderScreen() {
             onLayout={loadData}
         >
             <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
-                {/* Cliente */}
+                {/* Paso 1: Cliente */}
                 <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Cliente *</Text>
+                    <View style={styles.stepHeader}>
+                        <Text style={styles.sectionTitle}>Cliente</Text>
+                    </View>
                     <TouchableOpacity
-                        style={styles.dropdown}
+                        style={[styles.dropdown, selectedCustomer && styles.dropdownSelected]}
                         onPress={() => setShowCustomerModal(true)}
                     >
                         <View style={styles.dropdownContent}>
+                            {!selectedCustomer && <Ionicons name="person-outline" size={20} color="#9ca3af" />}
+                            {selectedCustomer && <Ionicons name="person" size={20} color="#2563eb" />}
                             <Text
                                 style={[styles.dropdownText, !selectedCustomer && styles.placeholder]}
                                 numberOfLines={1}
@@ -240,55 +252,82 @@ export default function NewOrderScreen() {
                         )}
                 </View>
 
-                {/* Productos */}
+                {/* Paso 2: Productos */}
                 <View style={styles.section}>
                     <View style={styles.sectionHeader}>
-                        <Text style={styles.sectionTitle}>Productos *</Text>
+                        <View style={styles.stepHeader}>
+                            <Text style={styles.sectionTitle}>Productos</Text>
+                            {orderItems.length > 0 && (
+                                <View style={styles.itemCountBadge}>
+                                    <Text style={styles.itemCountText}>{orderItems.length}</Text>
+                                </View>
+                            )}
+                        </View>
                         <TouchableOpacity
                             style={styles.addButton}
                             onPress={() => setShowProductModal(true)}
                         >
-                            <Ionicons name="add" size={24} color="#2563eb" />
+                            <Ionicons name="add" size={20} color="#fff" />
+                            <Text style={styles.addButtonText}>Agregar</Text>
                         </TouchableOpacity>
                     </View>
 
                     {orderItems.length === 0 ? (
-                        <Text style={styles.emptyText}>No hay productos agregados</Text>
+                        <TouchableOpacity
+                            style={styles.emptyState}
+                            onPress={() => setShowProductModal(true)}
+                        >
+                            <Ionicons name="cube-outline" size={40} color="#d1d5db" />
+                            <Text style={styles.emptyStateTitle}>Sin productos</Text>
+                            <Text style={styles.emptyStateSubtitle}>Toca aquí para agregar productos al pedido</Text>
+                        </TouchableOpacity>
                     ) : (
                         <View style={styles.productList}>
                             {orderItems.map((item) => (
                                 <View key={item.product.id} style={styles.productItem}>
-                                    <View style={styles.productInfo}>
-                                        <Text style={styles.productName}>{item.product.name}</Text>
+                                    {/* Fila superior: nombre + eliminar */}
+                                    <View style={styles.productTopRow}>
+                                        <Text style={styles.productName} numberOfLines={1}>{item.product.name}</Text>
+                                        <TouchableOpacity
+                                            onPress={() => handleRemoveItem(item.product.id)}
+                                            hitSlop={8}
+                                        >
+                                            <Ionicons name="trash-outline" size={18} color="#ef4444" />
+                                        </TouchableOpacity>
+                                    </View>
+                                    {/* Fila inferior: precio × cantidad = subtotal */}
+                                    <View style={styles.productBottomRow}>
                                         <Text style={styles.productPrice}>
                                             S/ {item.unitPrice.toFixed(2)}
                                         </Text>
-                                    </View>
-                                    <View style={styles.productControls}>
-                                        <TouchableOpacity
-                                            onPress={() =>
-                                                handleUpdateAmount(item.product.id, item.amount - 1)
-                                            }
-                                        >
-                                            <Ionicons name="remove-circle" size={24} color="#ef4444" />
-                                        </TouchableOpacity>
-                                        <TextInput
-                                            style={styles.amountInput}
-                                            value={quantityInputs[item.product.id] ?? item.amount.toString()}
-                                            onChangeText={(text) => handleQuantityInputChange(item.product.id, text)}
-                                            onEndEditing={() => commitQuantityInput(item.product.id)}
-                                            keyboardType="numeric"
-                                            selectTextOnFocus
-                                        />
-                                        <TouchableOpacity
-                                            onPress={() =>
-                                                handleUpdateAmount(item.product.id, item.amount + 1)
-                                            }
-                                        >
-                                            <Ionicons name="add-circle" size={24} color="#16a34a" />
-                                        </TouchableOpacity>
-                                    </View>
-                                    <View style={styles.productSubtotal}>
+                                        <Text style={styles.multiplySign}>×</Text>
+                                        <View style={styles.quantityStepper}>
+                                            <TouchableOpacity
+                                                style={styles.stepperButton}
+                                                onPress={() =>
+                                                    handleUpdateAmount(item.product.id, item.amount - 1)
+                                                }
+                                            >
+                                                <Ionicons name="remove" size={18} color="#ef4444" />
+                                            </TouchableOpacity>
+                                            <TextInput
+                                                style={styles.amountInput}
+                                                value={quantityInputs[item.product.id] ?? item.amount.toString()}
+                                                onChangeText={(text) => handleQuantityInputChange(item.product.id, text)}
+                                                onEndEditing={() => commitQuantityInput(item.product.id)}
+                                                keyboardType="numeric"
+                                                selectTextOnFocus
+                                            />
+                                            <TouchableOpacity
+                                                style={styles.stepperButton}
+                                                onPress={() =>
+                                                    handleUpdateAmount(item.product.id, item.amount + 1)
+                                                }
+                                            >
+                                                <Ionicons name="add" size={18} color="#16a34a" />
+                                            </TouchableOpacity>
+                                        </View>
+                                        <Text style={styles.equalsSign}>=</Text>
                                         <Text style={styles.subtotalAmount}>
                                             S/ {(item.amount * item.unitPrice).toFixed(2)}
                                         </Text>
@@ -307,9 +346,11 @@ export default function NewOrderScreen() {
                     </View>
                 )}
 
-                {/* Nota */}
+                {/* Paso 3: Nota */}
                 <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Nota (opcional)</Text>
+                    <View style={styles.stepHeader}>
+                        <Text style={styles.sectionTitle}>Nota <Text style={styles.optionalLabel}>(opcional)</Text></Text>
+                    </View>
                     <TextInput
                         style={[styles.input, styles.textArea]}
                         value={note}
@@ -436,22 +477,30 @@ export default function NewOrderScreen() {
                             {searchProduct.trim().length === 0 ? (
                                 <Text style={styles.noResults}>Escriba para buscar productos...</Text>
                             ) : filteredProducts.length > 0 ? (
-                                filteredProducts.map((product) => (
-                                    <TouchableOpacity
-                                        key={product.id}
-                                        style={styles.modalOption}
-                                        onPress={() => handleAddProduct(product)}
-                                    >
-                                        <View>
-                                            <Text style={styles.modalOptionText}>
-                                                {product.name}
-                                            </Text>
-                                            <Text style={styles.modalOptionSubtext}>
-                                                S/ {product.price.toFixed(2)}
-                                            </Text>
-                                        </View>
-                                    </TouchableOpacity>
-                                ))
+                                filteredProducts.map((product) => {
+                                    const inCart = orderItems.find((i) => i.product.id === product.id);
+                                    return (
+                                        <TouchableOpacity
+                                            key={product.id}
+                                            style={[styles.modalOption, inCart && styles.modalOptionInCart]}
+                                            onPress={() => handleAddProduct(product)}
+                                        >
+                                            <View style={{ flex: 1 }}>
+                                                <Text style={styles.modalOptionText}>
+                                                    {product.name}
+                                                </Text>
+                                                <Text style={styles.modalOptionSubtext}>
+                                                    S/ {product.price.toFixed(2)}
+                                                </Text>
+                                            </View>
+                                            {inCart && (
+                                                <View style={styles.cartBadge}>
+                                                    <Text style={styles.cartBadgeText}>{inCart.amount}</Text>
+                                                </View>
+                                            )}
+                                        </TouchableOpacity>
+                                    );
+                                })
                             ) : (
                                 <Text style={styles.noResults}>No se encontraron productos</Text>
                             )}
@@ -522,62 +571,161 @@ const styles = StyleSheet.create({
     placeholder: {
         color: '#9ca3af',
     },
-    addButton: {
-        padding: 4,
-    },
-    emptyText: {
-        fontSize: 14,
-        color: '#9ca3af',
-        textAlign: 'center',
-        paddingVertical: 20,
-    },
-    productList: {
-        gap: 12,
-    },
-    productItem: {
+    stepHeader: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#f9fafb',
-        borderRadius: 8,
-        padding: 12,
-        gap: 12,
+        gap: 8,
+        marginBottom: 10,
     },
-    productInfo: {
-        flex: 1,
+    stepBadge: {
+        width: 24,
+        height: 24,
+        borderRadius: 12,
+        backgroundColor: '#2563eb',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    stepBadgeText: {
+        color: '#fff',
+        fontSize: 12,
+        fontWeight: '700',
+    },
+    stepBadgeOptional: {
+        backgroundColor: '#d1d5db',
+    },
+    stepBadgeTextOptional: {
+        color: '#fff',
+        fontSize: 12,
+        fontWeight: '700',
+    },
+    optionalLabel: {
+        fontWeight: '400',
+        color: '#9ca3af',
+        fontSize: 13,
+    },
+    itemCountBadge: {
+        backgroundColor: '#dbeafe',
+        borderRadius: 10,
+        paddingHorizontal: 8,
+        paddingVertical: 2,
+    },
+    itemCountText: {
+        color: '#2563eb',
+        fontSize: 12,
+        fontWeight: '700',
+    },
+    addButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 4,
+        backgroundColor: '#2563eb',
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 20,
+    },
+    addButtonText: {
+        color: '#fff',
+        fontSize: 13,
+        fontWeight: '600',
+    },
+    emptyState: {
+        alignItems: 'center',
+        paddingVertical: 28,
+        backgroundColor: '#f9fafb',
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: '#e5e7eb',
+        borderStyle: 'dashed',
+        gap: 6,
+    },
+    emptyStateTitle: {
+        fontSize: 15,
+        fontWeight: '600',
+        color: '#9ca3af',
+    },
+    emptyStateSubtitle: {
+        fontSize: 13,
+        color: '#d1d5db',
+    },
+    productList: {
+        gap: 10,
+    },
+    productItem: {
+        backgroundColor: '#f9fafb',
+        borderRadius: 10,
+        padding: 12,
+        borderWidth: 1,
+        borderColor: '#f3f4f6',
+    },
+    productTopRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 10,
     },
     productName: {
         fontSize: 14,
         fontWeight: '600',
         color: '#111827',
-        marginBottom: 4,
+        flex: 1,
+        marginRight: 8,
     },
-    productPrice: {
-        fontSize: 12,
-        color: '#6b7280',
-    },
-    productControls: {
+    productBottomRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 8,
+        gap: 6,
     },
-    amountInput: {
-        width: 40,
-        height: 40,
-        borderWidth: 1,
-        borderColor: '#d1d5db',
-        borderRadius: 6,
-        textAlign: 'center',
+    productPrice: {
+        fontSize: 13,
+        color: '#6b7280',
+        minWidth: 52,
+    },
+    multiplySign: {
         fontSize: 14,
+        color: '#9ca3af',
         fontWeight: '600',
     },
-    productSubtotal: {
-        alignItems: 'flex-end',
-        minWidth: 70,
+    equalsSign: {
+        fontSize: 14,
+        color: '#9ca3af',
+        fontWeight: '600',
+    },
+    quantityStepper: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#fff',
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: '#e5e7eb',
+    },
+    stepperButton: {
+        width: 36,
+        height: 36,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    amountInput: {
+        width: 44,
+        height: 36,
+        borderLeftWidth: 1,
+        borderRightWidth: 1,
+        borderColor: '#e5e7eb',
+        textAlign: 'center',
+        fontSize: 15,
+        fontWeight: '700',
+        color: '#111827',
+        padding: 0,
     },
     subtotalAmount: {
         fontSize: 14,
         fontWeight: '700',
-        color: '#111827',
+        color: '#2563eb',
+        flex: 1,
+        textAlign: 'right',
+    },
+    dropdownSelected: {
+        borderColor: '#2563eb',
+        backgroundColor: '#f0f7ff',
     },
     totalSection: {
         backgroundColor: '#eff6ff',
@@ -740,6 +888,22 @@ const styles = StyleSheet.create({
         color: '#111827',
         backgroundColor: '#f9fafb',
         marginBottom: 8,
+    },
+    modalOptionInCart: {
+        backgroundColor: '#f0f7ff',
+    },
+    cartBadge: {
+        backgroundColor: '#2563eb',
+        borderRadius: 10,
+        width: 22,
+        height: 22,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    cartBadgeText: {
+        color: '#fff',
+        fontSize: 11,
+        fontWeight: '700',
     },
     noResults: {
         fontSize: 14,
