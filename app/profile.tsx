@@ -35,7 +35,7 @@ export default function ProfileScreen() {
       <View style={styles.card}>
         <View style={styles.header}>
           <Ionicons name="person-circle-outline" size={52} color="#2563eb" />
-          <Text style={styles.title}>Perfil del vendedor</Text>
+          <Text style={styles.title}>Mi Perfil</Text>
         </View>
 
         <View style={styles.row}>

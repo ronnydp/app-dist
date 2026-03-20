@@ -1,13 +1,15 @@
+import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
 import React from 'react';
-import { Ionicons } from '@expo/vector-icons';
 
 import { HapticTab } from '@/components/haptic-tab';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
+  const { role } = useAuth();
 
   return (
     <Tabs
@@ -35,6 +37,13 @@ export default function TabLayout() {
         options={{
           title: 'Pedidos',
           tabBarIcon: ({ color }) => <Ionicons size={28} name="receipt" color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="summary"
+        options={{
+          title: 'Resumen',
+          tabBarIcon: ({ color }) => <Ionicons size={28} name="stats-chart" color={color} />,
         }}
       />
     </Tabs>

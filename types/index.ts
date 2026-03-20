@@ -82,3 +82,20 @@ export interface User {
   created_at: string;
   updated_at: string;
 }
+
+// Tipos para resumen semanal de ventas
+export interface DailySale {
+  date: string;
+  dayLabel: string;
+  total: number;
+}
+
+export interface WeeklySales {
+  total: number;
+  daily: DailySale[];
+}
+
+export interface SellerWeeklySales extends WeeklySales {
+  sellerId: string;
+  sellerName: string;
+}

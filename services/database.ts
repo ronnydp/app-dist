@@ -1,6 +1,6 @@
 // services/database.ts
 import { supabase } from '../lib/supabase';
-import { Customer, NewOrder, Order, Product } from '../types';
+import { Customer, NewOrder, Order, Product, SellerWeeklySales, WeeklySales } from '../types';
 
 // ==========================================
 // FUNCIONES PARA CLIENTES (CUSTOMERS)
@@ -407,4 +407,116 @@ export const createOrder = async (order: NewOrder): Promise<Order> => {
     console.error('Error al crear pedido:', error);
     throw error;
   }
+};
+
+/**
+ * Obtiene el total vendido en la semana actual (domingo a sábado)
+ * para un vendedor específico, con desglose diario.
+ */
+export const getWeeklySalesTotal = async (sellerId: string): Promise<WeeklySales> => {
+  const now = new Date();
+  const day = now.getDay(); // 0=domingo, 6=sábado
+
+  const startOfWeek = new Date(now);
+  startOfWeek.setDate(now.getDate() - day);
+  startOfWeek.setHours(0, 0, 0, 0);
+
+  const endOfWeek = new Date(startOfWeek);
+  endOfWeek.setDate(startOfWeek.getDate() + 6);
+  endOfWeek.setHours(23, 59, 59, 999);
+
+  const startStr = startOfWeek.toISOString().slice(0, 10);
+  const endStr = endOfWeek.toISOString().slice(0, 10);
+
+  const { data, error } = await supabase
+    .from('orders')
+    .select('total, date')
+    .eq('seller_id', sellerId)
+    .gte('date', startStr)
+    .lte('date', endStr);
+
+  if (error) throw error;
+
+  const orders = data || [];
+  const weekTotal = orders.reduce((sum, o) => sum + (o.total || 0), 0);
+
+  // Desglose lunes(1) a sábado(6), omitimos domingo(0)
+  const dayNames = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+  const daily: WeeklySales['daily'] = [];
+
+  for (let i = 1; i <= 6; i++) {
+    const d = new Date(startOfWeek);
+    d.setDate(startOfWeek.getDate() + i);
+    const dateStr = d.toISOString().slice(0, 10);
+    const dayTotal = orders
+      .filter((o) => o.date?.startsWith(dateStr))
+      .reduce((sum, o) => sum + (o.total || 0), 0);
+    daily.push({ date: dateStr, dayLabel: dayNames[i], total: dayTotal });
+  }
+
+  return { total: weekTotal, daily };
+};
+
+/**
+ * Obtiene el resumen semanal de TODOS los vendedores (para admin).
+ */
+export const getAllSellersWeeklySales = async (): Promise<SellerWeeklySales[]> => {
+  const now = new Date();
+  const day = now.getDay();
+
+  const startOfWeek = new Date(now);
+  startOfWeek.setDate(now.getDate() - day);
+  startOfWeek.setHours(0, 0, 0, 0);
+
+  const endOfWeek = new Date(startOfWeek);
+  endOfWeek.setDate(startOfWeek.getDate() + 6);
+  endOfWeek.setHours(23, 59, 59, 999);
+
+  const startStr = startOfWeek.toISOString().slice(0, 10);
+  const endStr = endOfWeek.toISOString().slice(0, 10);
+
+  const { data, error } = await supabase
+    .from('orders')
+    .select('total, date, seller_id, users!seller_id (name)')
+    .gte('date', startStr)
+    .lte('date', endStr);
+
+  if (error) throw error;
+
+  const orders = data || [];
+
+  // Agrupar por vendedor
+  const sellerMap = new Map<string, { name: string; orders: typeof orders }>();
+  for (const order of orders) {
+    const id = order.seller_id;
+    const name = (order as any).users?.name || 'Sin nombre';
+    if (!sellerMap.has(id)) {
+      sellerMap.set(id, { name, orders: [] });
+    }
+    sellerMap.get(id)!.orders.push(order);
+  }
+
+  const dayNames = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+
+  const result: SellerWeeklySales[] = [];
+  for (const [sellerId, { name, orders: sellerOrders }] of sellerMap) {
+    const total = sellerOrders.reduce((sum, o) => sum + (o.total || 0), 0);
+    const daily: WeeklySales['daily'] = [];
+
+    for (let i = 1; i <= 6; i++) {
+      const d = new Date(startOfWeek);
+      d.setDate(startOfWeek.getDate() + i);
+      const dateStr = d.toISOString().slice(0, 10);
+      const dayTotal = sellerOrders
+        .filter((o) => o.date?.startsWith(dateStr))
+        .reduce((sum, o) => sum + (o.total || 0), 0);
+      daily.push({ date: dateStr, dayLabel: dayNames[i], total: dayTotal });
+    }
+
+    result.push({ sellerId, sellerName: name, total, daily });
+  }
+
+  // Ordenar por total descendente
+  result.sort((a, b) => b.total - a.total);
+  return result;
 };

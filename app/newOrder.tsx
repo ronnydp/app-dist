@@ -405,7 +405,7 @@ export default function NewOrderScreen() {
                             value={searchCustomer}
                             onChangeText={setSearchCustomer}
                         />
-                        <ScrollView style={styles.modalList}>
+                        <ScrollView style={styles.modalList} keyboardShouldPersistTaps="handled">
                             {searchCustomer.trim().length === 0 ? (
                                 <Text style={styles.noResults}>Escriba para buscar clientes...</Text>
                             ) : searchingCustomers ? (
@@ -473,7 +473,7 @@ export default function NewOrderScreen() {
                             value={searchProduct}
                             onChangeText={setSearchProduct}
                         />
-                        <ScrollView style={styles.modalList}>
+                        <ScrollView style={styles.modalList} keyboardShouldPersistTaps="handled">
                             {searchProduct.trim().length === 0 ? (
                                 <Text style={styles.noResults}>Escriba para buscar productos...</Text>
                             ) : filteredProducts.length > 0 ? (
