@@ -22,6 +22,17 @@ export interface Product {
   created_at: string; // timestamp
 }
 
+// Tabla: presentations
+export interface Presentation {
+  id: string; // uuid
+  product_id: string; // uuid referencia a products
+  name: string;
+  unit_quantity: number; // int2
+  sale_price: number; // numeric
+  is_default: boolean;
+  created_at: string; // timestamptz
+}
+
 // Tabla: orders
 export interface Order {
   id: string; // uuid

@@ -1,6 +1,6 @@
 // services/database.ts
 import { supabase } from '../lib/supabase';
-import { Customer, NewOrder, Order, Product, SellerWeeklySales, WeeklySales } from '../types';
+import { Customer, NewOrder, Order, Presentation, Product, SellerWeeklySales, WeeklySales } from '../types';
 
 // ==========================================
 // FUNCIONES PARA CLIENTES (CUSTOMERS)
@@ -308,6 +308,69 @@ export const activateProduct = async (id: string): Promise<void> => {
     if (error) throw error;
   } catch (error) {
     console.error('Error al habilitar producto:', error);
+    throw error;
+  }
+};
+
+// ==========================================
+// FUNCIONES PARA PRESENTACIONES (PRESENTATIONS)
+// ==========================================
+
+/**
+ * Obtiene las presentaciones de un producto
+ */
+export const getPresentationsByProduct = async (productId: string): Promise<Presentation[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('presentations')
+      .select('*')
+      .eq('product_id', productId)
+      .order('is_default', { ascending: false });
+
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    console.error('Error al obtener presentaciones:', error);
+    throw error;
+  }
+};
+
+/**
+ * Guarda las presentaciones de un producto (reemplaza todas las existentes)
+ */
+export const savePresentations = async (
+  productId: string,
+  presentations: Omit<Presentation, 'id' | 'product_id' | 'created_at'>[]
+): Promise<Presentation[]> => {
+  try {
+    // Eliminar presentaciones existentes del producto
+    const { error: deleteError } = await supabase
+      .from('presentations')
+      .delete()
+      .eq('product_id', productId);
+
+    if (deleteError) throw deleteError;
+
+    if (presentations.length === 0) return [];
+
+    // Insertar las nuevas presentaciones
+    const rows = presentations.map((p) => ({
+      product_id: productId,
+      name: p.name,
+      unit_quantity: p.unit_quantity,
+      sale_price: p.sale_price,
+      is_default: p.is_default,
+    }));
+
+    const { data, error } = await supabase
+      .from('presentations')
+      .insert(rows)
+      .select();
+
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    console.error('Error al guardar presentaciones:', error);
     throw error;
   }
 };
