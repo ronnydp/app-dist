@@ -33,6 +33,11 @@ export interface Presentation {
   created_at: string; // timestamptz
 }
 
+// Tipo extendido: producto con sus presentaciones
+export interface ProductWithPresentations extends Product {
+  presentations: Presentation[];
+}
+
 // Tabla: orders
 export interface Order {
   id: string; // uuid

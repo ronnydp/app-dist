@@ -1,6 +1,6 @@
 // services/database.ts
 import { supabase } from '../lib/supabase';
-import { Customer, NewOrder, Order, Presentation, Product, SellerWeeklySales, WeeklySales } from '../types';
+import { Customer, NewOrder, Order, Presentation, Product, ProductWithPresentations, SellerWeeklySales, WeeklySales } from '../types';
 
 // ==========================================
 // FUNCIONES PARA CLIENTES (CUSTOMERS)
@@ -210,12 +210,12 @@ export const getProductsPaginated = async (
   pageSize: number,
   search?: string,
   role?: string
-): Promise<{ data: Product[]; hasMore: boolean }> => {
+): Promise<{ data: ProductWithPresentations[]; hasMore: boolean }> => {
   await supabase.auth.getSession();
 
   let query = supabase
     .from('products')
-    .select('*', { count: 'exact' });
+    .select('*, presentations(*)', { count: 'exact' });
 
   if (role !== 'admin') {
     query = query.eq('is_active', true);
@@ -233,8 +233,17 @@ export const getProductsPaginated = async (
     .range(from, to);
 
   if (error) throw error;
+
+  // Ordenar presentaciones: default primero
+  const products = (data || []).map((p: any) => ({
+    ...p,
+    presentations: (p.presentations || []).sort((a: Presentation, b: Presentation) =>
+      a.is_default === b.is_default ? 0 : a.is_default ? -1 : 1
+    ),
+  }));
+
   return {
-    data: data || [],
+    data: products,
     hasMore: (count ?? 0) > to + 1,
   };
 };

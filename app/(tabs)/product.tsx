@@ -1,6 +1,6 @@
 import { useAuth } from "@/hooks/useAuth";
 import { activateProduct, deleteProduct, getProductsPaginated } from "@/services/database";
-import { Product } from "@/types";
+import { ProductWithPresentations } from "@/types";
 import { Ionicons } from "@expo/vector-icons";
 import { router, useFocusEffect } from "expo-router";
 import React, { useCallback, useRef, useState } from "react";
@@ -15,7 +15,7 @@ const PAGE_SIZE = 30;
 
 export default function ProductScreen() {
 
-    const [products, setProducts] = useState<Product[]>([]);
+    const [products, setProducts] = useState<ProductWithPresentations[]>([]);
     const [refreshing, setRefreshing] = useState(false);
     const [loadingMore, setLoadingMore] = useState(false);
     const [hasMore, setHasMore] = useState(true);
@@ -114,7 +114,7 @@ export default function ProductScreen() {
         }
     }, [loadProducts]);
 
-    const handleEdit = useCallback((p: Product) => {
+    const handleEdit = useCallback((p: ProductWithPresentations) => {
         router.push({
             pathname: '/newProduct',
             params: {
@@ -126,7 +126,7 @@ export default function ProductScreen() {
         });
     }, []);
 
-    const renderProduct = useCallback(({ item }: { item: Product }) => (
+    const renderProduct = useCallback(({ item }: { item: ProductWithPresentations }) => (
         <ProductCard
             item={item}
             onEdit={role === 'admin' ? handleEdit : undefined}

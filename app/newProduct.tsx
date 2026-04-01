@@ -11,8 +11,7 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
-import { getProducts, getPresentationsByProduct, saveProduct, savePresentations } from '../services/database';
-import { Presentation } from '../types';
+import { getPresentationsByProduct, getProducts, savePresentations, saveProduct } from '../services/database';
 
 export default function NewProductScreen() {
     const params = useLocalSearchParams<{
