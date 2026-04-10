@@ -33,7 +33,7 @@ export default memo(function ProductCard({ item, onEdit, onToggleActive }: Props
             <TouchableOpacity
               style={styles.defaultRow}
               onPress={() => hasMultiple && setExpanded(!expanded)}
-              activeOpacity={hasMultiple ? 0.6 : 1}
+              
             >
               <View style={styles.presInfo}>
                 <Text style={styles.presName} numberOfLines={1}>{defaultPres?.name}</Text>

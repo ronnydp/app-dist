@@ -16,8 +16,8 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
-import { createOrder, getProducts, searchCustomers } from '../services/database';
-import { Customer, Product } from '../types';
+import { createOrder, getPresentationsByProduct, getProducts, searchCustomers } from '../services/database';
+import { Customer, Presentation, Product } from '../types';
 
 export default function NewOrderScreen() {
     const [customers, setCustomers] = useState<Customer[]>([]);
@@ -35,6 +35,9 @@ export default function NewOrderScreen() {
     const [searchCustomer, setSearchCustomer] = useState('');
     const [searchProduct, setSearchProduct] = useState('');
     const customerSearchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+    // const hasMultiple = presentations.length > 1;
+    const [presentationsByProduct, setPresentationsByProduct] = useState<Presentation[]>([]);
+    const [showPresentationsByProduct, setShowPresentationsByProduct] = useState(false);
 
     // Buscar clientes desde Supabase con debounce
     useEffect(() => {
@@ -483,7 +486,18 @@ export default function NewOrderScreen() {
                                         <TouchableOpacity
                                             key={product.id}
                                             style={[styles.modalOption, inCart && styles.modalOptionInCart]}
-                                            onPress={() => handleAddProduct(product)}
+                                            onPress={async () => {
+                                                
+                                                getPresentationsByProduct(product.id).then((presentations) => {
+                                                    if(presentations.length === 0) {
+                                                        handleAddProduct(product);
+                                                        return;
+                                                    }
+                                                    setPresentationsByProduct(presentations);
+                                                    setShowPresentationsByProduct(true)
+                                                });
+                                            }}
+                                            
                                         >
                                             <View style={{ flex: 1 }}>
                                                 <Text style={styles.modalOptionText}>
@@ -508,8 +522,30 @@ export default function NewOrderScreen() {
                     </View>
                 </Pressable>
             </Modal>
-        </KeyboardAvoidingView>
-    );
+        <Modal
+            visible={showPresentationsByProduct}
+            onRequestClose={() => setShowPresentationsByProduct(false)}
+            transparent
+            animationType="fade"
+        >
+            <Pressable
+                style={styles.modalOverlay}
+                onPress={() => setShowPresentationsByProduct(false)} 
+            >
+                <View style={styles.modalContent} onStartShouldSetResponder={() => true}>
+                    <Text style={styles.modalTitle}>Presentaciones del producto</Text>
+                    {presentationsByProduct.map((presentation) => (
+                        <View key={presentation.id} style={styles.modalOption}>
+                            <Text style={styles.modalOptionText}>{presentation.name}</Text>
+                            <Text style={styles.modalOptionText}>{presentation.unit_quantity} unidades</Text>
+                            <Text style={styles.modalOptionSubtext}>S/. {presentation.sale_price}</Text>
+                        </View>
+                    ))}
+                </View>
+            </Pressable>
+        </Modal>
+    </KeyboardAvoidingView>
+);
 }
 
 const styles = StyleSheet.create({
@@ -836,8 +872,8 @@ const styles = StyleSheet.create({
         fontWeight: '600',
     },
     modalOptionSubtext: {
-        fontSize: 11,
-        color: '#9ca3af',
+        fontSize: 15,
+        color: '#19b63b',
         marginTop: 2,
     },
     modalFooter: {
