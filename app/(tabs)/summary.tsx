@@ -22,7 +22,8 @@ function getWeekRange() {
 
 function DailyBars({ daily }: { daily: WeeklySales['daily'] }) {
     const maxTotal = Math.max(...daily.map((d) => d.total), 1);
-    const todayStr = new Date().toISOString().slice(0, 10);
+    const now = new Date();
+    const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 
     return (
         <View style={styles.dailyContainer}>

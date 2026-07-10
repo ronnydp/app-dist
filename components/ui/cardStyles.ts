@@ -104,6 +104,11 @@ export default StyleSheet.create({
     color: '#111827',
     flex: 1,
   },
+  presentationName: {
+    fontSize: 11,
+    color: '#6b7280',
+    marginTop: 1,
+  },
   productPrice: {
     fontSize: 12,
     fontWeight: '600',

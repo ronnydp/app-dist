@@ -11,9 +11,11 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getPresentationsByProduct, getProducts, savePresentations, saveProduct } from '../services/database';
 
 export default function NewProductScreen() {
+    const insets = useSafeAreaInsets();
     const params = useLocalSearchParams<{
         id?: string;
         name?: string;
@@ -167,7 +169,11 @@ export default function NewProductScreen() {
             style={styles.container}
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         >
-            <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
+            <ScrollView
+                style={styles.scrollView}
+                keyboardShouldPersistTaps="handled"
+                contentContainerStyle={[styles.content, { paddingBottom: 24 + insets.bottom }]}
+            >
                 <View style={styles.form}>
                     <View style={styles.field}>
                         <Text style={styles.label}>Nombre *</Text>

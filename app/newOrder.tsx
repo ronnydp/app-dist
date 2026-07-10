@@ -1,7 +1,7 @@
 import { authService } from '@/services/auth-service';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { useEffect, useRef, useState } from 'react';
+import { RefObject, useEffect, useRef, useState } from 'react';
 import {
     ActivityIndicator,
     Alert,
@@ -16,28 +16,33 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { createOrder, getPresentationsByProduct, getProducts, searchCustomers } from '../services/database';
 import { Customer, Presentation, Product } from '../types';
 
 export default function NewOrderScreen() {
+    const insets = useSafeAreaInsets();
     const [customers, setCustomers] = useState<Customer[]>([]);
     const [searchingCustomers, setSearchingCustomers] = useState(false);
     const [products, setProducts] = useState<Product[]>([]);
     const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
     const [orderItems, setOrderItems] = useState<
-        Array<{ product: Product; amount: number; unitPrice: number }>
+        Array<{ product: Product; amount: number; unitPrice: number; presentationName?: string }>
     >([]);
     const [note, setNote] = useState('');
     const [loading, setLoading] = useState(false);
-    const [showCustomerModal, setShowCustomerModal] = useState(false);
-    const [showProductModal, setShowProductModal] = useState(false);
+    const [showCustomerModal, setShowCustomerModal] = useState(false); // Estado para controlar la visibilidad del modal de clientes
+    const [showProductModal, setShowProductModal] = useState(false); // Estado para controlar la visibilidad del modal de productos
     const [quantityInputs, setQuantityInputs] = useState<Record<string, string>>({});
     const [searchCustomer, setSearchCustomer] = useState('');
     const [searchProduct, setSearchProduct] = useState('');
-    const customerSearchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-    // const hasMultiple = presentations.length > 1;
-    const [presentationsByProduct, setPresentationsByProduct] = useState<Presentation[]>([]);
-    const [showPresentationsByProduct, setShowPresentationsByProduct] = useState(false);
+    const customerSearchTimer = useRef<ReturnType<typeof setTimeout> | null>(null); // Ref para manejar el debounce de búsqueda de clientes
+    const [presentationsByProduct, setPresentationsByProduct] = useState<Presentation[]>([]); // Estado para almacenar las presentaciones del producto seleccionado
+    const [showPresentationsByProduct, setShowPresentationsByProduct] = useState(false); // Estado para controlar la visibilidad del modal de presentaciones
+    const [selectedProduct, setSelectedProduct] = useState<Product | null>(null); // Estado para almacenar el producto seleccionado antes de mostrar las presentaciones
+    const [selectedPresentation, setSelectedPresentation] = useState<Presentation | null>(null); // Estado para almacenar la presentación seleccionada
+    const customerSearchInputRef = useRef<TextInput>(null);
+    const productSearchInputRef = useRef<TextInput>(null);
 
     // Buscar clientes desde Supabase con debounce
     useEffect(() => {
@@ -62,6 +67,10 @@ export default function NewOrderScreen() {
         };
     }, [searchCustomer]);
 
+    const focusInputWhenModalShown = (inputRef: RefObject<TextInput | null>) => {
+        setTimeout(() => { inputRef.current?.focus(); }, 150);
+    };
+
     const loadData = async () => {
         try {
             const productsData = await getProducts();
@@ -85,14 +94,14 @@ export default function NewOrderScreen() {
         normalizeText(product.name).includes(normalizeText(searchProduct))
     );
 
-    const handleAddProduct = (product: Product) => {
+    const handleAddProduct = (product: Product, presentationName?: string) => {
         const existingItem = orderItems.find((item) => item.product.id === product.id);
 
         if (existingItem) {
             setOrderItems(
                 orderItems.map((item) =>
                     item.product.id === product.id
-                        ? { ...item, amount: item.amount + 1 }
+                        ? { ...item, amount: item.amount + 1, presentationName }
                         : item
                 )
             );
@@ -107,6 +116,7 @@ export default function NewOrderScreen() {
                     product,
                     amount: 1,
                     unitPrice: product.price,
+                    presentationName,
                 },
             ]);
             setQuantityInputs((prev) => ({
@@ -180,7 +190,7 @@ export default function NewOrderScreen() {
 
         setLoading(true);
         try {
-            const session = await authService.getSession(); 
+            const session = await authService.getSession();
             if (!session?.user?.id) {
                 Alert.alert('Error', 'No hay sesión activa');
                 setLoading(false);
@@ -198,7 +208,7 @@ export default function NewOrderScreen() {
                     product_id: item.product.id,
                     amount: item.amount,
                     unit_price: item.unitPrice,
-                    sub_total: item.amount * item.unitPrice,
+                    sub_total: item.amount * item.unitPrice, presentation_name: item.presentationName,
                 })),
             });
 
@@ -222,7 +232,11 @@ export default function NewOrderScreen() {
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
             onLayout={loadData}
         >
-            <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
+            <ScrollView
+                style={styles.scrollView}
+                keyboardShouldPersistTaps="handled"
+                contentContainerStyle={[styles.content, { paddingBottom: 24 + insets.bottom }]}
+            >
                 {/* Paso 1: Cliente */}
                 <View style={styles.section}>
                     <View style={styles.stepHeader}>
@@ -248,11 +262,11 @@ export default function NewOrderScreen() {
                         </View>
                         <Ionicons name="chevron-down" size={20} color="#6b7280" />
                     </TouchableOpacity>
-                        {selectedCustomer && (
-                            <View style={{flexDirection: 'row', alignItems: 'center', gap: 8}}>
-                                <Text style={styles.selectedAddress}><Ionicons name="location-outline" size={18} color="#2563eb" style={{marginRight: 6}} /> {selectedCustomer.address}</Text>
-                            </View>
-                        )}
+                    {selectedCustomer && (
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                            <Text style={styles.selectedAddress}><Ionicons name="location-outline" size={18} color="#2563eb" style={{ marginRight: 6 }} /> {selectedCustomer.address}</Text>
+                        </View>
+                    )}
                 </View>
 
                 {/* Paso 2: Productos */}
@@ -266,13 +280,6 @@ export default function NewOrderScreen() {
                                 </View>
                             )}
                         </View>
-                        <TouchableOpacity
-                            style={styles.addButton}
-                            onPress={() => setShowProductModal(true)}
-                        >
-                            <Ionicons name="add" size={20} color="#fff" />
-                            <Text style={styles.addButtonText}>Agregar</Text>
-                        </TouchableOpacity>
                     </View>
 
                     {orderItems.length === 0 ? (
@@ -290,7 +297,12 @@ export default function NewOrderScreen() {
                                 <View key={item.product.id} style={styles.productItem}>
                                     {/* Fila superior: nombre + eliminar */}
                                     <View style={styles.productTopRow}>
-                                        <Text style={styles.productName} numberOfLines={1}>{item.product.name}</Text>
+                                        <View style={{ flex: 1 }}>
+                                            <Text style={styles.productName} numberOfLines={1}>{item.product.name}</Text>
+                                            {item.presentationName && (
+                                                <Text style={styles.presentationLabel}>{item.presentationName}</Text>
+                                            )}
+                                        </View>
                                         <TouchableOpacity
                                             onPress={() => handleRemoveItem(item.product.id)}
                                             hitSlop={8}
@@ -338,6 +350,16 @@ export default function NewOrderScreen() {
                                 </View>
                             ))}
                         </View>
+                    )}
+
+                    {orderItems.length > 0 && (
+                        <TouchableOpacity
+                            style={[styles.addButton, styles.addButtonBottom]}
+                            onPress={() => setShowProductModal(true)}
+                        >
+                            <Ionicons name="add" size={20} color="#fff" />
+                            <Text style={styles.addButtonText}>Agregar producto</Text>
+                        </TouchableOpacity>
                     )}
                 </View>
 
@@ -392,6 +414,7 @@ export default function NewOrderScreen() {
                 visible={showCustomerModal}
                 transparent
                 animationType="fade"
+                onShow={() => focusInputWhenModalShown(customerSearchInputRef)}
                 onRequestClose={() => setShowCustomerModal(false)}
             >
                 <Pressable
@@ -401,10 +424,10 @@ export default function NewOrderScreen() {
                     <View style={styles.modalContent}>
                         <Text style={styles.modalTitle}>Seleccionar Cliente</Text>
                         <TextInput
+                            ref={customerSearchInputRef}
                             style={styles.searchInput}
                             placeholder="Buscar cliente..."
                             placeholderTextColor="#9ca3af"
-                            autoFocus
                             value={searchCustomer}
                             onChangeText={setSearchCustomer}
                         />
@@ -432,16 +455,16 @@ export default function NewOrderScreen() {
                                         }}
                                     >
                                         <Text
-                                        style={[
-                                            styles.modalOptionText,
-                                            selectedCustomer?.id === customer.id &&
-                                            styles.modalOptionTextSelected,
-                                        ]}
-                                        numberOfLines={1}
-                                        ellipsizeMode="tail"
-                                    >
-                                        #{customer.cod_customer} - {customer.name}
-                                    </Text>
+                                            style={[
+                                                styles.modalOptionText,
+                                                selectedCustomer?.id === customer.id &&
+                                                styles.modalOptionTextSelected,
+                                            ]}
+                                            numberOfLines={1}
+                                            ellipsizeMode="tail"
+                                        >
+                                            #{customer.cod_customer} - {customer.name}
+                                        </Text>
                                         {selectedCustomer?.id === customer.id && (
                                             <Ionicons name="checkmark" size={20} color="#2563eb" />
                                         )}
@@ -460,6 +483,7 @@ export default function NewOrderScreen() {
                 visible={showProductModal}
                 transparent
                 animationType="fade"
+                onShow={() => focusInputWhenModalShown(productSearchInputRef)}
                 onRequestClose={() => setShowProductModal(false)}
             >
                 <Pressable
@@ -469,10 +493,10 @@ export default function NewOrderScreen() {
                     <View style={styles.modalContent}>
                         <Text style={styles.modalTitle}>Seleccionar Producto</Text>
                         <TextInput
+                            ref={productSearchInputRef}
                             style={styles.searchInput}
                             placeholder="Buscar producto..."
                             placeholderTextColor="#9ca3af"
-                            autoFocus
                             value={searchProduct}
                             onChangeText={setSearchProduct}
                         />
@@ -487,9 +511,9 @@ export default function NewOrderScreen() {
                                             key={product.id}
                                             style={[styles.modalOption, inCart && styles.modalOptionInCart]}
                                             onPress={async () => {
-                                                
+                                                setSelectedProduct(product);
                                                 getPresentationsByProduct(product.id).then((presentations) => {
-                                                    if(presentations.length === 0) {
+                                                    if (presentations.length === 0) {
                                                         handleAddProduct(product);
                                                         return;
                                                     }
@@ -497,7 +521,7 @@ export default function NewOrderScreen() {
                                                     setShowPresentationsByProduct(true)
                                                 });
                                             }}
-                                            
+
                                         >
                                             <View style={{ flex: 1 }}>
                                                 <Text style={styles.modalOptionText}>
@@ -522,30 +546,42 @@ export default function NewOrderScreen() {
                     </View>
                 </Pressable>
             </Modal>
-        <Modal
-            visible={showPresentationsByProduct}
-            onRequestClose={() => setShowPresentationsByProduct(false)}
-            transparent
-            animationType="fade"
-        >
-            <Pressable
-                style={styles.modalOverlay}
-                onPress={() => setShowPresentationsByProduct(false)} 
+            {/* Modal de presentaciones por producto */}
+            <Modal
+                visible={showPresentationsByProduct}
+                onRequestClose={() => setShowPresentationsByProduct(false)}
+                transparent
+                animationType="fade"
             >
-                <View style={styles.modalContent} onStartShouldSetResponder={() => true}>
-                    <Text style={styles.modalTitle}>Presentaciones del producto</Text>
-                    {presentationsByProduct.map((presentation) => (
-                        <View key={presentation.id} style={styles.modalOption}>
-                            <Text style={styles.modalOptionText}>{presentation.name}</Text>
-                            <Text style={styles.modalOptionText}>{presentation.unit_quantity} unidades</Text>
-                            <Text style={styles.modalOptionSubtext}>S/. {presentation.sale_price}</Text>
-                        </View>
-                    ))}
-                </View>
-            </Pressable>
-        </Modal>
-    </KeyboardAvoidingView>
-);
+                <Pressable
+                    style={styles.modalOverlay}
+                    onPress={() => setShowPresentationsByProduct(false)}
+                >
+                    <View style={styles.modalContent} onStartShouldSetResponder={() => true}>
+                        <Text style={styles.modalTitle}>Presentaciones del producto</Text>
+                        {presentationsByProduct.map((presentation) => (
+                            <TouchableOpacity
+                                key={presentation.id}
+                                onPress={() => {
+                                    handleAddProduct(
+                                        { ...selectedProduct!, price: presentation.sale_price },
+                                        presentation.name
+                                    );
+                                    setShowPresentationsByProduct(false);
+                                    setSelectedPresentation(presentation);
+                                }}>
+                                <View style={styles.modalOption}>
+                                    <Text style={styles.modalOptionText}>{presentation.name}</Text>
+                                    <Text style={styles.modalOptionText}>{presentation.unit_quantity} unidades</Text>
+                                    <Text style={styles.modalOptionSubtext}>S/. {presentation.sale_price}</Text>
+                                </View>
+                            </TouchableOpacity>
+                        ))}
+                    </View>
+                </Pressable>
+            </Modal>
+        </KeyboardAvoidingView>
+    );
 }
 
 const styles = StyleSheet.create({
@@ -659,6 +695,10 @@ const styles = StyleSheet.create({
         paddingVertical: 6,
         borderRadius: 20,
     },
+    addButtonBottom: {
+        alignSelf: 'flex-end',
+        marginTop: 12,
+    },
     addButtonText: {
         color: '#fff',
         fontSize: 13,
@@ -703,8 +743,12 @@ const styles = StyleSheet.create({
         fontSize: 14,
         fontWeight: '600',
         color: '#111827',
-        flex: 1,
         marginRight: 8,
+    },
+    presentationLabel: {
+        fontSize: 12,
+        color: '#6b7280',
+        marginTop: 2,
     },
     productBottomRow: {
         flexDirection: 'row',

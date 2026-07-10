@@ -32,7 +32,7 @@ export const authService = {
         const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
         if (error) {
-            throw new Error(error.message);
+            throw new Error("Credenciales inválidas");
         }
         // Save session to async storage
         const session: AuthSession = {

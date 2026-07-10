@@ -2,6 +2,13 @@
 import { supabase } from '../lib/supabase';
 import { Customer, NewOrder, Order, Presentation, Product, ProductWithPresentations, SellerWeeklySales, WeeklySales } from '../types';
 
+const formatLocalDate = (date: Date): string => {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+};
+
 // ==========================================
 // FUNCIONES PARA CLIENTES (CUSTOMERS)
 // ==========================================
@@ -328,7 +335,7 @@ export const activateProduct = async (id: string): Promise<void> => {
 /**
  * Obtiene las presentaciones de un producto
  */
-export const getPresentationsByProduct = async (productId: string): Promise<Presentation[]> => {
+export const getPresentationsByProduct = async (productId: string): Promise<Presentation[]> => {                                                                                                                                                                                                                                                                                                                                                                                                                              
   try {
     const { data, error } = await supabase
       .from('presentations')
@@ -466,6 +473,7 @@ export const createOrder = async (order: NewOrder): Promise<Order> => {
       amount: p.amount,
       unit_price: p.unit_price,
       sub_total: p.sub_total,
+      presentation_name: p.presentation_name,
     }));
 
     const { error: productsError } = await supabase
@@ -497,8 +505,8 @@ export const getWeeklySalesTotal = async (sellerId: string): Promise<WeeklySales
   endOfWeek.setDate(startOfWeek.getDate() + 6);
   endOfWeek.setHours(23, 59, 59, 999);
 
-  const startStr = startOfWeek.toISOString().slice(0, 10);
-  const endStr = endOfWeek.toISOString().slice(0, 10);
+  const startStr = formatLocalDate(startOfWeek);
+  const endStr = formatLocalDate(endOfWeek);
 
   const { data, error } = await supabase
     .from('orders')
@@ -519,7 +527,7 @@ export const getWeeklySalesTotal = async (sellerId: string): Promise<WeeklySales
   for (let i = 1; i <= 6; i++) {
     const d = new Date(startOfWeek);
     d.setDate(startOfWeek.getDate() + i);
-    const dateStr = d.toISOString().slice(0, 10);
+    const dateStr = formatLocalDate(d);
     const dayTotal = orders
       .filter((o) => o.date?.startsWith(dateStr))
       .reduce((sum, o) => sum + (o.total || 0), 0);
@@ -544,8 +552,8 @@ export const getAllSellersWeeklySales = async (): Promise<SellerWeeklySales[]> =
   endOfWeek.setDate(startOfWeek.getDate() + 6);
   endOfWeek.setHours(23, 59, 59, 999);
 
-  const startStr = startOfWeek.toISOString().slice(0, 10);
-  const endStr = endOfWeek.toISOString().slice(0, 10);
+  const startStr = formatLocalDate(startOfWeek);
+  const endStr = formatLocalDate(endOfWeek);
 
   const { data, error } = await supabase
     .from('orders')
@@ -578,7 +586,7 @@ export const getAllSellersWeeklySales = async (): Promise<SellerWeeklySales[]> =
     for (let i = 1; i <= 6; i++) {
       const d = new Date(startOfWeek);
       d.setDate(startOfWeek.getDate() + i);
-      const dateStr = d.toISOString().slice(0, 10);
+      const dateStr = formatLocalDate(d);
       const dayTotal = sellerOrders
         .filter((o) => o.date?.startsWith(dateStr))
         .reduce((sum, o) => sum + (o.total || 0), 0);
