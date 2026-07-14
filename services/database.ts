@@ -43,6 +43,9 @@ export const getCustomersPaginated = async (
   // Esperar a que la sesión esté lista (evita error al arrancar la app)
   await supabase.auth.getSession();
 
+  const { data: { session } } = await supabase.auth.getSession();
+  console.log('Token presente en web:', !!session?.access_token);
+
   let query = supabase
     .from('customers')
     .select('*', { count: 'exact' });

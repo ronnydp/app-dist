@@ -6,13 +6,15 @@ import { useEffect, useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, TextInput, View, Image, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient'
+import { useToast } from '@/contexts/ToastsContext';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const {showToast} = useToast();
+  const current_year = new Date().getFullYear();
 
   useEffect(() => {
     let isMounted = true;
@@ -42,18 +44,17 @@ export default function LoginScreen() {
 
   const handleContinue = async () => {
     if (!email.trim() || !password.trim()) {
-      setErrorMessage('Completa correo y contraseña');
+      showToast('Completa correo y contraseña', 'error');
       return;
     }
 
     setIsLoading(true);
-    setErrorMessage(null);
 
     try {
       await authService.login({ email, password });
       router.replace('/(tabs)/order');
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : 'Error al iniciar sesión');
+      showToast(error instanceof Error ? error.message : 'Error al iniciar sesión', 'error');
     } finally {
       setIsLoading(false);
     }
@@ -143,11 +144,14 @@ export default function LoginScreen() {
             >
               <Text style={styles.primaryButtonText}>{isLoading ? 'Validando...' : 'INICIAR SESION'}</Text>
             </Pressable>
+            <Text style={styles.helperText}>Ingresa con tus credenciales de usuario</Text>
 
-            {errorMessage && <Text style={styles.errorText}>{errorMessage}</Text>}
-
-            {/* <Text style={styles.helperText}>Ingresa con tus credenciales de vendedor</Text> */}
           </View>
+
+            <View style={styles.footer}>
+              <Text style={styles.copyright}>© {current_year} Distribuidora Santa Irene - Mikari</Text>
+              <Text style={styles.rights}>Todos los derechos reservados.</Text>
+            </View>
 
         </KeyboardAvoidingView>
       </SafeAreaView>
@@ -163,6 +167,7 @@ const styles = StyleSheet.create({
     flex: 1,
     marginTop: 60,
     paddingHorizontal: 28,
+    justifyContent: 'flex-start'
   },
   header: {
     alignItems: 'center',
@@ -260,4 +265,22 @@ const styles = StyleSheet.create({
     color: '#6B7280',
     marginTop: 12
   },
+  footer: {
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 'auto'
+  },
+  copyright: {
+    color: '#eceaea7c',
+    fontSize: 13,
+    fontWeight: '700'
+  },
+  rights: {
+    color: '#eceaea7c',
+    fontSize: 12,
+    marginTop: 2,
+    fontWeight: '700'
+  }
 });

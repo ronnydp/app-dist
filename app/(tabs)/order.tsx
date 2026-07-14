@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
-import { Alert, Platform, SectionList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Platform, SectionList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AppSearchBar from '../../components/app-search-bar';
 import FloatingActionButton from '../../components/floating-action-button';
@@ -11,6 +11,7 @@ import { useDebouncedValue } from '../../hooks/use-debounced-value';
 import { normalizeString } from '../../lib/utils/string';
 import { getOrders } from '../../services/database';
 import { OrderWithDetails } from '../../types';
+import { useToast } from '@/contexts/ToastsContext';
 
 export default function OrderScreen() {
     const [orders, setOrders] = useState<OrderWithDetails[]>([]);
@@ -19,6 +20,7 @@ export default function OrderScreen() {
     const debouncedQuery = useDebouncedValue(searchQuery.trim(), 250);
     const [selectedDate, setSelectedDate] = useState<Date | null>(null);
     const [showDatePicker, setShowDatePicker] = useState(false);
+    const {showToast} = useToast();
 
     const loadOrders = useCallback(async () => {
         setRefreshing(true);
@@ -26,7 +28,7 @@ export default function OrderScreen() {
             const data = await getOrders();
             setOrders(data);
         } catch (error) {
-            Alert.alert('Error', 'No se pudieron cargar los pedidos');
+            showToast('No se pudieron cargar los pedidos', 'error');
             console.error(error);
         } finally {
             setRefreshing(false);
@@ -140,6 +142,8 @@ export default function OrderScreen() {
                         <Text style={styles.clearButtonText}>Limpiar</Text>
                     </TouchableOpacity>
                 )}
+
+                <Text style={styles.totalPedidosText}>Total: {filteredOrders.length} pedido{filteredOrders.length !== 1 ? 's' : ''}</Text>
             </View>
 
             {showDatePicker && (
@@ -337,6 +341,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 12,
         marginBottom: 8,
         gap: 8,
+        justifyContent: 'space-between'
     },
     dateButton: {
         flexDirection: 'row',
@@ -353,6 +358,12 @@ const styles = StyleSheet.create({
         fontSize: 13,
         fontWeight: '600',
         color: '#2563eb',
+    },
+    totalPedidosText: {
+        fontSize: 13,
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+        fontWeight: '600',
     },
     clearButton: {
         flexDirection: 'row',

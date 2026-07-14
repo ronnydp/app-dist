@@ -71,6 +71,7 @@ export interface OrderWithDetails extends Order {
 
 export interface ProductOrderWithDetails extends ProductOrder {
   product_name: string; // nombre del producto
+  presentation_name: string // presentacion del producto
 }
 
 // Tipo para crear un nuevo pedido (antes de tener ID)

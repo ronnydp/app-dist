@@ -3,11 +3,12 @@ import React, { memo, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { ProductWithPresentations } from '../types';
 import cardStyles from './ui/cardStyles';
+import ConfirmDialog from './ConfirmDialogProps';
 
 type Props = {
   item: ProductWithPresentations;
   onEdit?: (p: ProductWithPresentations) => void;
-  onToggleActive?: (id: string, nombre: string, isActive: boolean) => void;
+  onToggleActive?: (id: string, nombre: string, isActive: boolean) => Promise<void>;
 };
 
 export default memo(function ProductCard({ item, onEdit, onToggleActive }: Props) {
@@ -16,6 +17,25 @@ export default memo(function ProductCard({ item, onEdit, onToggleActive }: Props
   const defaultPres = presentations.find((p) => p.is_default) || presentations[0];
   const hasMultiple = presentations.length > 1;
   const [expanded, setExpanded] = useState(false);
+  const [isConfirmVisible, setIsConfirmVisible] = useState(false)
+  const [isToggling, setIsToggling] = useState(false);
+
+  const handleActiveProduct = () => {
+    setIsConfirmVisible(true)
+  }
+  const handleCancelActiveProduct = () => {
+    setIsConfirmVisible(false)
+  }
+  const handleConfirmToggle = async () => {
+    try{
+      if (onToggleActive) {
+        setIsToggling(true);
+      await onToggleActive(item.id, item.name, item.is_active);}
+    }finally{
+      setIsToggling(false);
+      setIsConfirmVisible(false)
+    }
+  }
 
   return (
     <View style={[cardStyles.card, inactive && { opacity: 0.5 }]}>
@@ -66,8 +86,18 @@ export default memo(function ProductCard({ item, onEdit, onToggleActive }: Props
             </TouchableOpacity>
           )}
           {onToggleActive && (
-            <TouchableOpacity style={cardStyles.deleteBtn} onPress={() => onToggleActive(item.id, item.name, item.is_active)}>
+            <TouchableOpacity style={cardStyles.deleteBtn} onPress={() => handleActiveProduct()}>
               <Ionicons name={inactive ? 'checkmark-circle-outline' : 'ban-outline'} size={20} color={inactive ? '#16a34a' : '#ef4444'} />
+              <ConfirmDialog
+              visible={isConfirmVisible}
+              title={inactive ? "Habilitar" : "Dar de baja"}
+              confirmText='Confirmar'
+              isLoading={isToggling}
+              message={inactive ? "Habilitar producto?" : 'Seguro que deseas inhabilitar este producto?'}
+              onConfirm={handleConfirmToggle}
+              onCancel={handleCancelActiveProduct}
+
+              />
             </TouchableOpacity>
           )}
         </View>

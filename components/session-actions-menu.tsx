@@ -1,49 +1,46 @@
 import { authService } from '@/services/auth-service';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { useEffect, useState } from 'react';
-import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useState } from 'react';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import ConfirmDialog from './ConfirmDialogProps';
+import { useToast } from '@/contexts/ToastsContext';
 
 export default function SessionActionsMenu() {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [isConfirmVisible, setIsConfirmVisible] = useState(false);
+  const {showToast} = useToast();
 
   const handleViewProfile = () => {
     setIsOpen(false);
     router.push('/profile');
   };
 
-  useEffect(() => {
-    if (isLoggingOut) {
-      setIsOpen(false);
-    }
-  }, [isLoggingOut]);
-
   const handleLogout = () => {
-    Alert.alert('Cerrar sesión', '¿Seguro que deseas salir?', [
-      { text: 'Cancelar', style: 'cancel' },
-      {
-        text: 'Salir',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            setIsLoggingOut(true);
-            await authService.logout();
-            router.replace('/login');
-          } catch (error) {
-            Alert.alert('Error', 'No se pudo cerrar sesión');
-            console.error(error);
-          } finally {
-            setIsLoggingOut(false);
-          }
-        },
-      },
-    ]);
+    setIsConfirmVisible(true);
+  };
+  const handleCancelLogout = () => {
+    setIsConfirmVisible(false);
+  };
+
+  const handleConfirmLogout = async () => {
+    try {
+      setIsLoggingOut(true);
+      await authService.logout();
+      router.replace('/login');
+    } catch (error) {
+      showToast('No se pudo cerrar sesión', 'error');
+      console.error(error);
+    } finally {
+      setIsLoggingOut(false);
+      setIsConfirmVisible(false);
+    }
   };
 
   return (
     <View pointerEvents="box-none" style={styles.wrapper}>
-      {isOpen && (
+      {isOpen && !isConfirmVisible &&(
         <Pressable
           style={styles.backdrop}
           onPress={() => setIsOpen(false)}
@@ -73,6 +70,16 @@ export default function SessionActionsMenu() {
             </Pressable>
           </View>
         )}
+        <ConfirmDialog
+          visible={isConfirmVisible}
+          title="Cerrar sesión"
+          message="¿Seguro que deseas salir?"
+          confirmText="Salir"
+          cancelText="Cancelar"
+          isLoading={isLoggingOut}
+          onConfirm={handleConfirmLogout}
+          onCancel={handleCancelLogout}
+        />
 
         <Pressable
           style={[styles.triggerButton, isOpen && styles.triggerButtonActive]}

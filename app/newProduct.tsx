@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getPresentationsByProduct, getProducts, savePresentations, saveProduct } from '../services/database';
+import { useToast } from '@/contexts/ToastsContext';
 
 export default function NewProductScreen() {
     const insets = useSafeAreaInsets();
@@ -29,6 +30,7 @@ export default function NewProductScreen() {
     const [price, setPrice] = useState(params.price || '');
     const [imageUrl, setImageUrl] = useState(params.image_url || '');
     const [loading, setLoading] = useState(false);
+    const {showToast} = useToast();
 
     // Presentaciones
     type PresentationForm = {
@@ -88,15 +90,15 @@ export default function NewProductScreen() {
     const handleSubmit = async () => {
         // Validaciones del producto
         if (!name.trim()) {
-            Alert.alert('Error', 'El nombre es obligatorio');
+            showToast('El nombre es obligatorio', 'error');
             return;
         }
         if (!price.trim()) {
-            Alert.alert('Error', 'El precio es obligatorio');
+            showToast('El precio es obligatorio', 'error');
             return;
         }
         if (isNaN(parseFloat(price))) {
-            Alert.alert('Error', 'El precio debe ser un número válido');
+            showToast('El precio debe ser un número válido', 'error');
             return;
         }
 
@@ -104,15 +106,15 @@ export default function NewProductScreen() {
         for (let i = 0; i < presentations.length; i++) {
             const p = presentations[i];
             if (!p.name.trim()) {
-                Alert.alert('Error', `La presentación ${i + 1} necesita un nombre`);
+                showToast(`La presentación ${i + 1} necesita un nombre`, 'error');
                 return;
             }
             if (!p.unit_quantity.trim() || isNaN(parseInt(p.unit_quantity))) {
-                Alert.alert('Error', `La presentación "${p.name}" necesita una cantidad válida`);
+                showToast(`La presentación "${p.name}" necesita una cantidad válida`, 'error');
                 return;
             }
             if (!p.sale_price.trim() || isNaN(parseFloat(p.sale_price))) {
-                Alert.alert('Error', `La presentación "${p.name}" necesita un precio válido`);
+                showToast(`La presentación "${p.name}" necesita un precio válido`, 'error');
                 return;
             }
         }
@@ -124,7 +126,7 @@ export default function NewProductScreen() {
             );
 
             if (nombreExiste) {
-                Alert.alert('Error', 'Ya existe un producto con ese nombre');
+                showToast('Ya existe un producto con ese nombre', 'error');
                 return;
             }
         }
@@ -149,15 +151,10 @@ export default function NewProductScreen() {
                     is_default: p.is_default,
                 }))
             );
-
-            Alert.alert('Éxito', isEditing ? 'Producto actualizado correctamente' : 'Producto guardado correctamente', [
-                {
-                    text: 'OK',
-                    onPress: () => router.back(),
-                },
-            ]);
+            showToast(isEditing ? 'Producto actualizado' : 'Producto guardado', 'success')
+            router.replace('/product')
         } catch (error) {
-            Alert.alert('Error', 'No se pudo guardar el producto');
+            showToast('No se pudo guardar el producto', 'error');
             console.error(error);
         } finally {
             setLoading(false);

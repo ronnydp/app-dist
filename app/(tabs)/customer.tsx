@@ -11,6 +11,7 @@ import FloatingActionButton from '../../components/floating-action-button';
 import { useDebouncedValue } from '../../hooks/use-debounced-value';
 import { activateCustomer, deleteCustomer, getCustomersPaginated } from '../../services/database';
 import { Customer } from '../../types';
+import { useToast } from '@/contexts/ToastsContext';
 
 const PAGE_SIZE = 30;
 
@@ -25,6 +26,8 @@ export default function CustomerScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const { role } = useAuth(); // para asegurar que la sesión esté lista antes de cargar clientes (evita error al arrancar la app)
   const debouncedQuery = useDebouncedValue(searchQuery.trim(), 300);
+  const {showToast} = useToast();
+
 
   const loadCustomers = useCallback(async (reset = true) => {
     if (reset) {
@@ -70,52 +73,29 @@ export default function CustomerScreen() {
     loadCustomers(false);
   }, [loadingMore, hasMore, loadCustomers]);
 
-  const handleToggleActive = useCallback((id: string, nombre: string, isActive: boolean) => {
+  
+  const handleConfirmActiveCustomer = async (id: string, nombre: string, isActive: boolean) => {
     if (isActive) {
-      Alert.alert(
-        'Dar de baja',
-        `¿Estás seguro de dar de baja a ${nombre}?`,
-        [
-          { text: 'Cancelar', style: 'cancel' },
-          {
-            text: 'Dar de baja',
-            style: 'destructive',
-            onPress: async () => {
-              try {
-                await deleteCustomer(id);
-                await loadCustomers(true);
-                Alert.alert('Éxito', 'Cliente dado de baja correctamente');
-              } catch (error) {
-                Alert.alert('Error', 'No se pudo dar de baja el cliente');
-                console.error(error);
-              }
-            },
-          },
-        ]
-      );
+      try {
+        await deleteCustomer(id);
+        await loadCustomers(true);
+        showToast('Cliente dado de baja', 'success');
+        router.replace('/customer')
+      } catch (error) {
+        showToast('No se pudo dar de baja el cliente', 'error');
+      }
     } else {
-      Alert.alert(
-        'Habilitar cliente',
-        `¿Quieres volver a habilitar a ${nombre}?`,
-        [
-          { text: 'Cancelar', style: 'cancel' },
-          {
-            text: 'Habilitar',
-            onPress: async () => {
-              try {
-                await activateCustomer(id);
-                await loadCustomers(true);
-                Alert.alert('Éxito', 'Cliente habilitado correctamente');
-              } catch (error) {
-                Alert.alert('Error', 'No se pudo habilitar el cliente');
-                console.error(error);
-              }
-            },
-          },
-        ]
-      );
+      try {
+        await activateCustomer(id);
+        await loadCustomers(true);
+        showToast('Cliente habilitado', 'success');
+        router.replace('/customer')
+      } catch (error) {
+        showToast('No se pudo habilitar el cliente', 'error');
+      }
     }
-  }, [loadCustomers]);
+  };
+
 
   // abre un modal con detalles del customer seleccionado
   const openCustomer = useCallback((c: Customer) => {
@@ -140,8 +120,8 @@ export default function CustomerScreen() {
   // use shared `CustomerCard` component from components/
 
   const renderCustomer = useCallback(({ item }: { item: Customer }) => (
-    <CustomerCard item={item} onOpen={openCustomer} onEdit={handleEdit} onToggleActive={role === 'admin' ? handleToggleActive : undefined} />
-  ), [role, openCustomer, handleEdit, handleToggleActive]);
+    <CustomerCard item={item} onOpen={openCustomer} onEdit={handleEdit} onToggleActive={role === 'admin' ? handleConfirmActiveCustomer : undefined} />
+  ), [role, openCustomer, handleEdit, handleConfirmActiveCustomer]);
 
   const emptyIfMissing = (value: any) => (value || value === 0 ? String(value) : 'no tiene');
 

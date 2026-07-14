@@ -19,6 +19,8 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { createOrder, getPresentationsByProduct, getProducts, searchCustomers } from '../services/database';
 import { Customer, Presentation, Product } from '../types';
+import ConfirmDialog from '@/components/ConfirmDialogProps';
+import { useToast } from '@/contexts/ToastsContext';
 
 export default function NewOrderScreen() {
     const insets = useSafeAreaInsets();
@@ -43,6 +45,8 @@ export default function NewOrderScreen() {
     const [selectedPresentation, setSelectedPresentation] = useState<Presentation | null>(null); // Estado para almacenar la presentación seleccionada
     const customerSearchInputRef = useRef<TextInput>(null);
     const productSearchInputRef = useRef<TextInput>(null);
+    const [isSuccessVisible, setIsSuccessVisible] = useState(false);
+    const { showToast } = useToast();
 
     // Buscar clientes desde Supabase con debounce
     useEffect(() => {
@@ -76,7 +80,7 @@ export default function NewOrderScreen() {
             const productsData = await getProducts();
             setProducts(productsData);
         } catch (error) {
-            Alert.alert('Error', 'No se pudieron cargar los datos');
+            showToast('No se pudieron cargar los datos', 'error');
             console.error(error);
         }
     };
@@ -177,12 +181,12 @@ export default function NewOrderScreen() {
 
     const handleSubmit = async () => {
         if (!selectedCustomer) {
-            Alert.alert('Error', 'Debe seleccionar un cliente');
+            showToast('Debe seleccionar un cliente', 'error');
             return;
         }
 
         if (orderItems.length === 0) {
-            Alert.alert('Error', 'Debe agregar al menos un producto');
+            showToast('Debe agregar al menos un producto', 'error');
             return;
         }
 
@@ -192,7 +196,7 @@ export default function NewOrderScreen() {
         try {
             const session = await authService.getSession();
             if (!session?.user?.id) {
-                Alert.alert('Error', 'No hay sesión activa');
+                showToast('No hay sesión activa', 'error');
                 setLoading(false);
                 return;
             }
@@ -211,15 +215,10 @@ export default function NewOrderScreen() {
                     sub_total: item.amount * item.unitPrice, presentation_name: item.presentationName,
                 })),
             });
-
-            Alert.alert('Éxito', 'Pedido guardado correctamente', [
-                {
-                    text: 'OK',
-                    onPress: () => router.back(),
-                },
-            ]);
+            showToast('Pedido agregado', 'success')
+            router.replace('/order')
         } catch (error) {
-            Alert.alert('Error', 'No se pudo guardar el pedido');
+            showToast('No se pudo guardar el pedido', 'error');
             console.error(error);
         } finally {
             setLoading(false);
@@ -407,6 +406,18 @@ export default function NewOrderScreen() {
                         </Text>
                     </TouchableOpacity>
                 </View>
+                
+                {/* <ConfirmDialog
+                    visible={isSuccessVisible}
+                    title="Éxito"
+                    message="Pedido guardado correctamente"
+                    confirmText="OK"
+                    onConfirm={() => {
+                        setIsSuccessVisible(false);
+                        router.replace('/order');
+                    }}
+                // sin onCancel → no se renderiza el botón de cancelar
+                /> */}
             </ScrollView>
 
             {/* Modal de clientes */}
@@ -609,6 +620,12 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: '600',
         color: '#374151',
+    },
+    errorText: {
+        textAlign: 'center',
+        fontSize: 13,
+        color: '#DC2626',
+        fontWeight: '600',
     },
     dropdown: {
         borderWidth: 1,

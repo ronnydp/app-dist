@@ -10,6 +10,7 @@ import AppSearchBar from '../../components/app-search-bar';
 import FloatingActionButton from '../../components/floating-action-button';
 import ProductCard from '../../components/ProductCard';
 import { useDebouncedValue } from '../../hooks/use-debounced-value';
+import { useToast } from "@/contexts/ToastsContext";
 
 const PAGE_SIZE = 30;
 
@@ -23,10 +24,12 @@ export default function ProductScreen() {
     const [searchQuery, setSearchQuery] = useState('');
     const { role } = useAuth(); // para asegurar que la sesión esté lista antes de cargar productos (evita error al arrancar la app)
     const debouncedQuery = useDebouncedValue(searchQuery.trim(), 300);
+    const {showToast} = useToast();
 
     const loadProducts = useCallback(async (reset = true) => {
         if (reset) {
-            setRefreshing(true);
+            ;
+            setRefreshing(true)
             pageRef.current = 0;
         } else {
             setLoadingMore(true);
@@ -67,52 +70,27 @@ export default function ProductScreen() {
         loadProducts(false);
     }, [loadingMore, hasMore, loadProducts]);
 
-    const handleToggleActive = useCallback((id: string, nombre: string, isActive: boolean) => {
+    const handleToggleActive = async (id: string, nombre: string, isActive: boolean) => {
         if (isActive) {
-            Alert.alert(
-                'Dar de baja',
-                `¿Estás seguro de dar de baja ${nombre}?`,
-                [
-                    { text: 'Cancelar', style: 'cancel' },
-                    {
-                        text: 'Dar de baja',
-                        style: 'destructive',
-                        onPress: async () => {
-                            try {
-                                await deleteProduct(id);
-                                await loadProducts(true);
-                                Alert.alert('Éxito', 'Producto dado de baja correctamente');
-                            } catch (error) {
-                                Alert.alert('Error', 'No se pudo dar de baja el producto');
-                                console.error(error);
-                            }
-                        },
-                    },
-                ]
-            );
+            try {
+                await deleteProduct(id);
+                await loadProducts(true);
+                showToast('Producto inhabilitado', 'success');
+            } catch (error) {
+                showToast('No se pudo inhabilitar el producto', 'error');
+                console.error(error);
+            }
         } else {
-            Alert.alert(
-                'Habilitar producto',
-                `¿Quieres volver a habilitar ${nombre}?`,
-                [
-                    { text: 'Cancelar', style: 'cancel' },
-                    {
-                        text: 'Habilitar',
-                        onPress: async () => {
-                            try {
-                                await activateProduct(id);
-                                await loadProducts(true);
-                                Alert.alert('Éxito', 'Producto habilitado correctamente');
-                            } catch (error) {
-                                Alert.alert('Error', 'No se pudo habilitar el producto');
-                                console.error(error);
-                            }
-                        },
-                    },
-                ]
-            );
+            try {
+                await activateProduct(id);
+                await loadProducts(true);
+                showToast('Producto habilitado', 'success');
+            } catch (error) {
+                showToast('No se pudo habilitar el producto', 'error');
+                console.error(error);
+            }
         }
-    }, [loadProducts]);
+    }
 
     const handleEdit = useCallback((p: ProductWithPresentations) => {
         router.push({

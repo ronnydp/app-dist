@@ -1,17 +1,39 @@
 import { Ionicons } from '@expo/vector-icons';
-import React, { memo } from 'react';
+import React, { memo, useState } from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 import { Customer } from '../types';
 import cardStyles from './ui/cardStyles';
+import ConfirmDialog from './ConfirmDialogProps';
 
 type Props = {
   item: Customer;
   onOpen: (c: Customer) => void;
   onEdit?: (c: Customer) => void;
-  onToggleActive?: (id: string, nombre: string, isActive: boolean) => void;
+  onToggleActive?: (id: string, nombre: string, isActive: boolean) => Promise<void>;
 };
+  
 
 export default memo(function CustomerCard({ item, onOpen, onEdit, onToggleActive }: Props) {
+  const [isConfirmVisible, setIsConfirmVisible] = useState(false);
+  const [isToggling, setIsToggling] = useState(false);
+  
+  const handleActiveCustomer = () => {
+    setIsConfirmVisible(true);
+  };
+  const handleCancelActiveCustomer = () => {
+    setIsConfirmVisible(false);
+  };
+  const handleConfirmToggle = async () => {
+    try{
+      if (onToggleActive) {
+        setIsToggling(true)
+      await onToggleActive(item.id, item.name, item.is_active);}
+    }finally{
+      setIsToggling(false)
+      setIsConfirmVisible(false)
+    }
+  }
+
   const inactive = !item.is_active;
   return (
     <View style={[cardStyles.card, inactive && { opacity: 0.5 }]}>
@@ -46,8 +68,18 @@ export default memo(function CustomerCard({ item, onOpen, onEdit, onToggleActive
           </TouchableOpacity>
         )}
         {onToggleActive && (
-          <TouchableOpacity style={cardStyles.deleteBtn} onPress={() => onToggleActive(item.id, item.name, item.is_active)}>
+          <TouchableOpacity style={cardStyles.deleteBtn} onPress={() => handleActiveCustomer() }>
             <Ionicons name={inactive ? 'checkmark-circle-outline' : 'ban-outline'} size={20} color={inactive ? '#16a34a' : '#ef4444'} />
+            <ConfirmDialog
+                  visible={isConfirmVisible}
+                  title={inactive ? "Habilitar" : "Dar de baja"}
+                  message={inactive ? "¿Habilitar este cliente? " : "¿Seguro que deseas inhabilitar este cliente?"}
+                  confirmText="Confirmar"
+                  isLoading={isToggling}
+                  cancelText="Cancelar"
+                  onConfirm={handleConfirmToggle}
+                  onCancel={handleCancelActiveCustomer}
+                />
           </TouchableOpacity>
         )}
       </View>

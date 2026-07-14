@@ -16,6 +16,7 @@ import {
     View,
 } from 'react-native';
 import { getCustomers, saveCustomer } from '../services/database';
+import { useToast } from '@/contexts/ToastsContext';
 
 const DISTRITOS = ['Chimbote', 'Nuevo Chimbote'];
 
@@ -38,6 +39,7 @@ export default function NuevoClienteScreen() {
     const [telefono, setTelefono] = useState(params.phone || '');
     const [loading, setLoading] = useState(false);
     const [showDistritoModal, setShowDistritoModal] = useState(false);
+    const { showToast } = useToast();
 
     useLayoutEffect(() => {
         navigation.setOptions({
@@ -48,21 +50,21 @@ export default function NuevoClienteScreen() {
     const handleSubmit = async () => {
         // Validaciones
         if (!nombre.trim()) {
-            Alert.alert('Error', 'El nombre es obligatorio');
+            showToast('El nombre es obligatorio', 'error');
             return;
         }
         if (!direccion.trim()) {
-            Alert.alert('Error', 'La dirección es obligatoria');
+            showToast('La dirección es obligatoria', 'error');
             return;
         }
         if (!distrito.trim()) {
-            Alert.alert('Error', 'El distrito es obligatorio');
+            showToast('El distrito es obligatorio', 'error');
             return;
         }
 
         // Agrega esto:
         if (telefono.trim() && telefono.trim().length !== 9) {
-            Alert.alert('Error', 'El teléfono debe tener 9 dígitos');
+            showToast('El teléfono debe tener 9 dígitos', 'error');
             return;
         }
 
@@ -74,7 +76,7 @@ export default function NuevoClienteScreen() {
             );
 
             if (nombreExiste) {
-                Alert.alert('Error', 'Ya existe un cliente con ese nombre');
+                showToast('Ya existe un cliente con ese nombre', 'error');
                 return;
             }
         }
@@ -91,15 +93,11 @@ export default function NuevoClienteScreen() {
                 district: distrito.trim(),
                 phone: telefono.trim() || undefined,
             });
-
-            Alert.alert('Éxito', isEditing ? 'Cliente actualizado correctamente' : 'Cliente guardado correctamente', [
-                {
-                    text: 'OK',
-                    onPress: () => router.back(),
-                },
-            ]);
+            showToast(isEditing ? 'Cliente actualizado' : 'Cliente guardado',
+                'success')
+            router.replace('/customer')
         } catch (error) {
-            Alert.alert('Error', 'No se pudo guardar el cliente');
+            showToast('No se pudo guardar el cliente', 'error');
             console.error(error);
         } finally {
             setLoading(false);
