@@ -33,17 +33,14 @@ const styles = StyleSheet.create({
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
-    margin: 12,
-    marginRight: 64,
+    backgroundColor: '#f4f5f7',
+    marginBottom: 10,
     paddingHorizontal: 12,
-    paddingVertical: 8,
     borderRadius: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
+    borderWidth: 1,
+    borderColor: '#ececec',
+    marginHorizontal: 15,
+    height: 44
   },
   icon: {
     marginRight: 8,
@@ -52,6 +49,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 14,
     color: '#111827',
-    padding: 0,
+    fontWeight: 'bold',
+    paddingVertical: 5,
   },
 });

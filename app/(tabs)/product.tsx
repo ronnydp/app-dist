@@ -113,7 +113,7 @@ export default function ProductScreen() {
     ), [role, handleEdit, handleToggleActive]);
 
     return (
-        <SafeAreaView style={styles.container}>
+        <View style={styles.container}>
             <AppSearchBar
                 placeholder="Buscar por nombre"
                 value={searchQuery}
@@ -147,17 +147,19 @@ export default function ProductScreen() {
 
             <FloatingActionButton onPress={() => router.push('/newProduct')} />
             {/* modal removed */}
-        </SafeAreaView>
+        </View>
     );
 }
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f3f4f6',
+        backgroundColor: '#fff',
+        paddingBottom: 10
     },
     listContent: {
         padding: 16,
+        marginBottom: 70
     },
     card: {
         backgroundColor: '#fff',
@@ -168,10 +170,6 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'flex-start',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
         elevation: 3,
     },
     cardContent: {

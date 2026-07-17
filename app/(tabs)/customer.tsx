@@ -4,7 +4,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, FlatList, Modal, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import AppSearchBar from '../../components/app-search-bar';
 import CustomerCard from '../../components/CustomerCard';
 import FloatingActionButton from '../../components/floating-action-button';
@@ -26,7 +25,7 @@ export default function CustomerScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const { role } = useAuth(); // para asegurar que la sesión esté lista antes de cargar clientes (evita error al arrancar la app)
   const debouncedQuery = useDebouncedValue(searchQuery.trim(), 300);
-  const {showToast} = useToast();
+  const { showToast } = useToast();
 
 
   const loadCustomers = useCallback(async (reset = true) => {
@@ -73,7 +72,7 @@ export default function CustomerScreen() {
     loadCustomers(false);
   }, [loadingMore, hasMore, loadCustomers]);
 
-  
+
   const handleConfirmActiveCustomer = async (id: string, nombre: string, isActive: boolean) => {
     if (isActive) {
       try {
@@ -126,12 +125,19 @@ export default function CustomerScreen() {
   const emptyIfMissing = (value: any) => (value || value === 0 ? String(value) : 'no tiene');
 
   return (
-    <SafeAreaView style={styles.container}>
-      <AppSearchBar
-        placeholder="Buscar por código o nombre"
-        value={searchQuery}
-        onChangeText={setSearchQuery}
-      />
+    <View style={styles.container}>
+      {/* <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 15 }}> */}
+        <View>
+          <AppSearchBar
+            placeholder="Buscar por código o nombre"
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+        {/* </View> */}
+        {/* <TouchableOpacity style={styles.filterButton}>
+          <Ionicons name='funnel-outline' size={20} color='#6b7280' />
+        </TouchableOpacity> */}
+      </View>
 
       <FlatList
         data={customers}
@@ -213,20 +219,33 @@ export default function CustomerScreen() {
       </Modal>
 
       <FloatingActionButton onPress={() => router.push('/newCustomer')} />
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f3f4f6',
+    backgroundColor: '#fff',
+    paddingBottom: 10,
   },
   listContent: {
     padding: 16,
+    marginBottom: 70
+  },
+  filterButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f4f5f7',
+    marginBottom: 10,
+    paddingHorizontal: 12,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#ececec',
+    height: 44
   },
   card: {
-    backgroundColor: '#fff',
+    backgroundColor: '#ffffff',
     marginBottom: 10,
     paddingVertical: 10,
     paddingHorizontal: 12,
@@ -234,10 +253,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
     elevation: 3,
   },
   cardContent: {

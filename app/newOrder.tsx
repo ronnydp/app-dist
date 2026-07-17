@@ -4,7 +4,6 @@ import { router } from 'expo-router';
 import { RefObject, useEffect, useRef, useState } from 'react';
 import {
     ActivityIndicator,
-    Alert,
     KeyboardAvoidingView,
     Modal,
     Platform,
@@ -19,7 +18,6 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { createOrder, getPresentationsByProduct, getProducts, searchCustomers } from '../services/database';
 import { Customer, Presentation, Product } from '../types';
-import ConfirmDialog from '@/components/ConfirmDialogProps';
 import { useToast } from '@/contexts/ToastsContext';
 
 export default function NewOrderScreen() {
@@ -878,7 +876,7 @@ const styles = StyleSheet.create({
         color: '#6b7280',
     },
     submitButton: {
-        backgroundColor: '#2563eb',
+        backgroundColor: '#08859b',
     },
     submitButtonText: {
         fontSize: 16,

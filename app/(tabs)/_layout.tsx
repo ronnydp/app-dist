@@ -1,50 +1,62 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Tabs } from 'expo-router';
+import { router, Tabs } from 'expo-router';
 import React from 'react';
-
 import { HapticTab } from '@/components/haptic-tab';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
-import { useAuth } from '@/hooks/useAuth';  
+import { useAuth } from '@/hooks/useAuth';
+import { TouchableOpacity } from 'react-native';
 
 export default function TabLayout() {
+  type ScreenOptions = React.ComponentProps<typeof Tabs.Screen>['options'];
   const colorScheme = useColorScheme();
   const { role } = useAuth();
+  const getScreenOptions = (title: string, iconName: keyof typeof Ionicons.glyphMap): ScreenOptions => ({
+    title,
+    tabBarIcon: ({ color }: { color: string }) => (<Ionicons size={28} name={iconName} color={color} />),
+    headerStyle: { backgroundColor: '#fff' },
+    headerTitleStyle: { fontWeight: 'bold', fontSize: 20 },
+    headerTitleAlign: 'center',
+    headerShadowVisible: false,
+    headerLeft: () => (
+      <Ionicons name='menu' size={24} color='black' style={{ marginLeft: 16 }} />
+    ),
+    headerRight: () => (
+      <TouchableOpacity
+        style={{
+          backgroundColor: '#a3b3b6', width: 36,
+          height: 36,
+          borderRadius: 18,
+          justifyContent: 'center',
+          alignItems: 'center',
+          marginRight: 16,
+        }}
+        onPress={() => router.push('/profile')}>
+        <Ionicons name="person" size={22} color="white" />
+      </TouchableOpacity>)
+  })
 
   return (
     <Tabs
       screenOptions={{
         tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-        headerShown: false,
         tabBarButton: HapticTab,
       }}>
       <Tabs.Screen
         name="customer"
-        options={{
-          title: 'Clientes',
-          tabBarIcon: ({ color }) => <Ionicons size={28} name="people" color={color} />,
-        }}
+        options={getScreenOptions('Clientes', 'people')}
       />
       <Tabs.Screen
         name="product"
-        options={{
-          title: 'Productos',
-          tabBarIcon: ({ color }) => <Ionicons size={28} name="bag" color={color} />,
-        }}
+        options={getScreenOptions('Productos', 'bag')}
       />
       <Tabs.Screen
         name="order"
-        options={{
-          title: 'Pedidos',
-          tabBarIcon: ({ color }) => <Ionicons size={28} name="receipt" color={color} />,
-        }}
+        options={getScreenOptions('Pedidos', "receipt")}
       />
       <Tabs.Screen
         name="summary"
-        options={{
-          title: 'Resumen',
-          tabBarIcon: ({ color }) => <Ionicons size={28} name="stats-chart" color={color} />,
-        }}
+        options={getScreenOptions('Resumen semanal', "stats-chart")}
       />
     </Tabs>
   );

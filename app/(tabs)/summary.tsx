@@ -11,13 +11,14 @@ import { SellerWeeklySales, WeeklySales } from '../../types';
 function getWeekRange() {
     const now = new Date();
     const day = now.getDay();
+    const year = now.getFullYear();
     const start = new Date(now);
     start.setDate(now.getDate() - day);
     const end = new Date(start);
     end.setDate(start.getDate() + 6);
     const fmt = (d: Date) =>
         d.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' });
-    return `${fmt(start)} - ${fmt(end)}`;
+    return `${fmt(start)} - ${fmt(end)}, ${year}`;
 }
 
 function DailyBars({ daily }: { daily: WeeklySales['daily'] }) {
@@ -105,20 +106,19 @@ export default function SummaryScreen() {
 
     if (loading) {
         return (
-            <SafeAreaView style={styles.container}>
+            <View style={styles.container}>
                 <View style={styles.loadingContainer}>
                     <ActivityIndicator size="large" color="#2563eb" />
                 </View>
-            </SafeAreaView>
+            </View>
         );
     }
 
     // Vista vendedor
     if (role !== 'admin') {
         return (
-            <SafeAreaView style={styles.container}>
+            <View style={styles.container}>
                 <ScrollView contentContainerStyle={styles.content}>
-                    <Text style={styles.pageTitle}>Resumen semanal</Text>
                     <Text style={styles.weekRange}>{weekRange}</Text>
 
                     <View style={styles.totalCard}>
@@ -138,15 +138,14 @@ export default function SummaryScreen() {
                         </View>
                     )}
                 </ScrollView>
-            </SafeAreaView>
+            </View>
         );
     }
 
     // Vista admin
     return (
-        <SafeAreaView style={styles.container}>
+        <View style={styles.container}>
             <ScrollView contentContainerStyle={styles.content}>
-                <Text style={styles.pageTitle}>Resumen semanal</Text>
                 <Text style={styles.weekRange}>{weekRange}</Text>
 
                 <View style={styles.totalCard}>
@@ -184,17 +183,19 @@ export default function SummaryScreen() {
                     </View>
                 )}
             </ScrollView>
-        </SafeAreaView>
+        </View>
     );
 }
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f3f4f6',
+        backgroundColor: '#fff',
+        paddingBottom: 10
     },
     content: {
-        padding: 16,
+        padding: 20,
+        marginBottom: 70
     },
     loadingContainer: {
         flex: 1,
@@ -207,9 +208,11 @@ const styles = StyleSheet.create({
         color: '#111827',
     },
     weekRange: {
-        fontSize: 13,
-        color: '#6b7280',
+        fontSize: 16,
+        color: '#000000',
+        fontWeight: '900',
         marginBottom: 16,
+        textAlign: 'center'
     },
     totalCard: {
         backgroundColor: '#f0fdf4',

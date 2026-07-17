@@ -1,10 +1,10 @@
 {
   "expo": {
-    "name": "app-dist",
+    "name": "Mikari",
     "slug": "app-dist",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/mikary.png",
     "scheme": "appdist",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -19,11 +19,12 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.santairene.mikari"
     },
     "web": {
       "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/images/mikary.png"
     },
     "plugins": [
       "expo-router",
@@ -44,6 +45,12 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "d733ee4a-9786-4932-8252-b30163bf2b81"
+      }
     }
   }
 }

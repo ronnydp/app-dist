@@ -110,7 +110,7 @@ export default function OrderScreen() {
     );
 
     return (
-        <SafeAreaView style={styles.container}>
+        <View style={styles.container}>
             <AppSearchBar
                 placeholder="Buscar por nombre o código de cliente"
                 value={searchQuery}
@@ -178,17 +178,19 @@ export default function OrderScreen() {
             />
 
             <FloatingActionButton onPress={() => router.push('/newOrder')} />
-        </SafeAreaView>
+        </View>
     );
 }
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f3f4f6',
+        backgroundColor: '#fff',
+        paddingBottom: 10
     },
     listContent: {
         padding: 16,
+        marginBottom: 70
     },
     card: {
         backgroundColor: '#fff',
@@ -338,7 +340,7 @@ const styles = StyleSheet.create({
     },
     dateFilterContainer: {
         flexDirection: 'row',
-        paddingHorizontal: 12,
+        paddingHorizontal: 15,
         marginBottom: 8,
         gap: 8,
         justifyContent: 'space-between'

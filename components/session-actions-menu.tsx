@@ -49,7 +49,7 @@ export default function SessionActionsMenu() {
         />
       )}
 
-      <View style={styles.anchor}>
+      {/* <View style={styles.anchor}>
         {isOpen && (
           <View style={styles.menuCard}>
             <Pressable
@@ -87,7 +87,7 @@ export default function SessionActionsMenu() {
         >
           <Ionicons name={isOpen ? 'close' : 'ellipsis-vertical'} size={18} color="#111827" />
         </Pressable>
-      </View>
+      </View> */}
     </View>
   );
 }

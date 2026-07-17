@@ -42,10 +42,30 @@ export default function RootLayout() {
         <Stack>
           <Stack.Screen name="login" options={{ headerShown: false }} />
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="profile" options={{ title: 'Perfil' }} />
-          <Stack.Screen name="newProduct" options={{ presentation: 'modal', title: 'Nuevo Producto' }} />
-          <Stack.Screen name="newCustomer" options={{ presentation: 'modal', title: 'Nuevo Cliente' }} />
-          <Stack.Screen name="newOrder" options={{ presentation: 'modal', title: 'Nuevo Pedido' }} />
+          <Stack.Screen name="profile" options={{
+            title: 'Perfil',
+            headerStyle: { backgroundColor: '#fff' },
+            headerTitleStyle: { fontWeight: 'bold', fontSize: 20 },
+            headerTitleAlign: 'center'
+          }} />
+          <Stack.Screen name="newProduct" options={{
+            presentation: 'modal', title: 'Nuevo Producto',
+            headerStyle: { backgroundColor: '#fff' },
+            headerTitleStyle: { fontWeight: 'bold', fontSize: 20 },
+            headerTitleAlign: 'center'
+          }} />
+          <Stack.Screen name="newCustomer" options={{
+            presentation: 'modal', title: 'Nuevo Cliente',
+            headerStyle: { backgroundColor: '#fff' },
+            headerTitleStyle: { fontWeight: 'bold', fontSize: 20 },
+            headerTitleAlign: 'center'
+          }} />
+          <Stack.Screen name="newOrder" options={{
+            presentation: 'modal', title: 'Nuevo Pedido',
+            headerStyle: { backgroundColor: '#fff' },
+            headerTitleStyle: { fontWeight: 'bold', fontSize: 20 },
+            headerTitleAlign: 'center'
+          }} />
         </Stack>
         {showSessionMenu && <SessionActionsMenu />}
         <StatusBar style="auto" />
