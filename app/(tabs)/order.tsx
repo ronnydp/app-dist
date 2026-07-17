@@ -1,9 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { router, useFocusEffect } from 'expo-router';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Platform, SectionList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import AppSearchBar from '../../components/app-search-bar';
 import FloatingActionButton from '../../components/floating-action-button';
 import OrderCard from '../../components/OrderCard';
@@ -12,20 +11,48 @@ import { normalizeString } from '../../lib/utils/string';
 import { getOrders } from '../../services/database';
 import { OrderWithDetails } from '../../types';
 import { useToast } from '@/contexts/ToastsContext';
+import { useAuth } from '@/hooks/useAuth';
+
+type OrdersVisibility = 'mine' | 'all';
 
 export default function OrderScreen() {
+    const { role, session } = useAuth();
     const [orders, setOrders] = useState<OrderWithDetails[]>([]);
     const [refreshing, setRefreshing] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const debouncedQuery = useDebouncedValue(searchQuery.trim(), 250);
     const [selectedDate, setSelectedDate] = useState<Date | null>(null);
     const [showDatePicker, setShowDatePicker] = useState(false);
+    const [ordersVisibility, setOrdersVisibility] = useState<OrdersVisibility>('mine');
     const {showToast} = useToast();
 
+    useEffect(() => {
+        if (role === 'admin') {
+            setOrdersVisibility('all');
+            return;
+        }
+
+        if (role) {
+            setOrdersVisibility('mine');
+        }
+    }, [role]);
+
+    const sellerIdFilter = useMemo(() => {
+        if (ordersVisibility === 'all') {
+            return undefined;
+        }
+        return session?.user?.id;
+    }, [ordersVisibility, session?.user?.id]);
+
     const loadOrders = useCallback(async () => {
+        if (ordersVisibility === 'mine' && !session?.user?.id) {
+            setOrders([]);
+            return;
+        }
+
         setRefreshing(true);
         try {
-            const data = await getOrders();
+            const data = await getOrders({ sellerId: sellerIdFilter });
             setOrders(data);
         } catch (error) {
             showToast('No se pudieron cargar los pedidos', 'error');
@@ -33,7 +60,7 @@ export default function OrderScreen() {
         } finally {
             setRefreshing(false);
         }
-    }, []);
+    }, [ordersVisibility, sellerIdFilter, session?.user?.id, showToast]);
 
     // Recargar cuando la pantalla recibe foco
     useFocusEffect(
@@ -86,6 +113,14 @@ export default function OrderScreen() {
         setSelectedDate(null);
     };
 
+    const setMineVisibility = useCallback(() => {
+        setOrdersVisibility('mine');
+    }, []);
+
+    const setAllVisibility = useCallback(() => {
+        setOrdersVisibility('all');
+    }, []);
+
     // Agrupar pedidos filtrados por vendedor
     const sections = useMemo(() => {
         const groups: Record<string, OrderWithDetails[]> = {};
@@ -111,39 +146,82 @@ export default function OrderScreen() {
 
     return (
         <View style={styles.container}>
-            <AppSearchBar
-                placeholder="Buscar por nombre o código de cliente"
-                value={searchQuery}
-                onChangeText={setSearchQuery}
-                iconSize={20}
-            />
+            <View style={styles.topFiltersRow}>
+                <AppSearchBar
+                    placeholder="Busca por nombre o código de cliente"
+                    value={searchQuery}
+                    onChangeText={setSearchQuery}
+                    containerStyle={styles.searchBarInline}
+                />
+
+                <TouchableOpacity
+                    style={[styles.iconButton]}
+                    onPress={() => setShowDatePicker(true)}
+                    accessibilityLabel="Seleccionar fecha"
+                >
+                    <Ionicons name="calendar-outline" size={18} color="#6b7280" />
+                </TouchableOpacity>
+            </View>
 
             {/* Filtros por fecha */}
             <View style={styles.dateFilterContainer}>
-                <TouchableOpacity
-                    style={styles.dateButton}
-                    onPress={() => setShowDatePicker(true)}
-                >
-                    <Ionicons name="calendar-outline" size={18} color="#2563eb" />
-                    <Text style={styles.dateButtonText}>
-                        {selectedDate
-                            ? selectedDate.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' })
-                            : 'Hoy'
-                        }
-                    </Text>
-                </TouchableOpacity>
-
-                {selectedDate && (
+                <View style={styles.scopeButtonsContainer}>
                     <TouchableOpacity
-                        style={styles.clearButton}
-                        onPress={clearDateFilter}
+                        style={[
+                            styles.scopeButton,
+                            ordersVisibility === 'mine' ? styles.scopeButtonActive : styles.scopeButtonInactive,
+                        ]}
+                        onPress={setMineVisibility}
                     >
-                        <Ionicons name="close-circle" size={20} color="#ef4444" />
-                        <Text style={styles.clearButtonText}>Limpiar</Text>
+                        <Ionicons
+                            name="person-outline"
+                            size={16}
+                            color={ordersVisibility === 'mine' ? '#fff' : '#08859b'}
+                        />
+                        <Text
+                            style={[
+                                styles.scopeButtonText,
+                                ordersVisibility === 'mine' ? styles.scopeButtonTextActive : styles.scopeButtonTextInactive,
+                            ]}
+                        >
+                            Mis pedidos
+                        </Text>
                     </TouchableOpacity>
-                )}
 
-                <Text style={styles.totalPedidosText}>Total: {filteredOrders.length} pedido{filteredOrders.length !== 1 ? 's' : ''}</Text>
+                    <TouchableOpacity
+                        style={[
+                            styles.scopeButton,
+                            ordersVisibility === 'all' ? styles.scopeButtonActive : styles.scopeButtonInactive,
+                        ]}
+                        onPress={setAllVisibility}
+                    >
+                        <Ionicons
+                            name="people-outline"
+                            size={16}
+                            color={ordersVisibility === 'all' ? '#fff' : '#08859b'}
+                        />
+                        <Text
+                            style={[
+                                styles.scopeButtonText,
+                                ordersVisibility === 'all' ? styles.scopeButtonTextActive : styles.scopeButtonTextInactive,
+                            ]}
+                        >
+                            Todos
+                        </Text>
+                    </TouchableOpacity>
+                </View>
+
+                <View style={styles.rightFiltersGroup}>
+                    {selectedDate && (
+                        <TouchableOpacity
+                            style={styles.clearButton}
+                            onPress={clearDateFilter}
+                        >
+                            <Ionicons name="close-circle" size={18} color="#ef4444" />
+                            <Text style={styles.clearButtonText}>Limpiar</Text>
+                        </TouchableOpacity>
+                    )}
+                </View>
             </View>
 
             {showDatePicker && (
@@ -343,29 +421,78 @@ const styles = StyleSheet.create({
         paddingHorizontal: 15,
         marginBottom: 8,
         gap: 8,
-        justifyContent: 'space-between'
+        justifyContent: 'space-between',
+        alignItems: 'center',
     },
-    dateButton: {
+    scopeButtonsContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#eff6ff',
-        paddingHorizontal: 12,
+        gap: 8,
+    },
+    topFiltersRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+        paddingHorizontal: 15,
+        marginBottom: 10,
+    },
+    searchBarInline: {
+        flex: 1,
+        marginHorizontal: 0,
+        marginBottom: 0,
+    },
+    iconButton: {
+        width: 44,
+        height: 44,
+        borderRadius: 10,
+        borderWidth: 1,
+        borderColor: '#ececec',
+        backgroundColor: '#f4f5f7',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    scopeButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 10,
         paddingVertical: 8,
         borderRadius: 8,
         borderWidth: 1,
-        borderColor: '#bfdbfe',
         gap: 6,
     },
-    dateButtonText: {
+    scopeButtonActive: {
+        backgroundColor: '#08859b',
+        borderColor: '#08859b',
+    },
+    scopeButtonInactive: {
+        backgroundColor: '#fff',
+        borderColor: '#08859b',
+    },
+    scopeButtonText: {
         fontSize: 13,
         fontWeight: '600',
-        color: '#2563eb',
+    },
+    scopeButtonTextActive: {
+        color: '#fff',
+    },
+    scopeButtonTextInactive: {
+        color: '#08859b',
+    },
+    rightFiltersGroup: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+        flexShrink: 1,
+    },
+    dateInfoText: {
+        fontSize: 12,
+        color: '#475569',
+        fontWeight: '500',
     },
     totalPedidosText: {
         fontSize: 13,
-        paddingHorizontal: 12,
-        paddingVertical: 8,
         fontWeight: '600',
+        color: '#111827',
     },
     clearButton: {
         flexDirection: 'row',

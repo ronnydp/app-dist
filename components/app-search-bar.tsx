@@ -1,11 +1,13 @@
 import { Ionicons } from '@expo/vector-icons';
-import { StyleSheet, TextInput, View } from 'react-native';
+import { StyleProp, StyleSheet, TextInput, TextStyle, View, ViewStyle } from 'react-native';
 
 type AppSearchBarProps = {
   placeholder: string;
   value: string;
   onChangeText: (text: string) => void;
   iconSize?: number;
+  containerStyle?: StyleProp<ViewStyle>;
+  inputStyle?: StyleProp<TextStyle>;
 };
 
 export default function AppSearchBar({
@@ -13,14 +15,16 @@ export default function AppSearchBar({
   value,
   onChangeText,
   iconSize = 18,
+  containerStyle,
+  inputStyle,
 }: AppSearchBarProps) {
   return (
-    <View style={styles.searchContainer}>
+    <View style={[styles.searchContainer, containerStyle]}>
       <Ionicons name="search" size={iconSize} color="#6b7280" style={styles.icon} />
       <TextInput
         placeholder={placeholder}
         placeholderTextColor="#9ca3af"
-        style={styles.searchInput}
+        style={[styles.searchInput, inputStyle]}
         value={value}
         onChangeText={onChangeText}
         clearButtonMode="while-editing"

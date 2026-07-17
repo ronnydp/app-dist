@@ -401,10 +401,16 @@ export const savePresentations = async (
 /**
  * Obtiene todos los pedidos con información del cliente
  */
-export const getOrders = async () => {
+export type GetOrdersParams = {
+  sellerId?: string;
+};
+
+export const getOrders = async (params: GetOrdersParams = {}) => {
   try {
+    const { sellerId } = params;
+
     // Traer pedidos con product_orders
-    const { data, error } = await supabase
+    let query = supabase
       .from('orders')
       .select(`
         *,
@@ -413,6 +419,12 @@ export const getOrders = async () => {
         product_orders (*)
       `)
       .order('date', { ascending: false });
+
+    if (sellerId) {
+      query = query.eq('seller_id', sellerId);
+    }
+
+    const { data, error } = await query;
 
     if (error) throw error;
 
