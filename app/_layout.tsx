@@ -43,7 +43,7 @@ export default function RootLayout() {
           <Stack.Screen name="login" options={{ headerShown: false }} />
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="profile" options={{
-            title: 'Perfil',
+            title: 'Mi perfil',
             headerStyle: { backgroundColor: '#fff' },
             headerTitleStyle: { fontWeight: 'bold', fontSize: 20 },
             headerTitleAlign: 'center'
@@ -62,6 +62,12 @@ export default function RootLayout() {
           }} />
           <Stack.Screen name="newOrder" options={{
             presentation: 'modal', title: 'Nuevo Pedido',
+            headerStyle: { backgroundColor: '#fff' },
+            headerTitleStyle: { fontWeight: 'bold', fontSize: 20 },
+            headerTitleAlign: 'center'
+          }} />
+          <Stack.Screen name="detailCustomer" options={{
+            presentation: 'modal', title: 'Detalle de cliente',
             headerStyle: { backgroundColor: '#fff' },
             headerTitleStyle: { fontWeight: 'bold', fontSize: 20 },
             headerTitleAlign: 'center'

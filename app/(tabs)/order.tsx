@@ -1,3 +1,5 @@
+import { useToast } from '@/contexts/ToastsContext';
+import { useAuth } from '@/hooks/useAuth';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { router, useFocusEffect } from 'expo-router';
@@ -10,8 +12,6 @@ import { useDebouncedValue } from '../../hooks/use-debounced-value';
 import { normalizeString } from '../../lib/utils/string';
 import { getOrders } from '../../services/database';
 import { OrderWithDetails } from '../../types';
-import { useToast } from '@/contexts/ToastsContext';
-import { useAuth } from '@/hooks/useAuth';
 
 type OrdersVisibility = 'mine' | 'all';
 
@@ -148,7 +148,7 @@ export default function OrderScreen() {
         <View style={styles.container}>
             <View style={styles.topFiltersRow}>
                 <AppSearchBar
-                    placeholder="Busca por nombre o código de cliente"
+                    placeholder="Buscar pedidos..."
                     value={searchQuery}
                     onChangeText={setSearchQuery}
                     containerStyle={styles.searchBarInline}

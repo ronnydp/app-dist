@@ -55,5 +55,7 @@ const styles = StyleSheet.create({
     color: '#111827',
     fontWeight: 'bold',
     paddingVertical: 5,
+    textAlignVertical: 'center',
+    includeFontPadding: false
   },
 });

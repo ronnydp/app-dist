@@ -99,7 +99,20 @@ export default function CustomerScreen() {
   // abre un modal con detalles del customer seleccionado
   const openCustomer = useCallback((c: Customer) => {
     setSelectedCustomer(c);
-    setModalVisible(true);
+    router.push({
+      pathname: '/detailCustomer',
+      params: {
+        id: c.id,
+        name: c.name,
+        ruc: c.ruc,
+        address: c.address,
+        district: c.district,
+        phone: c.phone,
+        cod_customer: String(c.cod_customer),
+        created_at: c.created_at,
+        updated_at: c.updated_at
+      }
+    });
   }, []);
 
   const handleEdit = useCallback((c: Customer) => {
@@ -112,11 +125,10 @@ export default function CustomerScreen() {
         address: c.address,
         district: c.district,
         phone: c.phone || '',
+        cod_customer: c.cod_customer
       },
     });
   }, []);
-
-  // use shared `CustomerCard` component from components/
 
   const renderCustomer = useCallback(({ item }: { item: Customer }) => (
     <CustomerCard item={item} onOpen={openCustomer} onEdit={handleEdit} onToggleActive={role === 'admin' ? handleConfirmActiveCustomer : undefined} />
@@ -127,12 +139,12 @@ export default function CustomerScreen() {
   return (
     <View style={styles.container}>
       {/* <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 15 }}> */}
-        <View>
-          <AppSearchBar
-            placeholder="Buscar por código o nombre"
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-          />
+      <View>
+        <AppSearchBar
+          placeholder="Buscar clientes..."
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+        />
         {/* </View> */}
         {/* <TouchableOpacity style={styles.filterButton}>
           <Ionicons name='funnel-outline' size={20} color='#6b7280' />
