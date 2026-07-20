@@ -19,6 +19,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { createOrder, getPresentationsByProduct, getProducts, searchCustomers } from '../services/database';
 import { Customer, Presentation, Product } from '../types';
 import { useToast } from '@/contexts/ToastsContext';
+import { FlatList } from 'react-native';
 
 export default function NewOrderScreen() {
     const insets = useSafeAreaInsets();
@@ -43,7 +44,6 @@ export default function NewOrderScreen() {
     const [selectedPresentation, setSelectedPresentation] = useState<Presentation | null>(null); // Estado para almacenar la presentación seleccionada
     const customerSearchInputRef = useRef<TextInput>(null);
     const productSearchInputRef = useRef<TextInput>(null);
-    const [isSuccessVisible, setIsSuccessVisible] = useState(false);
     const { showToast } = useToast();
 
     // Buscar clientes desde Supabase con debounce
@@ -99,7 +99,7 @@ export default function NewOrderScreen() {
     const handleAddProduct = (product: Product, presentationName?: string) => {
         const existingItem = orderItems.find((item) => item.product.id === product.id);
 
-        if (existingItem) {
+        if (existingItem && existingItem.presentationName === presentationName) {
             setOrderItems(
                 orderItems.map((item) =>
                     item.product.id === product.id
@@ -111,6 +111,13 @@ export default function NewOrderScreen() {
                 ...prev,
                 [product.id]: String((existingItem.amount || 0) + 1),
             }));
+        } else if (existingItem) {
+            setOrderItems(
+                orderItems.map((item) =>
+                    item.product.id === product.id ? {
+                        ...item, amount: 1, unitPrice: product.price, presentationName
+                    } : item)
+            )
         } else {
             setOrderItems([
                 ...orderItems,
@@ -126,9 +133,6 @@ export default function NewOrderScreen() {
                 [product.id]: '1',
             }));
         }
-
-        setShowProductModal(false);
-        setSearchProduct('');
     };
 
     const handleRemoveItem = (productId: string) => {
@@ -138,6 +142,7 @@ export default function NewOrderScreen() {
             delete next[productId];
             return next;
         });
+        setSelectedPresentation(null)
     };
 
     const handleUpdateAmount = (productId: string, newAmount: number) => {
@@ -153,16 +158,16 @@ export default function NewOrderScreen() {
         setQuantityInputs((prev) => ({ ...prev, [productId]: String(newAmount) }));
     };
 
-    const handleQuantityInputChange = (productId: string, text: string) => {
-        setQuantityInputs((prev) => ({ ...prev, [productId]: text }));
-        const num = parseInt(text);
-        if (!isNaN(num) && num > 0) {
-            setOrderItems((prev) =>
-                prev.map((item) =>
-                    item.product.id === productId ? { ...item, amount: num } : item
-                )
-            );
-        }
+const handleQuantityInputChange = (productId: string, text: string) => {
+    setQuantityInputs((prev) => ({ ...prev, [productId]: text }));
+        // const num = parseInt(text);
+        // if (!isNaN(num) && num > 0) {
+        //     setOrderItems((prev) =>
+        //         prev.map((item) =>
+        //             item.product.id === productId ? { ...item, amount: num } : item
+        //         )
+        //     );
+        // }
     };
 
     const commitQuantityInput = (productId: string) => {
@@ -244,8 +249,8 @@ export default function NewOrderScreen() {
                         onPress={() => setShowCustomerModal(true)}
                     >
                         <View style={styles.dropdownContent}>
-                            {!selectedCustomer && <Ionicons name="person-outline" size={20} color="#9ca3af" />}
-                            {selectedCustomer && <Ionicons name="person" size={20} color="#2563eb" />}
+                            {!selectedCustomer && <Ionicons name="person-outline" size={18} color="#9ca3af" />}
+                            {selectedCustomer && <Ionicons name="person" size={18} color="#2563eb" />}
                             <Text
                                 style={[styles.dropdownText, !selectedCustomer && styles.placeholder]}
                                 numberOfLines={1}
@@ -261,7 +266,7 @@ export default function NewOrderScreen() {
                     </TouchableOpacity>
                     {selectedCustomer && (
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                            <Text style={styles.selectedAddress}><Ionicons name="location-outline" size={18} color="#2563eb" style={{ marginRight: 6 }} /> {selectedCustomer.address}</Text>
+                            <Text style={styles.selectedAddress}><Ionicons name="location-outline" size={16} color="#2563eb" style={{ marginRight: 6 }} /> {selectedCustomer.address}</Text>
                         </View>
                     )}
                 </View>
@@ -404,18 +409,6 @@ export default function NewOrderScreen() {
                         </Text>
                     </TouchableOpacity>
                 </View>
-                
-                {/* <ConfirmDialog
-                    visible={isSuccessVisible}
-                    title="Éxito"
-                    message="Pedido guardado correctamente"
-                    confirmText="OK"
-                    onConfirm={() => {
-                        setIsSuccessVisible(false);
-                        router.replace('/order');
-                    }}
-                // sin onCancel → no se renderiza el botón de cancelar
-                /> */}
             </ScrollView>
 
             {/* Modal de clientes */}
@@ -428,10 +421,20 @@ export default function NewOrderScreen() {
             >
                 <Pressable
                     style={styles.modalOverlay}
-                    onPress={() => setShowCustomerModal(false)}
                 >
                     <View style={styles.modalContent}>
-                        <Text style={styles.modalTitle}>Seleccionar Cliente</Text>
+                        <View style={styles.modalHeader}>
+                            <Text style={styles.modalTitleText}>Seleccionar Cliente</Text>
+                            <TouchableOpacity
+                                onPress={() => {
+                                    setShowCustomerModal(false)
+                                    setSearchCustomer('')
+                                }}
+                            >
+                                <Ionicons name='close-outline' size={25} />
+                            </TouchableOpacity>
+
+                        </View>
                         <TextInput
                             ref={customerSearchInputRef}
                             style={styles.searchInput}
@@ -440,29 +443,29 @@ export default function NewOrderScreen() {
                             value={searchCustomer}
                             onChangeText={setSearchCustomer}
                         />
-                        <ScrollView style={styles.modalList} keyboardShouldPersistTaps="handled">
-                            {searchCustomer.trim().length === 0 ? (
-                                <Text style={styles.noResults}>Escriba para buscar clientes...</Text>
-                            ) : searchingCustomers ? (
-                                <View style={styles.searchingContainer}>
-                                    <ActivityIndicator size="small" color="#2563eb" />
-                                    <Text style={styles.noResults}>Buscando...</Text>
-                                </View>
-                            ) : filteredCustomers.length > 0 ? (
-                                filteredCustomers.map((customer) => (
-                                    <TouchableOpacity
-                                        key={customer.id}
-                                        style={[
-                                            styles.modalOption,
-                                            selectedCustomer?.id === customer.id &&
-                                            styles.modalOptionSelected,
-                                        ]}
-                                        onPress={() => {
-                                            setSelectedCustomer(customer);
-                                            setShowCustomerModal(false);
-                                            setSearchCustomer('');
-                                        }}
-                                    >
+                        <FlatList
+                            style={styles.modalList}
+                            data={searchCustomer.trim().length === 0 || searchingCustomers ? [] : filteredCustomers}
+                            keyExtractor={(customer) => customer.id}
+                            keyboardShouldPersistTaps="handled"
+                            renderItem={({ item: customer }) => (
+                                <TouchableOpacity
+                                    key={customer.id}
+                                    style={[
+                                        styles.modalOption,
+                                        selectedCustomer?.id === customer.id &&
+                                        styles.modalOptionSelected,
+                                    ]}
+                                    onPress={() => {
+                                        setSelectedCustomer(customer);
+                                        setShowCustomerModal(false);
+                                        setSearchCustomer('');
+                                    }}
+                                >
+                                    <View style={styles.modalOptionTextCode}>
+                                        <Text style={styles.codeBadge}>
+                                            #{customer.cod_customer}
+                                        </Text>
                                         <Text
                                             style={[
                                                 styles.modalOptionText,
@@ -472,17 +475,29 @@ export default function NewOrderScreen() {
                                             numberOfLines={1}
                                             ellipsizeMode="tail"
                                         >
-                                            #{customer.cod_customer} - {customer.name}
+                                            {customer.name}
                                         </Text>
-                                        {selectedCustomer?.id === customer.id && (
-                                            <Ionicons name="checkmark" size={20} color="#2563eb" />
-                                        )}
-                                    </TouchableOpacity>
-                                ))
+                                    </View>
+
+                                    <Text style={styles.modalOptionTextAddress}>
+                                        {customer.address}
+                                    </Text>
+                                    {selectedCustomer?.id === customer.id && (
+                                        <Ionicons name="checkmark" size={20} color="#2563eb" />
+                                    )}
+                                </TouchableOpacity>
+                            )}
+                            ListEmptyComponent={searchCustomer.trim().length === 0 ? (
+                                <Text style={styles.noResults}>Escriba para buscar clientes...</Text>
+                            ) : searchingCustomers ? (
+                                <View style={styles.searchingContainer}>
+                                    <ActivityIndicator size="small" color="#2563eb" />
+                                    <Text style={styles.noResults}>Buscando...</Text>
+                                </View>
                             ) : (
                                 <Text style={styles.noResults}>No se encontraron clientes</Text>
                             )}
-                        </ScrollView>
+                        />
                     </View>
                 </Pressable>
             </Modal>
@@ -497,10 +512,20 @@ export default function NewOrderScreen() {
             >
                 <Pressable
                     style={styles.modalOverlay}
-                    onPress={() => setShowProductModal(false)}
                 >
                     <View style={styles.modalContent}>
-                        <Text style={styles.modalTitle}>Seleccionar Producto</Text>
+                        <View style={styles.modalHeader}>
+                            <Text style={styles.modalTitleText}>Seleccionar Producto</Text>
+                            <TouchableOpacity
+                                onPress={() => {
+                                    setShowProductModal(false)
+                                    setSearchProduct('')
+                                }}
+                            >
+                                <Ionicons name='close-outline' size={25} />
+                            </TouchableOpacity>
+
+                        </View>
                         <TextInput
                             ref={productSearchInputRef}
                             style={styles.searchInput}
@@ -509,49 +534,52 @@ export default function NewOrderScreen() {
                             value={searchProduct}
                             onChangeText={setSearchProduct}
                         />
-                        <ScrollView style={styles.modalList} keyboardShouldPersistTaps="handled">
-                            {searchProduct.trim().length === 0 ? (
-                                <Text style={styles.noResults}>Escriba para buscar productos...</Text>
-                            ) : filteredProducts.length > 0 ? (
-                                filteredProducts.map((product) => {
-                                    const inCart = orderItems.find((i) => i.product.id === product.id);
-                                    return (
-                                        <TouchableOpacity
-                                            key={product.id}
-                                            style={[styles.modalOption, inCart && styles.modalOptionInCart]}
-                                            onPress={async () => {
-                                                setSelectedProduct(product);
-                                                getPresentationsByProduct(product.id).then((presentations) => {
-                                                    if (presentations.length === 0) {
-                                                        handleAddProduct(product);
-                                                        return;
-                                                    }
-                                                    setPresentationsByProduct(presentations);
-                                                    setShowPresentationsByProduct(true)
-                                                });
-                                            }}
+                        <FlatList
+                            style={styles.modalList}
+                            data={searchProduct.trim().length === 0 ? [] : filteredProducts}
+                            keyExtractor={(product) => product.id}
+                            keyboardShouldPersistTaps="handled"
+                            renderItem={({ item: product }) => {
+                                const inCart = orderItems.find((i) => i.product.id === product.id);
+                                return (
+                                    <TouchableOpacity
+                                        key={product.id}
+                                        style={[styles.modalOption, inCart && styles.modalOptionInCart]}
+                                        onPress={async () => {
+                                            setSelectedProduct(product);
+                                            getPresentationsByProduct(product.id).then((presentations) => {
+                                                if (presentations.length === 0) {
+                                                    handleAddProduct(product);
+                                                    return;
+                                                }
+                                                setPresentationsByProduct(presentations);
+                                                setShowPresentationsByProduct(true)
+                                            });
+                                        }}
 
-                                        >
-                                            <View style={{ flex: 1 }}>
-                                                <Text style={styles.modalOptionText}>
-                                                    {product.name}
-                                                </Text>
-                                                <Text style={styles.modalOptionSubtext}>
-                                                    S/ {product.price.toFixed(2)}
-                                                </Text>
+                                    >
+                                        <View style={{ flex: 1 }}>
+                                            <Text style={styles.modalOptionText}>
+                                                {product.name}
+                                            </Text>
+                                            <Text style={styles.modalOptionSubtext}>
+                                                S/ {product.price.toFixed(2)}
+                                            </Text>
+                                        </View>
+                                        {inCart && (
+                                            <View style={styles.cartBadge}>
+                                                <Text style={styles.cartBadgeText}>{inCart.amount}</Text>
                                             </View>
-                                            {inCart && (
-                                                <View style={styles.cartBadge}>
-                                                    <Text style={styles.cartBadgeText}>{inCart.amount}</Text>
-                                                </View>
-                                            )}
-                                        </TouchableOpacity>
-                                    );
-                                })
+                                        )}
+                                    </TouchableOpacity>
+                                )
+                            }}
+                            ListEmptyComponent={searchProduct.trim().length === 0 ? (
+                                <Text style={styles.noResults}>Escriba para buscar productos...</Text>
                             ) : (
                                 <Text style={styles.noResults}>No se encontraron productos</Text>
                             )}
-                        </ScrollView>
+                        />
                     </View>
                 </Pressable>
             </Modal>
@@ -562,32 +590,127 @@ export default function NewOrderScreen() {
                 transparent
                 animationType="fade"
             >
-                <Pressable
+                <View
                     style={styles.modalOverlay}
-                    onPress={() => setShowPresentationsByProduct(false)}
                 >
                     <View style={styles.modalContent} onStartShouldSetResponder={() => true}>
-                        <Text style={styles.modalTitle}>Presentaciones del producto</Text>
+                        <View style={styles.modalHeader}>
+                            <Text style={styles.modalTitleText}>Agregar Producto</Text>
+                            <TouchableOpacity
+                                onPress={() => setShowPresentationsByProduct(false)}
+                            >
+                                <Ionicons name='close-outline' size={25} />
+                            </TouchableOpacity>
+
+                        </View>
+                        <View style={styles.selectedProductHeader}>
+                            <View style={styles.productIconBox}>
+                                <Ionicons name="cube-outline" size={28} color="#6b7280" />
+                            </View>
+                            <View style={{ flex: 1 }}>
+                                <Text style={styles.selectedProductName}>{selectedProduct?.name}</Text>
+                                <Text style={styles.selectedProductPrice}>S/ {selectedProduct?.price.toFixed(2)}</Text>
+                            </View>
+                        </View>
+                        <Text style={{ fontWeight: 'bold', marginVertical: 10 }}>1. Selecciona la presentación</Text>
                         {presentationsByProduct.map((presentation) => (
                             <TouchableOpacity
                                 key={presentation.id}
+                                style={[
+                                    styles.modalOptionPresentation,
+                                    selectedPresentation?.id === presentation.id && styles.modalOptionSelected,
+                                ]}
                                 onPress={() => {
                                     handleAddProduct(
                                         { ...selectedProduct!, price: presentation.sale_price },
                                         presentation.name
                                     );
-                                    setShowPresentationsByProduct(false);
                                     setSelectedPresentation(presentation);
                                 }}>
-                                <View style={styles.modalOption}>
-                                    <Text style={styles.modalOptionText}>{presentation.name}</Text>
-                                    <Text style={styles.modalOptionText}>{presentation.unit_quantity} unidades</Text>
-                                    <Text style={styles.modalOptionSubtext}>S/. {presentation.sale_price}</Text>
+                                <Ionicons
+                                    name={selectedPresentation?.id === presentation.id ? 'radio-button-on' : 'radio-button-off'}
+                                    size={20}
+                                    color={selectedPresentation?.id === presentation.id ? '#2563eb' : '#9ca3af'} />
+                                <View style={{ flex: 1, marginLeft: 10 }}>
+                                    <Text style={styles.modalOptionTextPresentationName}>{presentation.name} </Text>
+                                    <Text style={styles.modalOptionTextPresentationQuantity}>{presentation.unit_quantity} unidades</Text>
                                 </View>
+                                <Text style={styles.presentationPrice}>S/ {presentation.sale_price.toFixed(2)}</Text>
                             </TouchableOpacity>
                         ))}
+                        <Text style={{ fontWeight: 'bold', marginVertical: 10 }}>2. Ingresa la cantidad</Text>
+                        <View style={styles.quantityCard}>
+                            <View>
+                                {orderItems.length === 0 ? (
+                                    <Text style={{ color: '#bdb9b9', textAlign: 'center', width: '100%', marginVertical: 10 }}>
+                                        No ha seleccionado presentación aún
+                                    </Text>
+                                ) : (
+                                    <>
+                                        {orderItems.map((item) => (
+                                            <View key={item.product.id} style={styles.quantityRow}>
+                                                <TouchableOpacity style={styles.quantityButton} onPress={() =>
+                                                    handleUpdateAmount(item.product.id, item.amount - 1)
+                                                }>
+                                                    <Ionicons name="remove" size={20} color="#2563eb" />
+                                                </TouchableOpacity>
+                                                <TextInput
+                                                    // key={`${item.product.id} - ${item.presentationName}`}
+                                                    style={{ fontWeight: 'bold', fontSize: 20 }}
+                                                    value={quantityInputs[item.product.id] ?? item.amount.toString()}
+                                                    onChangeText={(text) => handleQuantityInputChange(item.product.id, text)}
+                                                    onEndEditing={() => commitQuantityInput(item.product.id)}
+                                                    keyboardType="numeric"
+                                                    selectTextOnFocus
+                                                />
+                                                <TouchableOpacity style={styles.quantityButton} onPress={() =>
+                                                    handleUpdateAmount(item.product.id, item.amount + 1)
+                                                }>
+                                                    <Ionicons name="add" size={20} color="#2563eb" />
+                                                </TouchableOpacity>
+                                            </View>
+                                        ))}
+                                        <View style={styles.divider} />
+                                        <View style={styles.summaryRow}>
+                                            <Text style={styles.summaryLabel}>Estás agregando:</Text>
+                                            <Text style={styles.summaryValue}>{orderItems.reduce((sum, item) => sum + item.amount, 0)} unidad(es)</Text>
+                                        </View>
+                                        <View style={styles.summaryRow}>
+                                            <Text style={styles.summaryLabel}>Subtotal:</Text>
+                                            <Text style={styles.summaryValue}>S/ {orderItems.reduce((sum, item) => sum + item.amount * item.product.price, 0).toFixed(2)}</Text>
+                                        </View>
+                                    </>
+                                )}
+                            </View>
+
+                            <View style={styles.actions}>
+                                <TouchableOpacity
+                                    style={[styles.button, styles.cancelButton]}
+                                    onPress={() => {
+                                        setShowPresentationsByProduct(false);
+                                        setShowProductModal(true);
+                                    }}
+                                    disabled={loading}
+                                >
+                                    <Text style={styles.cancelButtonText}>Cancelar</Text>
+                                </TouchableOpacity>
+
+                                <TouchableOpacity
+                                    style={[styles.button, styles.submitButton, loading && styles.buttonDisabled]}
+                                    onPress={() => {
+                                        setShowPresentationsByProduct(false);
+                                        setShowProductModal(false);
+                                    }}
+                                    disabled={loading}
+                                >
+                                    <Text style={styles.submitButtonText}>
+                                        {loading ? 'Agregando...' : 'Agregar al pedido'}
+                                    </Text>
+                                </TouchableOpacity>
+                            </View>
+                        </View>
                     </View>
-                </Pressable>
+                </View>
             </Modal>
         </KeyboardAvoidingView>
     );
@@ -642,12 +765,13 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     dropdownText: {
-        fontSize: 16,
+        fontSize: 14,
+        fontWeight: '600',
         color: '#111827',
         maxWidth: '70%',
     },
     dropdownCode: {
-        fontSize: 12,
+        fontSize: 11,
         fontWeight: '600',
         color: '#6b7280',
         backgroundColor: '#f3f4f6',
@@ -793,6 +917,53 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: '#e5e7eb',
     },
+    quantityCard: {
+        borderWidth: 1,
+        borderColor: '#e5e7eb',
+        borderRadius: 10,
+        padding: 16,
+        marginBottom: 10
+    },
+    quantityButton: {
+        width: 36,
+        height: 36,
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: '#2563eb',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    quantityRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 12,
+    },
+    quantityValue: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: '#111827'
+    },
+    summaryRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginBottom: 4,
+        padding: 5
+    },
+    summaryLabel: {
+        fontSize: 13,
+        color: '#6b7280',
+    },
+    summaryValue: {
+        fontSize: 13,
+        fontWeight: 'bold',
+        color: '#16a34a',
+    },
+    divider: {
+        height: 1,
+        backgroundColor: '#e5e7eb',
+        marginBottom: 10,
+    },
     stepperButton: {
         width: 36,
         height: 36,
@@ -888,47 +1059,121 @@ const styles = StyleSheet.create({
     },
     modalOverlay: {
         flex: 1,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        justifyContent: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+        justifyContent: 'flex-end',
         alignItems: 'center',
     },
     modalContent: {
         backgroundColor: '#fff',
-        borderRadius: 12,
-        padding: 12,
-        width: '90%',
+        borderTopLeftRadius: 20,
+        borderTopRightRadius: 20,
+        padding: 20,
         maxHeight: '80%',
-        maxWidth: 500,
+        minHeight: '90%',
+        width: '100%'
     },
-    modalTitle: {
+    modalHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'flex-start',
+        marginBottom: 10
+    },
+    modalTitleText: {
         fontSize: 16,
         fontWeight: '600',
         color: '#111827',
-        marginBottom: 12,
     },
     modalList: {
-        maxHeight: 220,
+        maxHeight: 470,
         marginBottom: 8,
+        marginHorizontal: 3
     },
     modalOption: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        padding: 6,
+        flexDirection: 'column',
+        justifyContent: 'flex-start',
+        alignItems: 'flex-start',
         borderRadius: 8,
-        marginBottom: 4,
+        marginBottom: 15,
     },
     modalOptionSelected: {
         backgroundColor: '#eff6ff',
     },
+    modalOptionTextCode: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+        flex: 1
+    },
     modalOptionText: {
         fontSize: 15,
-        color: '#374151',
-        fontWeight: '500',
+        color: '#585e69',
+        fontWeight: '600'
+    },
+    modalOptionPresentation: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: 12,
+        borderWidth: 1,
+        borderColor: '#e5e7eb',
+        borderRadius: 10,
+        marginBottom: 8,
+    },
+    modalOptionTextPresentationName: {
+        fontWeight: 'bold',
+        fontSize: 14,
+        color: '#111827',
+    },
+    modalOptionTextPresentationQuantity: {
+        fontSize: 12,
+        color: '#6b7280',
+    },
+    presentationPrice: {
+        fontWeight: 'bold',
+        fontSize: 14,
+        color: '#111827',
+    },
+    codeBadge: {
+        backgroundColor: '#08859b',
+        borderRadius: 10,
+        color: '#fff',
+        fontSize: 13,
+        fontWeight: '600',
+        padding: 5
+    },
+    modalOptionTextAddress: {
+        fontSize: 12,
+        color: '#9ea1a7',
+        marginTop: 3,
+        marginLeft: 5
     },
     modalOptionTextSelected: {
         color: '#2563eb',
         fontWeight: '600',
+    },
+    selectedProductHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 10,
+        marginBottom: 12,
+    },
+    productIconBox: {
+        width: 48,
+        height: 48,
+        borderRadius: 10,
+        backgroundColor: '#f4f5f7',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    selectedProductName: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        color: '#111827',
+    },
+    selectedProductPrice: {
+        fontSize: 14,
+        fontWeight: 'bold',
+        color: '#16a34a',  // verde, como en la imagen
+        marginTop: 2,
     },
     modalOptionSubtext: {
         fontSize: 15,
@@ -1013,7 +1258,7 @@ const styles = StyleSheet.create({
     },
     selectedAddress: {
         marginTop: 8,
-        fontSize: 14,
+        fontSize: 12,
         color: '#374151',
         backgroundColor: '#f8fafc',
         paddingVertical: 8,

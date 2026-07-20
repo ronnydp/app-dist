@@ -5,7 +5,6 @@ import { Ionicons } from "@expo/vector-icons";
 import { router, useFocusEffect } from "expo-router";
 import React, { useCallback, useRef, useState } from "react";
 import { ActivityIndicator, Alert, FlatList, StyleSheet, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import AppSearchBar from '../../components/app-search-bar';
 import FloatingActionButton from '../../components/floating-action-button';
 import ProductCard from '../../components/ProductCard';
@@ -115,7 +114,7 @@ export default function ProductScreen() {
     return (
         <View style={styles.container}>
             <AppSearchBar
-                placeholder="Buscar por nombre"
+                placeholder="Buscar producto..."
                 value={searchQuery}
                 onChangeText={setSearchQuery}
             />

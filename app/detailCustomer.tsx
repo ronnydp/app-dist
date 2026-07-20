@@ -14,12 +14,12 @@ export default function DetailCustomer() {
         created_at?: string,
         updated_at?: string
     }>()
-    const emptyIfMissing = (value: any) => (value || value === 0 ? String(value) : 'no tiene');
+    const emptyIfMissing = (value: any) => (value || value === 0 ? String(value) : '-');
     return (
         <View style={styles.container}>
             <View style={styles.modalHeader}>
                 <View style={styles.avatar}>
-                    <Ionicons name="storefront" size={50} color="#fff" />
+                    <Ionicons name="storefront-outline" size={50} color="#fff" />
                 </View>
                 <View style={{flex: 1}}>
                     <Text style={styles.badgeText}>#{params ? String(params.cod_customer) : 'no tiene'}</Text>
@@ -111,6 +111,7 @@ const styles = StyleSheet.create({
         padding: 15,
         borderWidth: 0.5,
         borderRadius: 10,
-        borderColor: '#b8b8b8'
+        borderColor: '#b8b8b8',
+        gap: 12
     }
 })
