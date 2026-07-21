@@ -1,15 +1,31 @@
 import { Ionicons } from "@expo/vector-icons";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { authService } from "@/services/auth-service";
+import { authService, AuthSession } from "@/services/auth-service";
 import { router } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useToast } from "@/contexts/ToastsContext";
 import ConfirmDialog from "@/components/ConfirmDialogProps";
+
 
 export default function MenuOptions() {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isConfirmVisible, setIsConfirmVisible] = useState(false);
   const { showToast } = useToast();
+  const [session, setSession] = useState<AuthSession | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const loadProfile = async () => {
+      try {
+        const currentSession = await authService.getSession();
+        setSession(currentSession);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadProfile();
+  }, []);
 
   const handleLogout = () => {
     setIsConfirmVisible(true);
@@ -54,16 +70,30 @@ export default function MenuOptions() {
   // ]
   return (
     <View style={styles.container}>
-      <TouchableOpacity style={styles.option}>
-        <Ionicons name="settings-outline" size={20} />
-        <Text style={styles.optionText}>Configuración</Text>
-      </TouchableOpacity>
       <TouchableOpacity
         style={styles.option}
         onPress={() => router.push("/profile")}
       >
         <Ionicons name="person-outline" size={20} />
         <Text style={styles.optionText}>Mi Perfil</Text>
+      </TouchableOpacity>
+      {(session?.user?.role === 'admin') && (
+        <>
+        <TouchableOpacity style={styles.option}>
+          <Ionicons name="people-outline" size={20} />
+          <Text style={styles.optionText}>Usuarios</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.option}>
+          <Ionicons name="people-outline" size={20} />
+          <Text style={styles.optionText}>Reportes</Text>
+        </TouchableOpacity>
+        </>
+        
+      )}
+
+      <TouchableOpacity style={styles.option}>
+        <Ionicons name="settings-outline" size={20} />
+        <Text style={styles.optionText}>Configuración</Text>
       </TouchableOpacity>
       <TouchableOpacity style={styles.option}>
         <Ionicons name="information-circle-outline" size={20} />
@@ -74,15 +104,15 @@ export default function MenuOptions() {
         <Text style={styles.optionText}>Cerrar sesión</Text>
       </TouchableOpacity>
       <ConfirmDialog
-          visible={isConfirmVisible}
-          title="Cerrar sesión"
-          message="¿Seguro que deseas salir?"
-          confirmText="Salir"
-          cancelText="Cancelar"
-          isLoading={isLoggingOut}
-          onConfirm={handleConfirmLogout}
-          onCancel={handleCancelLogout}
-        />
+        visible={isConfirmVisible}
+        title="Cerrar sesión"
+        message="¿Seguro que deseas salir?"
+        confirmText="Salir"
+        cancelText="Cancelar"
+        isLoading={isLoggingOut}
+        onConfirm={handleConfirmLogout}
+        onCancel={handleCancelLogout}
+      />
     </View>
   );
 }

@@ -2,7 +2,6 @@ import { authService, AuthSession } from '@/services/auth-service';
 import { Ionicons } from '@expo/vector-icons';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function ProfileScreen() {
   const [session, setSession] = useState<AuthSession | null>(null);
@@ -23,37 +22,52 @@ export default function ProfileScreen() {
 
   if (isLoading) {
     return (
-      <SafeAreaView style={styles.loadingContainer}>
+      <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#2563eb" />
         <Text style={styles.loadingText}>Cargando perfil...</Text>
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.card}>
-        <View style={styles.header}>
-          <Ionicons name="person-circle-outline" size={52} color="#2563eb" />
-          <Text style={styles.title}>Mi Perfil</Text>
-        </View>
-
-        <View style={styles.row}>
-          <Text style={styles.label}>Nombre</Text>
-          <Text style={styles.value}>{session?.user?.name || 'Vendedor'}</Text>
-        </View>
-
-        <View style={styles.row}>
-          <Text style={styles.label}>Correo</Text>
-          <Text style={styles.value}>{session?.user?.email || 'Sin correo'}</Text>
-        </View>
-
-        <View style={styles.row}>
-          <Text style={styles.label}>Rol</Text>
-          <Text style={styles.value}>{session?.user?.role || 'Sin rol'}</Text>
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <Ionicons name="person-circle-outline" size={100} color="#2563eb" />
+        <View style={{ flex: 1 }}>
+          <Text style={styles.title}>{session?.user?.name || 'Vendedor'}</Text>
+          <Text style={styles.subtitle}>{session?.user?.role || 'Sin rol'}</Text>
         </View>
       </View>
-    </SafeAreaView>
+      <View style={styles.statsGrid}>
+        <View style={styles.statsRow}>
+          <View style={styles.statCard}>
+            <Text style={styles.statLabel}>Pedidos hoy</Text>
+            <Text style={styles.statValue}>12</Text>
+          </View>
+          <View style={styles.statCard}>
+            <Text style={styles.statLabel}>Ventas semana pasada</Text>
+            <Text style={styles.statValue}>S/ 3,820.00</Text>
+          </View>
+        </View>
+        <View style={styles.statsRow}>
+          <View style={styles.statCard}>
+            <Text style={styles.statLabel}>Pedidos esta semana</Text>
+            <Text style={styles.statValue}>65</Text>
+          </View>
+          <View style={styles.statCard}>
+            <Text style={styles.statLabel}>Ventas esta semana</Text>
+            <Text style={styles.statValue}>S/ 3,820.00</Text>
+          </View>
+        </View>
+      </View>
+      <Text style={{marginTop: 20, marginBottom:10, padding: 3, fontWeight: 'bold', fontSize: 16}}>Información personal</Text>
+      <View style={styles.infoCard}>
+        <View style={styles.infoRow}>
+          <Text style={{color: '#6b7280', fontSize: 16}}>Correo</Text>
+          <Text style={{color: '#6b7280', fontSize: 16}}>{session?.user?.email || 'Vendedor'}</Text>
+        </View>
+      </View>
+    </View>
   );
 }
 
@@ -75,41 +89,56 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '500',
   },
-  card: {
+  infoCard: {
     backgroundColor: '#fff',
+    borderWidth: 1,
     borderRadius: 12,
-    padding: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-    elevation: 2,
+    borderColor: '#ecedf0',
+    padding: 16
+  },
+  infoRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between'
   },
   header: {
+    flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 16,
+    gap: 15,
+    paddingBottom: 15,
   },
   title: {
     marginTop: 6,
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: '700',
     color: '#111827',
   },
-  row: {
-    marginBottom: 12,
-    paddingBottom: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f3f4f6',
+  subtitle: {
+    fontSize: 14,
+    color: '#6b7280',
   },
-  label: {
-    fontSize: 12,
-    fontWeight: '600',
+  statsGrid: {
+    gap: 1.5,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    gap: 2,
+  },
+
+  statCard: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: '#ecedf0',
+    borderRadius: 12,
+    padding: 16,
+  },
+  statLabel: {
+    fontSize: 14,
     color: '#6b7280',
     marginBottom: 4,
   },
-  value: {
-    fontSize: 15,
-    fontWeight: '600',
+  statValue: {
+    fontSize: 20,
+    fontWeight: 'bold',
     color: '#111827',
   },
 });

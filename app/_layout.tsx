@@ -78,6 +78,12 @@ export default function RootLayout() {
             headerTitleStyle: { fontWeight: 'bold', fontSize: 20 },
             headerTitleAlign: 'center'
           }} />
+          <Stack.Screen name="users" options={{
+            presentation: 'modal', title: 'Usuarios',
+            headerStyle: { backgroundColor: '#fff' },
+            headerTitleStyle: { fontWeight: 'bold', fontSize: 20 },
+            headerTitleAlign: 'center'
+          }} />
         </Stack>
         {showSessionMenu && <SessionActionsMenu />}
         <StatusBar style="auto" />

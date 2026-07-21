@@ -22,8 +22,8 @@ export default function DetailCustomer() {
                     <Ionicons name="storefront-outline" size={50} color="#fff" />
                 </View>
                 <View style={{flex: 1}}>
-                    <Text style={styles.badgeText}>#{params ? String(params.cod_customer) : 'no tiene'}</Text>
                     <Text style={styles.customerName}>{params?.name}</Text>
+                    <Text style={styles.badgeText}>#{params ? String(params.cod_customer) : 'no tiene'}</Text>
                 </View>
             </View>
             <View style={styles.modalBody}>
