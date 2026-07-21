@@ -99,25 +99,14 @@ export default function NewOrderScreen() {
     const handleAddProduct = (product: Product, presentationName?: string) => {
         const existingItem = orderItems.find((item) => item.product.id === product.id);
 
-        if (existingItem && existingItem.presentationName === presentationName) {
-            setOrderItems(
-                orderItems.map((item) =>
-                    item.product.id === product.id
-                        ? { ...item, amount: item.amount + 1, presentationName }
-                        : item
-                )
-            );
-            setQuantityInputs((prev) => ({
-                ...prev,
-                [product.id]: String((existingItem.amount || 0) + 1),
-            }));
-        } else if (existingItem) {
+        if (existingItem) {
             setOrderItems(
                 orderItems.map((item) =>
                     item.product.id === product.id ? {
                         ...item, amount: 1, unitPrice: product.price, presentationName
                     } : item)
             )
+            setQuantityInputs((prev) => ({ ...prev, [product.id]: '1' }));
         } else {
             setOrderItems([
                 ...orderItems,
@@ -158,8 +147,8 @@ export default function NewOrderScreen() {
         setQuantityInputs((prev) => ({ ...prev, [productId]: String(newAmount) }));
     };
 
-const handleQuantityInputChange = (productId: string, text: string) => {
-    setQuantityInputs((prev) => ({ ...prev, [productId]: text }));
+    const handleQuantityInputChange = (productId: string, text: string) => {
+        setQuantityInputs((prev) => ({ ...prev, [productId]: text }));
         // const num = parseInt(text);
         // if (!isNaN(num) && num > 0) {
         //     setOrderItems((prev) =>
@@ -655,8 +644,7 @@ const handleQuantityInputChange = (productId: string, text: string) => {
                                                     <Ionicons name="remove" size={20} color="#2563eb" />
                                                 </TouchableOpacity>
                                                 <TextInput
-                                                    // key={`${item.product.id} - ${item.presentationName}`}
-                                                    style={{ fontWeight: 'bold', fontSize: 20 }}
+                                                    style={{ fontWeight: 'bold', fontSize: 20, textAlign: 'center' }}
                                                     value={quantityInputs[item.product.id] ?? item.amount.toString()}
                                                     onChangeText={(text) => handleQuantityInputChange(item.product.id, text)}
                                                     onEndEditing={() => commitQuantityInput(item.product.id)}
@@ -683,31 +671,31 @@ const handleQuantityInputChange = (productId: string, text: string) => {
                                 )}
                             </View>
 
-                            <View style={styles.actions}>
-                                <TouchableOpacity
-                                    style={[styles.button, styles.cancelButton]}
-                                    onPress={() => {
-                                        setShowPresentationsByProduct(false);
-                                        setShowProductModal(true);
-                                    }}
-                                    disabled={loading}
-                                >
-                                    <Text style={styles.cancelButtonText}>Cancelar</Text>
-                                </TouchableOpacity>
+                        </View>
+                        <View style={styles.actions}>
+                            <TouchableOpacity
+                                style={[styles.button, styles.cancelButton]}
+                                onPress={() => {
+                                    setShowPresentationsByProduct(false);
+                                    setShowProductModal(true);
+                                }}
+                                disabled={loading}
+                            >
+                                <Text style={styles.cancelButtonText}>Cancelar</Text>
+                            </TouchableOpacity>
 
-                                <TouchableOpacity
-                                    style={[styles.button, styles.submitButton, loading && styles.buttonDisabled]}
-                                    onPress={() => {
-                                        setShowPresentationsByProduct(false);
-                                        setShowProductModal(false);
-                                    }}
-                                    disabled={loading}
-                                >
-                                    <Text style={styles.submitButtonText}>
-                                        {loading ? 'Agregando...' : 'Agregar al pedido'}
-                                    </Text>
-                                </TouchableOpacity>
-                            </View>
+                            <TouchableOpacity
+                                style={[styles.button, styles.submitButton, loading && styles.buttonDisabled]}
+                                onPress={() => {
+                                    setShowPresentationsByProduct(false);
+                                    setShowProductModal(false);
+                                }}
+                                disabled={loading}
+                            >
+                                <Text style={styles.submitButtonText}>
+                                    {loading ? 'Agregando...' : 'Agregar al pedido'}
+                                </Text>
+                            </TouchableOpacity>
                         </View>
                     </View>
                 </View>
