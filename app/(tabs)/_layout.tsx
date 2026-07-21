@@ -18,21 +18,18 @@ export default function TabLayout() {
     headerTitleStyle: { fontWeight: 'bold', fontSize: 20 },
     headerTitleAlign: 'center',
     headerShadowVisible: false,
-    headerLeft: () => (
-      <Ionicons name='menu' size={24} color='black' style={{ marginLeft: 16 }} />
-    ),
     headerRight: () => (
       <TouchableOpacity
         style={{
-          backgroundColor: '#a3b3b6', width: 36,
+          width: 36,
           height: 36,
           borderRadius: 18,
           justifyContent: 'center',
           alignItems: 'center',
           marginRight: 16,
         }}
-        onPress={() => router.push('/profile')}>
-        <Ionicons name="person" size={22} color="white" />
+        onPress={() => router.push('/menuOptions')}>
+        <Ionicons name="menu" size={22} color="#717c7e" />
       </TouchableOpacity>)
   })
 

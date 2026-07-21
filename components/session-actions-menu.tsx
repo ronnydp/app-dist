@@ -3,7 +3,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import ConfirmDialog from './ConfirmDialogProps';
 import { useToast } from '@/contexts/ToastsContext';
 
 export default function SessionActionsMenu() {
