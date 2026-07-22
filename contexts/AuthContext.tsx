@@ -26,14 +26,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } = supabase.auth.onAuthStateChange(async (_event, authSession) => {
             if (authSession) {
                 const fullSession = await authService.getSession();
+                console.log('fullSession')
                 setIsAuthenticated(true);
                 setSession(fullSession)
             } else {
                 setSession(null);
                 setIsAuthenticated(false);
+                setIsLoading(false)
             }
         });
-
         return () => {
             subscription.unsubscribe(); // Limpia el listener al desmontar el componente
             isMounted = false;
@@ -46,6 +47,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         try {
             await authService.login({ email, password });
             const fullSession = await authService.getSession();
+            console.log(fullSession)
             setSession(fullSession);
             setIsAuthenticated(true);
         } catch (err) {

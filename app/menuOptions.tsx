@@ -42,9 +42,10 @@ export default function MenuOptions() {
       onPress: () => router.push('/profile'),
     },
     {
-      icon: 'person-outline',
+      icon: 'people-outline',
       label: 'Usuarios',
-      role: 'admin'
+      role: 'admin',
+      onPress: () => router.push('/users')
     },
     {
       icon: 'bar-chart-outline',
