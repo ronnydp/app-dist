@@ -1,4 +1,5 @@
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/contexts/ToastsContext";
 import { activateProduct, deleteProduct, getProductsPaginated } from "@/services/database";
 import { ProductWithPresentations } from "@/types";
 import { Ionicons } from "@expo/vector-icons";
@@ -9,7 +10,6 @@ import AppSearchBar from '../../components/app-search-bar';
 import FloatingActionButton from '../../components/floating-action-button';
 import ProductCard from '../../components/ProductCard';
 import { useDebouncedValue } from '../../hooks/use-debounced-value';
-import { useToast } from "@/contexts/ToastsContext";
 
 const PAGE_SIZE = 30;
 

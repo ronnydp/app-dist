@@ -1,5 +1,6 @@
 // app/(tabs)/customers.tsx
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/contexts/ToastsContext';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
@@ -10,7 +11,6 @@ import FloatingActionButton from '../../components/floating-action-button';
 import { useDebouncedValue } from '../../hooks/use-debounced-value';
 import { activateCustomer, deleteCustomer, getCustomersPaginated } from '../../services/database';
 import { Customer } from '../../types';
-import { useToast } from '@/contexts/ToastsContext';
 
 const PAGE_SIZE = 30;
 

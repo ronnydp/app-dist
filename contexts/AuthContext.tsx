@@ -1,8 +1,18 @@
 import { supabase } from "@/lib/supabase";
 import { authService, AuthSession } from "@/services/auth-service";
-import { useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 
-export const useAuth = () => {
+type AuthContextType = {
+    login: (email: string, password: string) => Promise<void>
+    session: AuthSession | null;
+    role: string | undefined;
+    isAuthenticated: boolean;
+    isLoading: boolean;
+    error: string | null
+}
+export const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [session, setSession] = useState<AuthSession | null>(null);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
@@ -16,7 +26,7 @@ export const useAuth = () => {
                 setSession(session);
                 setIsAuthenticated(true);
             }
-            if(isMounted) setIsLoading(false); // Oculta el LoginScreen
+            if (isMounted) setIsLoading(false); // Oculta el LoginScreen
         };
         checkSession();
 
@@ -55,7 +65,18 @@ export const useAuth = () => {
         }
 
     };
-    return {
-        login, session, role: session?.user?.role, isAuthenticated, isLoading, error
+    return (
+        <AuthContext.Provider
+            value={{ login, session, role: session?.user?.role, isAuthenticated, isLoading, error }}>
+            {children}
+        </AuthContext.Provider>
+    )
+}
+
+export function useAuth() {
+    const context = useContext(AuthContext);
+    if(!context) {
+        throw new Error('useToast debe usarse dentro de un ToastProvider.')
     }
-};
+    return context
+}

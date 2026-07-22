@@ -1,31 +1,18 @@
-import { Ionicons } from "@expo/vector-icons";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { authService, AuthSession } from "@/services/auth-service";
-import { router } from "expo-router";
-import { useEffect, useState } from "react";
-import { useToast } from "@/contexts/ToastsContext";
 import ConfirmDialog from "@/components/ConfirmDialogProps";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/contexts/ToastsContext";
+import { authService } from "@/services/auth-service";
+import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
+import { useState } from "react";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 
 export default function MenuOptions() {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isConfirmVisible, setIsConfirmVisible] = useState(false);
   const { showToast } = useToast();
-  const [session, setSession] = useState<AuthSession | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    const loadProfile = async () => {
-      try {
-        const currentSession = await authService.getSession();
-        setSession(currentSession);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadProfile();
-  }, []);
+  const {role} = useAuth();
 
   const handleLogout = () => {
     setIsConfirmVisible(true);
@@ -77,7 +64,7 @@ export default function MenuOptions() {
         <Ionicons name="person-outline" size={20} />
         <Text style={styles.optionText}>Mi Perfil</Text>
       </TouchableOpacity>
-      {(session?.user?.role === 'admin') && (
+      {role === 'admin' && (
         <>
         <TouchableOpacity style={styles.option}>
           <Ionicons name="people-outline" size={20} />
