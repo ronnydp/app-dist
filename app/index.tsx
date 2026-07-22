@@ -1,44 +1,11 @@
-import { supabase } from '@/lib/supabase';
-import { authService } from '@/services/auth-service';
+import { useAuth } from '@/contexts/AuthContext';
 import { Redirect } from 'expo-router';
-import { useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 
 export default function IndexScreen() {
-  const [targetRoute, setTargetRoute] = useState<'/login' | '/(tabs)/order' | null>(null);
+  const{session, isLoading} = useAuth();
 
-  useEffect(() => {
-    let isMounted = true;
-
-    const resolveSession = async () => {
-      // Recuperamos la sesión guardada en AsyncStorage
-      const session = await authService.getSession();
-      if (!isMounted) {
-        return;
-      }
-
-      setTargetRoute(session ? '/(tabs)/order' : '/login');
-    };
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!isMounted) {
-        return;
-      }
-
-      setTargetRoute(session ? '/(tabs)/order' : '/login');
-    });
-
-    resolveSession();
-
-    return () => {
-      isMounted = false;
-      subscription.unsubscribe();
-    };
-  }, []);
-
-  if (!targetRoute) {
+  if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#2563eb" />
@@ -47,7 +14,7 @@ export default function IndexScreen() {
     );
   }
 
-  return <Redirect href={targetRoute} />;
+  return <Redirect href={session ? '/(tabs)/order' : '/login'} />;
 }
 
 const styles = StyleSheet.create({

@@ -40,11 +40,8 @@ export const getCustomersPaginated = async (
   search?: string,
   role?: string
 ): Promise<{ data: Customer[]; hasMore: boolean }> => {
-  // Esperar a que la sesión esté lista (evita error al arrancar la app)
-  await supabase.auth.getSession();
 
   const { data: { session } } = await supabase.auth.getSession();
-  console.log('Token presente en web:', !!session?.access_token);
 
   let query = supabase
     .from('customers')
@@ -338,7 +335,7 @@ export const activateProduct = async (id: string): Promise<void> => {
 /**
  * Obtiene las presentaciones de un producto
  */
-export const getPresentationsByProduct = async (productId: string): Promise<Presentation[]> => {                                                                                                                                                                                                                                                                                                                                                                                                                              
+export const getPresentationsByProduct = async (productId: string): Promise<Presentation[]> => {
   try {
     const { data, error } = await supabase
       .from('presentations')
@@ -488,7 +485,6 @@ export const createOrder = async (order: NewOrder): Promise<Order> => {
       amount: p.amount,
       unit_price: p.unit_price,
       sub_total: p.sub_total,
-      presentation_name: p.presentation_name,
     }));
 
     const { error: productsError } = await supabase

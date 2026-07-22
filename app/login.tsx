@@ -7,6 +7,7 @@ import { KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, TextInput,
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient'
 import { useToast } from '@/contexts/ToastsContext';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
@@ -14,33 +15,14 @@ export default function LoginScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const {showToast} = useToast();
+  const {session, login} = useAuth();
   const current_year = new Date().getFullYear();
 
   useEffect(() => {
-    let isMounted = true;
-
-    const checkSession = async () => {
-      const session = await authService.getSession();
-      if (isMounted && session) {
-        router.replace('/(tabs)/order');
-      }
-    };
-
-    checkSession();
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (isMounted && session) {
-        router.replace('/(tabs)/order');
-      }
-    });
-
-    return () => {
-      isMounted = false;
-      subscription.unsubscribe();
-    };
-  }, []);
+    if(session){
+      router.replace('/(tabs)/order')
+    }
+  }, [session]);
 
   const handleContinue = async () => {
     if (!email.trim() || !password.trim()) {

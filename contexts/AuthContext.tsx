@@ -20,15 +20,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     useEffect(() => {
         let isMounted = true; // Muestra el LoginScreen
-        const checkSession = async () => {
-            const session = await authService.getSession();
-            if (isMounted && session) {
-                setSession(session);
-                setIsAuthenticated(true);
-            }
-            if (isMounted) setIsLoading(false); // Oculta el LoginScreen
-        };
-        checkSession();
 
         const {
             data: { subscription },

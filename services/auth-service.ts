@@ -76,12 +76,11 @@ export const authService = {
             } = await supabase.auth.getSession();
 
             if (session?.user) {
-                const { data: userData } = await supabase
+                const { data: userData, error } = await supabase
                     .from('users')
                     .select('name, role')
                     .eq('id', session.user.id)
                     .single();
-                    
                 const mappedSession: AuthSession = {
                     token: session.access_token,
                     user: {
