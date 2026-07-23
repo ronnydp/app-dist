@@ -5,7 +5,6 @@ import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 export default function IndexScreen() {
   const {session, isLoading} = useAuth();
   if (isLoading) {
-    console.log(isLoading)
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#2563eb" />

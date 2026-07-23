@@ -63,8 +63,8 @@ export default function ProfileScreen() {
       <Text style={{marginTop: 20, marginBottom:10, padding: 3, fontWeight: 'bold', fontSize: 16}}>Información personal</Text>
       <View style={styles.infoCard}>
         <View style={styles.infoRow}>
-          <Text style={{color: '#6b7280', fontSize: 16}}>Correo</Text>
-          <Text style={{color: '#6b7280', fontSize: 16}}>{session?.user?.email || 'Vendedor'}</Text>
+          <Text style={{color: '#6b7280', fontSize: 14}}>Correo</Text>
+          <Text style={{color: '#6b7280', fontSize: 14}}>{session?.user?.email || 'Vendedor'}</Text>
         </View>
       </View>
     </View>
@@ -132,7 +132,7 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   statLabel: {
-    fontSize: 14,
+    fontSize: 12,
     color: '#6b7280',
     marginBottom: 4,
   },

@@ -611,3 +611,14 @@ export const getAllSellersWeeklySales = async (): Promise<SellerWeeklySales[]> =
   result.sort((a, b) => b.total - a.total);
   return result;
 };
+
+export const getUsers = async () => {
+  try {
+    const { data, error } = await supabase.from('users').select('*')
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error('Error al obtener usuarios: ', error)
+    throw error
+  }
+}

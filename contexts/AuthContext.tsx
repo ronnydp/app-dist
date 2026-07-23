@@ -26,13 +26,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } = supabase.auth.onAuthStateChange(async (_event, authSession) => {
             if (authSession) {
                 const fullSession = await authService.getSession();
-                console.log('fullSession')
                 setIsAuthenticated(true);
                 setSession(fullSession)
             } else {
                 setSession(null);
                 setIsAuthenticated(false);
-                setIsLoading(false)
+                setIsLoading(false) 
             }
         });
         return () => {

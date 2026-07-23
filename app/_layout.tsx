@@ -129,7 +129,6 @@ export default function RootLayout() {
           </Stack>
           {showSessionMenu && <SessionActionsMenu />}
           <StatusBar style="auto" />
-          <Toast />
         </ThemeProvider>
       </AuthProvider>
     </ToastProvider>
