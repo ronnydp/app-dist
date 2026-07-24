@@ -1,9 +1,21 @@
+import { useProduct } from "@/contexts/ProductContext";
 import { Ionicons } from "@expo/vector-icons";
+import { useLocalSearchParams } from "expo-router";
 import { Text, View } from "react-native";
 
 export default function DetailProduct() {
+    const {products, isLoading, error} = useProduct();
+    const params = useLocalSearchParams<{
+        id?: string,
+        nombre?: string,
+        precio?: number
+
+    }>()
+
+    }
     return (
-        <View style={{ flex: 1, backgroundColor: '#fff', padding: 15 }}>
+        products.map((product) => {
+            <View style={{ flex: 1, backgroundColor: '#fff', padding: 15 }}>
             <View style={{flexDirection: 'row'}}>
                 <View style={{paddingHorizontal: 20, paddingVertical: 10}}>
                     <Ionicons name="cube-outline" size={100}/>
@@ -32,5 +44,6 @@ export default function DetailProduct() {
                 </View>
             </View>
         </View>
+        })
     )
 }

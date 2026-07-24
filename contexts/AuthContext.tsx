@@ -67,7 +67,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 export function useAuth() {
     const context = useContext(AuthContext);
     if(!context) {
-        throw new Error('useToast debe usarse dentro de un ToastProvider.')
+        throw new Error('useAuth debe usarse dentro de un AuthProvider.')
     }
     return context
 }
