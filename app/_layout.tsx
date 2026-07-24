@@ -126,6 +126,16 @@ export default function RootLayout() {
                 headerTitleAlign: "center",
               }}
             />
+            <Stack.Screen
+              name="detailProduct"
+              options={{
+                presentation: "modal",
+                title: "Detalle de Producto",
+                headerStyle: { backgroundColor: "#fff" },
+                headerTitleStyle: { fontWeight: "bold", fontSize: 20 },
+                headerTitleAlign: "center",
+              }}
+            />
           </Stack>
           {showSessionMenu && <SessionActionsMenu />}
           <StatusBar style="auto" />

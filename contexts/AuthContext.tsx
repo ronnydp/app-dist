@@ -46,7 +46,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         try {
             await authService.login({ email, password });
             const fullSession = await authService.getSession();
-            console.log(fullSession)
             setSession(fullSession);
             setIsAuthenticated(true);
         } catch (err) {
