@@ -1,7 +1,7 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/contexts/ToastsContext";
 import { activateProduct, deleteProduct, getProductsPaginated } from "@/services/database";
-import { ProductWithPresentations } from "@/types";
+import { Product, ProductWithPresentations } from "@/types";
 import { Ionicons } from "@expo/vector-icons";
 import { router, useFocusEffect } from "expo-router";
 import React, { useCallback, useRef, useState } from "react";
@@ -18,6 +18,7 @@ export default function ProductScreen() {
     const [products, setProducts] = useState<ProductWithPresentations[]>([]);
     const [refreshing, setRefreshing] = useState(false);
     const [loadingMore, setLoadingMore] = useState(false);
+    const [selectedProduct, setSelectedProduct] = useState<Product | null>()
     const [hasMore, setHasMore] = useState(true);
     const pageRef = useRef(0);
     const [searchQuery, setSearchQuery] = useState('');
@@ -103,9 +104,24 @@ export default function ProductScreen() {
         });
     }, []);
 
+    const openProduct = useCallback((p: ProductWithPresentations) => {
+        setSelectedProduct(p);
+        const presentations = JSON.stringify(p.presentations)
+        router.push({
+            pathname: '/detailProduct',
+            params: {
+                id: p.id,
+                name: p.name,
+                price: p.price,
+                presentations: presentations
+            }
+        })
+    }, [])
+
     const renderProduct = useCallback(({ item }: { item: ProductWithPresentations }) => (
         <ProductCard
             item={item}
+            onOpen={openProduct}
             onEdit={role === 'admin' ? handleEdit : undefined}
             onToggleActive={role === 'admin' ? handleToggleActive : undefined}
         />

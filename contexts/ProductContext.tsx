@@ -1,6 +1,7 @@
 import { getProducts } from "@/services/database";
 import { Product } from "@/types";
 import { createContext, useContext, useEffect, useState } from "react";
+import { useAuth } from "./AuthContext";
 
 /*
 1. ProductTypeContext
@@ -26,6 +27,7 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { session } = useAuth();
 
   useEffect(() => {
     const loadProducts = async () => {
@@ -40,8 +42,12 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
         setIsLoading(false);
       }
     };
-    loadProducts();
-  }, []);
+    if (session != null) {
+      loadProducts();
+    } else {
+      setProducts([])
+    }
+  }, [session]);
 
   return (
     <ProductContext.Provider value={{ products, isLoading, error }}>
@@ -50,9 +56,9 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
   );
 }
 export function useProduct() {
-    const context = useContext(ProductContext);
-    if(!context){
-        throw new Error('useProrduct debe usarse dentro de un ProductProvider.')
-    }
+  const context = useContext(ProductContext);
+  if (!context) {
+    throw new Error('useProduct debe usarse dentro de un ProductProvider.')
+  }
   return context;
 }

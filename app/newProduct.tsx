@@ -1,7 +1,6 @@
 import { router, useLocalSearchParams, useNavigation } from 'expo-router';
 import { useEffect, useLayoutEffect, useState } from 'react';
 import {
-    Alert,
     KeyboardAvoidingView,
     Platform,
     ScrollView,
@@ -242,7 +241,7 @@ export default function NewProductScreen() {
 
                             <View style={styles.row}>
                                 <View style={[styles.field, { flex: 1 }]}>
-                                    <Text style={styles.label}>Cantidad *</Text>
+                                    <Text style={styles.label}>Unidades *</Text>
                                     <TextInput
                                         style={styles.input}
                                         value={p.unit_quantity}

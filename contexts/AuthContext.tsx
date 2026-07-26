@@ -24,14 +24,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const {
             data: { subscription },
         } = supabase.auth.onAuthStateChange(async (_event, authSession) => {
-            if (authSession) {
-                const fullSession = await authService.getSession();
-                setIsAuthenticated(true);
-                setSession(fullSession)
-            } else {
-                setSession(null);
-                setIsAuthenticated(false);
-                setIsLoading(false) 
+            try {
+                if (authSession) {
+                    const fullSession = await authService.getSession();
+                    setIsAuthenticated(true);
+                    setSession(fullSession);
+                    setIsLoading(false)
+                } else {
+                    setSession(null);
+                    setIsAuthenticated(false);
+                }
+            } catch (err) {
+                const message = err instanceof Error ? err.message : 'Error al iniciar sesión';
+                setError(message);
+                setIsAuthenticated(false)
+                setSession(null)
+            } finally {
+                setIsLoading(false)
             }
         });
         return () => {
@@ -66,7 +75,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 export function useAuth() {
     const context = useContext(AuthContext);
-    if(!context) {
+    if (!context) {
         throw new Error('useAuth debe usarse dentro de un AuthProvider.')
     }
     return context

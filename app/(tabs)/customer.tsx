@@ -131,24 +131,24 @@ export default function CustomerScreen() {
   }, []);
 
   const renderCustomer = useCallback(({ item }: { item: Customer }) => (
-    <CustomerCard item={item} onOpen={openCustomer} onEdit={handleEdit} onToggleActive={role === 'admin' ? handleConfirmActiveCustomer : undefined} />
+    <CustomerCard 
+      item={item} 
+      onOpen={openCustomer} 
+      onEdit={handleEdit} 
+      onToggleActive={role === 'admin' ? handleConfirmActiveCustomer : undefined} 
+      />
   ), [role, openCustomer, handleEdit, handleConfirmActiveCustomer]);
 
   const emptyIfMissing = (value: any) => (value || value === 0 ? String(value) : 'no tiene');
 
   return (
     <View style={styles.container}>
-      {/* <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 15 }}> */}
       <View>
         <AppSearchBar
           placeholder="Buscar clientes..."
           value={searchQuery}
           onChangeText={setSearchQuery}
         />
-        {/* </View> */}
-        {/* <TouchableOpacity style={styles.filterButton}>
-          <Ionicons name='funnel-outline' size={20} color='#6b7280' />
-        </TouchableOpacity> */}
       </View>
 
       <FlatList

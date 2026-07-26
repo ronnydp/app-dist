@@ -4,20 +4,16 @@ import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { ProductWithPresentations } from '../types';
 import cardStyles from './ui/cardStyles';
 import ConfirmDialog from './ConfirmDialogProps';
-import { router } from 'expo-router';
 
 type Props = {
   item: ProductWithPresentations;
+  onOpen: (c: ProductWithPresentations) => void
   onEdit?: (p: ProductWithPresentations) => void;
   onToggleActive?: (id: string, nombre: string, isActive: boolean) => Promise<void>;
 };
 
-export default memo(function ProductCard({ item, onEdit, onToggleActive }: Props) {
+export default memo(function ProductCard({ item, onOpen, onEdit, onToggleActive }: Props) {
   const inactive = !item.is_active;
-  const presentations = item.presentations || [];
-  const defaultPres = presentations.find((p) => p.is_default) || presentations[0];
-  const hasMultiple = presentations.length > 1;
-  const [expanded, setExpanded] = useState(false);
   const [isConfirmVisible, setIsConfirmVisible] = useState(false)
   const [isToggling, setIsToggling] = useState(false);
 
@@ -41,7 +37,7 @@ export default memo(function ProductCard({ item, onEdit, onToggleActive }: Props
 
   return (
     <TouchableOpacity 
-      onPress={() => router.push('/detailProduct')}
+      onPress={() => onOpen(item)}
       >
       <View style={[cardStyles.card, inactive && { opacity: 0.5 }]}>
         <View style={{ flex: 1 }}>
@@ -50,37 +46,6 @@ export default memo(function ProductCard({ item, onEdit, onToggleActive }: Props
             <Text style={cardStyles.price}>S/ {item.price.toFixed(2)}</Text>
             {item.image_url ? <Text style={cardStyles.info}>{item.image_url}</Text> : null}
           </View>
-
-          {/* Presentaciones */}
-          {presentations.length > 0 && (
-            <View style={styles.presentationsSection}>
-              {/* Presentación por defecto o única */}
-              <TouchableOpacity
-                style={styles.defaultRow}
-                onPress={() => hasMultiple && setExpanded(!expanded)}
-
-              >
-                <View style={styles.presInfo}>
-                  <Text style={styles.presName} numberOfLines={1}>{defaultPres?.name}</Text>
-                  <Text style={styles.presQty}>x{defaultPres?.unit_quantity}</Text>
-                </View>
-                <View style={styles.presRight}>
-                  <Text style={styles.presPrice}>S/ {defaultPres?.sale_price.toFixed(2)}</Text>
-                </View>
-              </TouchableOpacity>
-
-              {/* Otras presentaciones (expandible) */}
-              {expanded && presentations.filter((p) => p.id !== defaultPres?.id).map((p) => (
-                <View key={p.id} style={styles.otherRow}>
-                  <View style={styles.presInfo}>
-                    <Text style={styles.presName} numberOfLines={1}>{p.name}</Text>
-                    <Text style={styles.presQty}>x{p.unit_quantity}</Text>
-                  </View>
-                  <Text style={styles.presPrice}>S/ {p.sale_price.toFixed(2)}</Text>
-                </View>
-              ))}
-            </View>
-          )}
         </View>
 
         {(onEdit || onToggleActive) && (

@@ -45,7 +45,7 @@ export default function NewOrderScreen() {
     const customerSearchInputRef = useRef<TextInput>(null);
     const productSearchInputRef = useRef<TextInput>(null);
     const { showToast } = useToast();
-
+    console.log(orderItems)
     // Buscar clientes desde Supabase con debounce
     useEffect(() => {
         if (!searchCustomer.trim()) {
@@ -149,14 +149,6 @@ export default function NewOrderScreen() {
 
     const handleQuantityInputChange = (productId: string, text: string) => {
         setQuantityInputs((prev) => ({ ...prev, [productId]: text }));
-        // const num = parseInt(text);
-        // if (!isNaN(num) && num > 0) {
-        //     setOrderItems((prev) =>
-        //         prev.map((item) =>
-        //             item.product.id === productId ? { ...item, amount: num } : item
-        //         )
-        //     );
-        // }
     };
 
     const commitQuantityInput = (productId: string) => {
@@ -496,7 +488,10 @@ export default function NewOrderScreen() {
                 visible={showProductModal}
                 transparent
                 animationType="fade"
-                onShow={() => focusInputWhenModalShown(productSearchInputRef)}
+                onShow={() => {
+                    focusInputWhenModalShown(productSearchInputRef);
+                    setSearchProduct('')
+                }}
                 onRequestClose={() => setShowProductModal(false)}
             >
                 <Pressable
@@ -570,12 +565,16 @@ export default function NewOrderScreen() {
                             )}
                         />
                     </View>
+                    
                 </Pressable>
             </Modal>
             {/* Modal de presentaciones por producto */}
             <Modal
                 visible={showPresentationsByProduct}
-                onRequestClose={() => setShowPresentationsByProduct(false)}
+                onRequestClose={() => {
+                    setShowPresentationsByProduct(false);
+                    setOrderItems([])
+                }}
                 transparent
                 animationType="fade"
             >
@@ -661,23 +660,24 @@ export default function NewOrderScreen() {
                                         <View style={styles.divider} />
                                         <View style={styles.summaryRow}>
                                             <Text style={styles.summaryLabel}>Estás agregando:</Text>
-                                            <Text style={styles.summaryValue}>{orderItems.reduce((sum, item) => sum + item.amount, 0)} unidad(es)</Text>
+                                            <Text style={styles.summaryValue}>{orderItems.reduce((sum, item) => sum + item.amount, 0)} {orderItems.map((item) => item.presentationName)}(s)</Text>
                                         </View>
                                         <View style={styles.summaryRow}>
                                             <Text style={styles.summaryLabel}>Subtotal:</Text>
-                                            <Text style={styles.summaryValue}>S/ {orderItems.reduce((sum, item) => sum + item.amount * item.product.price, 0).toFixed(2)}</Text>
+                                            <Text style={styles.summaryValue}>S/ {orderItems.reduce((sum, item) => sum + item.amount * item.unitPrice, 0).toFixed(2)}</Text>
                                         </View>
                                     </>
                                 )}
                             </View>
-
                         </View>
                         <View style={styles.actions}>
                             <TouchableOpacity
                                 style={[styles.button, styles.cancelButton]}
                                 onPress={() => {
                                     setShowPresentationsByProduct(false);
-                                    setShowProductModal(true);
+                                    setShowProductModal(false);
+                                    setSearchProduct('')
+                                    setOrderItems([])
                                 }}
                                 disabled={loading}
                             >
