@@ -1,4 +1,3 @@
-import { useAuth } from "@/contexts/AuthContext";
 import { getUsers } from "@/services/database";
 import { User } from "@/types";
 import { Ionicons } from "@expo/vector-icons";
@@ -37,7 +36,7 @@ export default function UsersScreen() {
       case 'vendedor':
         return '#16a34a';
       case 'admin':
-        return '#2563eb';
+        return '#08859b';
       default:
         return '#111827';
     }
@@ -51,7 +50,7 @@ export default function UsersScreen() {
     <View style={{ flex: 1, padding: 15, gap: 10, backgroundColor: '#fff' }}>
       {users.map((user) => (
         <View key={user.id} style={{ borderWidth: 0.5, borderColor: '#c5c3c3', borderRadius: 10, paddingVertical: 10, paddingRight: 15, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-          <Ionicons name="person-circle-outline" size={65} color="#2563eb" />
+          <Ionicons name="person-circle-outline" size={65} color="#08859b" />
           <View style={{ flex: 1, gap: 5 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
               <Text style={{ fontSize: 16, fontWeight: '800' }} numberOfLines={1} ellipsizeMode="tail">

@@ -7,7 +7,7 @@ export default function IndexScreen() {
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#2563eb" />
+        <ActivityIndicator size="large" color="#08859b" />
         <Text style={styles.loadingText}>Cargando sesión...</Text>
       </View>
     );

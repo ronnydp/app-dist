@@ -1,23 +1,21 @@
-import { supabase } from "@/lib/supabase";
-import { authService } from "@/services/auth-service";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/contexts/ToastsContext";
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import {
+  Image,
   KeyboardAvoidingView,
   Platform,
   Pressable,
   StyleSheet,
   Text,
   TextInput,
-  View,
-  Image,
   TouchableOpacity,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { LinearGradient } from "expo-linear-gradient";
-import { useToast } from "@/contexts/ToastsContext";
-import { useAuth } from "@/contexts/AuthContext";
 
 export default function LoginScreen() {
   const [email, setEmail] = useState("");
@@ -43,7 +41,7 @@ export default function LoginScreen() {
     setIsLoading(true);
 
     try {
-      await authService.login({ email, password });
+      await login( email, password );
       router.replace("/(tabs)/order");
     } catch (error) {
       showToast(
@@ -245,12 +243,12 @@ const styles = StyleSheet.create({
   },
   primaryButton: {
     marginTop: 10,
-    backgroundColor: "#0f6fc9",
+    backgroundColor: "#08859b",
     height: 54,
     borderRadius: 14,
     justifyContent: "center",
     alignItems: "center",
-    shadowColor: "#0F4CC9",
+    shadowColor: "#08599b",
     shadowOffset: {
       width: 0,
       height: 8,

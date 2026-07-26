@@ -1,9 +1,11 @@
+import { useToast } from '@/contexts/ToastsContext';
 import { authService } from '@/services/auth-service';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { RefObject, useEffect, useRef, useState } from 'react';
 import {
     ActivityIndicator,
+    FlatList,
     KeyboardAvoidingView,
     Modal,
     Platform,
@@ -18,8 +20,6 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { createOrder, getPresentationsByProduct, getProducts, searchCustomers } from '../services/database';
 import { Customer, Presentation, Product } from '../types';
-import { useToast } from '@/contexts/ToastsContext';
-import { FlatList } from 'react-native';
 
 export default function NewOrderScreen() {
     const insets = useSafeAreaInsets();
@@ -231,7 +231,7 @@ export default function NewOrderScreen() {
                     >
                         <View style={styles.dropdownContent}>
                             {!selectedCustomer && <Ionicons name="person-outline" size={18} color="#9ca3af" />}
-                            {selectedCustomer && <Ionicons name="person" size={18} color="#2563eb" />}
+                            {selectedCustomer && <Ionicons name="person" size={18} color="#08859b" />}
                             <Text
                                 style={[styles.dropdownText, !selectedCustomer && styles.placeholder]}
                                 numberOfLines={1}
@@ -247,7 +247,7 @@ export default function NewOrderScreen() {
                     </TouchableOpacity>
                     {selectedCustomer && (
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                            <Text style={styles.selectedAddress}><Ionicons name="location-outline" size={16} color="#2563eb" style={{ marginRight: 6 }} /> {selectedCustomer.address}</Text>
+                            <Text style={styles.selectedAddress}><Ionicons name="location-outline" size={16} color="#08859b" style={{ marginRight: 6 }} /> {selectedCustomer.address}</Text>
                         </View>
                     )}
                 </View>
@@ -464,7 +464,7 @@ export default function NewOrderScreen() {
                                         {customer.address}
                                     </Text>
                                     {selectedCustomer?.id === customer.id && (
-                                        <Ionicons name="checkmark" size={20} color="#2563eb" />
+                                        <Ionicons name="checkmark" size={20} color="#08859b" />
                                     )}
                                 </TouchableOpacity>
                             )}
@@ -472,7 +472,7 @@ export default function NewOrderScreen() {
                                 <Text style={styles.noResults}>Escriba para buscar clientes...</Text>
                             ) : searchingCustomers ? (
                                 <View style={styles.searchingContainer}>
-                                    <ActivityIndicator size="small" color="#2563eb" />
+                                    <ActivityIndicator size="small" color="#08859b" />
                                     <Text style={styles.noResults}>Buscando...</Text>
                                 </View>
                             ) : (
@@ -618,7 +618,7 @@ export default function NewOrderScreen() {
                                 <Ionicons
                                     name={selectedPresentation?.id === presentation.id ? 'radio-button-on' : 'radio-button-off'}
                                     size={20}
-                                    color={selectedPresentation?.id === presentation.id ? '#2563eb' : '#9ca3af'} />
+                                    color={selectedPresentation?.id === presentation.id ? '#08859b' : '#9ca3af'} />
                                 <View style={{ flex: 1, marginLeft: 10 }}>
                                     <Text style={styles.modalOptionTextPresentationName}>{presentation.name} </Text>
                                     <Text style={styles.modalOptionTextPresentationQuantity}>{presentation.unit_quantity} unidades</Text>
@@ -640,7 +640,7 @@ export default function NewOrderScreen() {
                                                 <TouchableOpacity style={styles.quantityButton} onPress={() =>
                                                     handleUpdateAmount(item.product.id, item.amount - 1)
                                                 }>
-                                                    <Ionicons name="remove" size={20} color="#2563eb" />
+                                                    <Ionicons name="remove" size={20} color="#08859b" />
                                                 </TouchableOpacity>
                                                 <TextInput
                                                     style={{ fontWeight: 'bold', fontSize: 20, textAlign: 'center' }}
@@ -653,7 +653,7 @@ export default function NewOrderScreen() {
                                                 <TouchableOpacity style={styles.quantityButton} onPress={() =>
                                                     handleUpdateAmount(item.product.id, item.amount + 1)
                                                 }>
-                                                    <Ionicons name="add" size={20} color="#2563eb" />
+                                                    <Ionicons name="add" size={20} color="#08859b" />
                                                 </TouchableOpacity>
                                             </View>
                                         ))}
@@ -780,7 +780,7 @@ const styles = StyleSheet.create({
         width: 24,
         height: 24,
         borderRadius: 12,
-        backgroundColor: '#2563eb',
+        backgroundColor: '#08859b',
         justifyContent: 'center',
         alignItems: 'center',
     },
@@ -817,7 +817,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         gap: 4,
-        backgroundColor: '#2563eb',
+        backgroundColor: '#08859b',
         paddingHorizontal: 12,
         paddingVertical: 6,
         borderRadius: 20,
@@ -917,7 +917,7 @@ const styles = StyleSheet.create({
         height: 36,
         borderRadius: 8,
         borderWidth: 1,
-        borderColor: '#2563eb',
+        borderColor: '#08859b',
         justifyContent: 'center',
         alignItems: 'center',
     },
@@ -973,16 +973,16 @@ const styles = StyleSheet.create({
     subtotalAmount: {
         fontSize: 14,
         fontWeight: '700',
-        color: '#2563eb',
+        color: '#08859b',
         flex: 1,
         textAlign: 'right',
     },
     dropdownSelected: {
-        borderColor: '#2563eb',
-        backgroundColor: '#f0f7ff',
+        borderColor: '#08859b',
+        backgroundColor: '#eefafc',
     },
     totalSection: {
-        backgroundColor: '#eff6ff',
+        backgroundColor: '#eefafc',
         borderRadius: 8,
         padding: 16,
         marginBottom: 24,
@@ -990,7 +990,7 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         alignItems: 'center',
         borderLeftWidth: 4,
-        borderLeftColor: '#2563eb',
+        borderLeftColor: '#08859b',
     },
     totalLabel: {
         fontSize: 16,
@@ -1000,7 +1000,7 @@ const styles = StyleSheet.create({
     totalAmount: {
         fontSize: 20,
         fontWeight: '700',
-        color: '#2563eb',
+        color: '#08859b',
     },
     input: {
         borderWidth: 1,
@@ -1197,7 +1197,7 @@ const styles = StyleSheet.create({
         textAlign: 'center',
     },
     addProductButton: {
-        backgroundColor: '#2563eb',
+        backgroundColor: '#08859b',
         paddingHorizontal: 16,
         paddingVertical: 8,
         borderRadius: 6,
@@ -1221,7 +1221,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#f0f7ff',
     },
     cartBadge: {
-        backgroundColor: '#2563eb',
+        backgroundColor: '#08859b',
         borderRadius: 10,
         width: 22,
         height: 22,

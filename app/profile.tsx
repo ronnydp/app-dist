@@ -23,7 +23,7 @@ export default function ProfileScreen() {
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#2563eb" />
+        <ActivityIndicator size="large" color="#08859b" />
         <Text style={styles.loadingText}>Cargando perfil...</Text>
       </View>
     );
@@ -32,7 +32,7 @@ export default function ProfileScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Ionicons name="person-circle-outline" size={100} color="#2563eb" />
+        <Ionicons name="person-circle-outline" size={100} color="#08859b" />
         <View style={{ flex: 1 }}>
           <Text style={styles.title}>{session?.user?.name || 'Vendedor'}</Text>
           <Text style={styles.subtitle}>{session?.user?.role || 'Sin rol'}</Text>

@@ -107,7 +107,7 @@ export default function SummaryScreen() {
         return (
             <View style={styles.container}>
                 <View style={styles.loadingContainer}>
-                    <ActivityIndicator size="large" color="#2563eb" />
+                    <ActivityIndicator size="large" color="#08859b" />
                 </View>
             </View>
         );
@@ -122,7 +122,7 @@ export default function SummaryScreen() {
 
                     <View style={styles.totalCard}>
                         <View style={styles.totalIconContainer}>
-                            <Ionicons name="trending-up" size={28} color="#16a34a" />
+                                <Ionicons name="trending-up" size={28} color="#16a34a" />
                         </View>
                         <Text style={styles.totalLabel}>Total vendido</Text>
                         <Text style={styles.totalAmount}>
@@ -149,7 +149,7 @@ export default function SummaryScreen() {
 
                 <View style={styles.totalCard}>
                     <View style={[styles.totalIconContainer, styles.totalIconAdmin]}>
-                        <Ionicons name="stats-chart" size={28} color="#2563eb" />
+                        <Ionicons name="stats-chart" size={28} color="#08859b" />
                     </View>
                     <Text style={styles.totalLabel}>Total general</Text>
                     <Text style={[styles.totalAmount, styles.totalAmountAdmin]}>
@@ -164,7 +164,7 @@ export default function SummaryScreen() {
                     <View key={seller.sellerId} style={styles.sellerCard}>
                         <View style={styles.sellerHeader}>
                             <View style={styles.sellerInfo}>
-                                <Ionicons name="person" size={18} color="#2563eb" />
+                                <Ionicons name="person" size={18} color="#08859b" />
                                 <Text style={styles.sellerName}>{seller.sellerName}</Text>
                             </View>
                             <Text style={styles.sellerTotal}>

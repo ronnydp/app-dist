@@ -1,3 +1,4 @@
+import { useToast } from '@/contexts/ToastsContext';
 import { router, useLocalSearchParams, useNavigation } from 'expo-router';
 import { useEffect, useLayoutEffect, useState } from 'react';
 import {
@@ -12,7 +13,6 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getPresentationsByProduct, getProducts, savePresentations, saveProduct } from '../services/database';
-import { useToast } from '@/contexts/ToastsContext';
 
 export default function NewProductScreen() {
     const insets = useSafeAreaInsets();
@@ -357,7 +357,7 @@ const styles = StyleSheet.create({
         color: '#6b7280',
     },
     submitButton: {
-        backgroundColor: '#2563eb',
+        backgroundColor: '#08859b',
     },
     submitButtonText: {
         fontSize: 16,
@@ -442,8 +442,8 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     checkboxActive: {
-        backgroundColor: '#2563eb',
-        borderColor: '#2563eb',
+        backgroundColor: '#08859b',
+        borderColor: '#08859b',
     },
     checkmark: {
         color: '#fff',

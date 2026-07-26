@@ -1,9 +1,8 @@
+import { useToast } from '@/contexts/ToastsContext';
 import { authService } from '@/services/auth-service';
-import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { useToast } from '@/contexts/ToastsContext';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 export default function SessionActionsMenu() {
   const [isOpen, setIsOpen] = useState(false);
@@ -47,46 +46,6 @@ export default function SessionActionsMenu() {
           accessibilityLabel="Cerrar menú"
         />
       )}
-
-      {/* <View style={styles.anchor}>
-        {isOpen && (
-          <View style={styles.menuCard}>
-            <Pressable
-              style={styles.profileMenuItem}
-              onPress={handleViewProfile}
-            >
-              <Ionicons name="person-outline" size={16} color="#2563eb" />
-              <Text style={styles.profileMenuItemText}>Ver perfil</Text>
-            </Pressable>
-
-            <Pressable
-              style={[styles.menuItem, isLoggingOut && styles.menuItemDisabled]}
-              onPress={handleLogout}
-              disabled={isLoggingOut}
-            >
-              <Ionicons name="log-out-outline" size={16} color="#ef4444" />
-              <Text style={styles.menuItemText}>{isLoggingOut ? 'Saliendo...' : 'Cerrar sesión'}</Text>
-            </Pressable>
-          </View>
-        )}
-        <ConfirmDialog
-          visible={isConfirmVisible}
-          title="Cerrar sesión"
-          message="¿Seguro que deseas salir?"
-          confirmText="Salir"
-          cancelText="Cancelar"
-          isLoading={isLoggingOut}
-          onConfirm={handleConfirmLogout}
-          onCancel={handleCancelLogout}
-        />
-
-        <Pressable
-          style={[styles.triggerButton, isOpen && styles.triggerButtonActive]}
-          onPress={() => setIsOpen((prev) => !prev)}
-        >
-          <Ionicons name={isOpen ? 'close' : 'ellipsis-vertical'} size={18} color="#111827" />
-        </Pressable>
-      </View> */}
     </View>
   );
 }

@@ -107,13 +107,15 @@ export default function ProductScreen() {
     const openProduct = useCallback((p: ProductWithPresentations) => {
         setSelectedProduct(p);
         const presentations = JSON.stringify(p.presentations)
+        const is_active = String(p.is_active)
         router.push({
             pathname: '/detailProduct',
             params: {
                 id: p.id,
                 name: p.name,
                 price: p.price,
-                presentations: presentations
+                presentations: presentations,
+                is_active: is_active
             }
         })
     }, [])
@@ -146,7 +148,7 @@ export default function ProductScreen() {
                 ListFooterComponent={
                     loadingMore ? (
                         <View style={styles.loadingMore}>
-                            <ActivityIndicator size="small" color="#2563eb" />
+                            <ActivityIndicator size="small" color="#08859b" />
                         </View>
                     ) : null
                 }

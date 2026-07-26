@@ -162,7 +162,7 @@ export default function CustomerScreen() {
         ListFooterComponent={
           loadingMore ? (
             <View style={styles.loadingMore}>
-              <ActivityIndicator size="small" color="#2563eb" />
+              <ActivityIndicator size="small" color="#08859b" />
             </View>
           ) : null
         }
@@ -186,7 +186,7 @@ export default function CustomerScreen() {
             <View style={styles.modalContent}>
               <View style={styles.modalHeader}>
                 <View style={styles.modalTitleRow}>
-                  <Ionicons name="person-circle-outline" size={28} color="#2563eb" style={{ marginRight: 8 }} />
+                  <Ionicons name="person-circle-outline" size={28} color="#08859b" style={{ marginRight: 8 }} />
                   <Text style={styles.modalTitle} numberOfLines={1} ellipsizeMode="tail">
                     {selectedCustomer ? selectedCustomer.name : 'Customer'}
                   </Text>

@@ -23,12 +23,12 @@ export default memo(function OrderCard({ item, onOpen }: Props) {
           </View>
 
           <View style={cardStyles.infoRow}>
-            <Ionicons name="location-outline" size={14} color="#2563eb" style={cardStyles.infoIcon} />
+            <Ionicons name="location-outline" size={14} color="#08859b" style={cardStyles.infoIcon} />
             <Text style={cardStyles.info}>{item.customer_address}</Text>
           </View>
           {item.customer_phone && (
             <View style={cardStyles.infoRow}>
-              <Ionicons name="call-outline" size={14} color="#2563eb" style={cardStyles.infoIcon} />  
+              <Ionicons name="call-outline" size={14} color="#08859b" style={cardStyles.infoIcon} />  
               <Text style={cardStyles.info}>{item.customer_phone}</Text>
             </View>
           )}

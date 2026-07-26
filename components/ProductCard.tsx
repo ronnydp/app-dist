@@ -2,8 +2,8 @@ import { Ionicons } from '@expo/vector-icons';
 import React, { memo, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { ProductWithPresentations } from '../types';
-import cardStyles from './ui/cardStyles';
 import ConfirmDialog from './ConfirmDialogProps';
+import cardStyles from './ui/cardStyles';
 
 type Props = {
   item: ProductWithPresentations;
@@ -40,19 +40,22 @@ export default memo(function ProductCard({ item, onOpen, onEdit, onToggleActive 
       onPress={() => onOpen(item)}
       >
       <View style={[cardStyles.card, inactive && { opacity: 0.5 }]}>
-        <View style={{ flex: 1 }}>
+        <View style={{ flex: 1, flexDirection: 'row' }}>
           <View style={cardStyles.cardContent}>
             <Text style={cardStyles.nombre} numberOfLines={1} ellipsizeMode="tail">{item.name}</Text>
             <Text style={cardStyles.price}>S/ {item.price.toFixed(2)}</Text>
             {item.image_url ? <Text style={cardStyles.info}>{item.image_url}</Text> : null}
           </View>
+          <View style={{alignItems: 'center', justifyContent: 'center'}}>
+            <Ionicons name="chevron-forward-outline" size={16}></Ionicons>
+          </View>
         </View>
 
-        {(onEdit || onToggleActive) && (
+        {/* {(onEdit || onToggleActive) && (
           <View style={{ alignItems: 'center', gap: 8 }}>
             {onEdit && (
               <TouchableOpacity style={cardStyles.deleteBtn} onPress={() => onEdit(item)}>
-                <Ionicons name="create-outline" size={20} color="#cfbb09" />
+                <Ionicons name="create-outline" size={20} color="#08859b" />
               </TouchableOpacity>
             )}
             {onToggleActive && (
@@ -71,7 +74,7 @@ export default memo(function ProductCard({ item, onOpen, onEdit, onToggleActive 
               </TouchableOpacity>
             )}
           </View>
-        )}
+        )} */}
       </View>
     </TouchableOpacity>
   );

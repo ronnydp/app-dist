@@ -1,4 +1,5 @@
 // app/nuevo-cliente.tsx
+import { useToast } from '@/contexts/ToastsContext';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams, useNavigation } from 'expo-router';
 import { useLayoutEffect, useState } from 'react';
@@ -15,7 +16,6 @@ import {
     View,
 } from 'react-native';
 import { getCustomers, saveCustomer } from '../services/database';
-import { useToast } from '@/contexts/ToastsContext';
 
 const DISTRITOS = ['Chimbote', 'Nuevo Chimbote'];
 
@@ -226,7 +226,7 @@ export default function NuevoClienteScreen() {
                                     {dist}
                                 </Text>
                                 {distrito === dist && (
-                                    <Ionicons name="checkmark" size={20} color="#2563eb" />
+                                    <Ionicons name="checkmark" size={20} color="#08859b" />
                                 )}
                             </TouchableOpacity>
                         ))}
@@ -307,7 +307,7 @@ const styles = StyleSheet.create({
         color: '#6b7280',
     },
     submitButton: {
-        backgroundColor: '#2563eb',
+        backgroundColor: '#08859b',
     },
     submitButtonText: {
         fontSize: 16,
@@ -345,7 +345,7 @@ const styles = StyleSheet.create({
         marginBottom: 8,
     },
     modalOptionSelected: {
-        backgroundColor: '#eff6ff',
+        backgroundColor: '#eefafc',
     },
     modalOptionText: {
         fontSize: 16,
