@@ -16,6 +16,7 @@ import { supabase } from "@/lib/supabase";
 import { ToastProvider } from "../contexts/ToastsContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProductProvider } from "@/contexts/ProductContext";
+import Toast from "@/components/Toast";
 
 export const unstable_settings = {
   anchor: "(tabs)",
@@ -138,6 +139,7 @@ export default function RootLayout() {
                 }}
               />
             </Stack>
+            <Toast/>
           </ProductProvider>
           {showSessionMenu && <SessionActionsMenu />}
           <StatusBar style="auto" />

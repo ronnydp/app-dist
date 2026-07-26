@@ -2,7 +2,7 @@ import ConfirmDialog from "@/components/ConfirmDialogProps";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/contexts/ToastsContext";
 import { activateProduct, deleteProduct } from "@/services/database";
-import { Presentation, ProductWithPresentations } from "@/types";
+import { Presentation } from "@/types";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useLocalSearchParams } from "expo-router/build/hooks";
@@ -47,26 +47,29 @@ export default function DetailProduct() {
     const handleRemove = async () => {
         if (is_active) {
             try {
-                await deleteProduct(params.id)
                 setIsToggling(true)
+                await deleteProduct(params.id)
                 showToast('Producto inhabilitado', 'success');
+                router.back()
             } catch (error) {
                 showToast('No se pudo inhabilitar el producto', 'error');
                 console.error(error);
             } finally {
+                setIsToggling(false)
                 setIsConfirmVisible(false)
             }
         } else {
             try {
-                await activateProduct(params.id);
                 setIsToggling(true)
+                await activateProduct(params.id);
                 showToast('Producto habilitado', 'success');
+                router.back()
             } catch (error) {
                 showToast('No se pudo habilitar el producto', 'error');
                 console.error(error);
             } finally {
-                setIsConfirmVisible(false)
                 setIsToggling(false)
+                setIsConfirmVisible(false)
             }
         }
 
@@ -172,7 +175,7 @@ export default function DetailProduct() {
                 title={is_active ? "Deshabilitar" : "Habilitar"}
                 confirmText='Confirmar'
                 isLoading={isToggling}
-                message={is_active ? 'Seguro que deseas inhabilitar este producto?' : "Habilitar producto?"}
+                message={is_active ? 'Los vendedores no podrán seleccionar este producto' : "Los vendedores podrán seleccionar este producto"}
                 onConfirm={handleRemove}
                 onCancel={handleCancelActiveProduct}
 

@@ -45,8 +45,8 @@ export default function NewOrderScreen() {
     const customerSearchInputRef = useRef<TextInput>(null);
     const productSearchInputRef = useRef<TextInput>(null);
     const { showToast } = useToast();
-    console.log(orderItems)
     // Buscar clientes desde Supabase con debounce
+    console.log(orderItems)
     useEffect(() => {
         if (!searchCustomer.trim()) {
             setCustomers([]);
@@ -96,14 +96,15 @@ export default function NewOrderScreen() {
         normalizeText(product.name).includes(normalizeText(searchProduct))
     );
 
-    const handleAddProduct = (product: Product, presentationName?: string) => {
+    const handleAddProduct = (product: Product, presentation_price: number, presentationName?: string, ) => {
         const existingItem = orderItems.find((item) => item.product.id === product.id);
-
+        
+        console.log(existingItem)
         if (existingItem) {
             setOrderItems(
                 orderItems.map((item) =>
                     item.product.id === product.id ? {
-                        ...item, amount: 1, unitPrice: product.price, presentationName
+                        ...item, amount: 1, unitPrice: presentation_price, presentationName
                     } : item)
             )
             setQuantityInputs((prev) => ({ ...prev, [product.id]: '1' }));
@@ -113,10 +114,11 @@ export default function NewOrderScreen() {
                 {
                     product,
                     amount: 1,
-                    unitPrice: product.price,
+                    unitPrice: presentation_price,
                     presentationName,
                 },
             ]);
+            console.log(orderItems)
             setQuantityInputs((prev) => ({
                 ...prev,
                 [product.id]: '1',
@@ -533,7 +535,7 @@ export default function NewOrderScreen() {
                                             setSelectedProduct(product);
                                             getPresentationsByProduct(product.id).then((presentations) => {
                                                 if (presentations.length === 0) {
-                                                    handleAddProduct(product);
+                                                    handleAddProduct(product, product.price);
                                                     return;
                                                 }
                                                 setPresentationsByProduct(presentations);
@@ -610,8 +612,9 @@ export default function NewOrderScreen() {
                                 ]}
                                 onPress={() => {
                                     handleAddProduct(
-                                        { ...selectedProduct!, price: presentation.sale_price },
-                                        presentation.name
+                                        { ...selectedProduct!},
+                                        presentation.sale_price,
+                                        presentation.name,
                                     );
                                     setSelectedPresentation(presentation);
                                 }}>
@@ -621,7 +624,7 @@ export default function NewOrderScreen() {
                                     color={selectedPresentation?.id === presentation.id ? '#08859b' : '#9ca3af'} />
                                 <View style={{ flex: 1, marginLeft: 10 }}>
                                     <Text style={styles.modalOptionTextPresentationName}>{presentation.name} </Text>
-                                    <Text style={styles.modalOptionTextPresentationQuantity}>{presentation.unit_quantity} unidades</Text>
+                                    <Text style={styles.modalOptionTextPresentationQuantity}>{presentation.unit_quantity} unidad(es)</Text>
                                 </View>
                                 <Text style={styles.presentationPrice}>S/ {presentation.sale_price.toFixed(2)}</Text>
                             </TouchableOpacity>
@@ -660,7 +663,7 @@ export default function NewOrderScreen() {
                                         <View style={styles.divider} />
                                         <View style={styles.summaryRow}>
                                             <Text style={styles.summaryLabel}>Estás agregando:</Text>
-                                            <Text style={styles.summaryValue}>{orderItems.reduce((sum, item) => sum + item.amount, 0)} {orderItems.map((item) => item.presentationName)}(s)</Text>
+                                            <Text style={styles.summaryValue}>{orderItems.reduce((sum, item) => sum + item.amount, 0)} {orderItems.map((item) => item.presentationName)}(es)</Text>
                                         </View>
                                         <View style={styles.summaryRow}>
                                             <Text style={styles.summaryLabel}>Subtotal:</Text>
@@ -678,6 +681,7 @@ export default function NewOrderScreen() {
                                     setShowProductModal(false);
                                     setSearchProduct('')
                                     setOrderItems([])
+                                    setSelectedPresentation(null)
                                 }}
                                 disabled={loading}
                             >
