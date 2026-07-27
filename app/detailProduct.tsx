@@ -49,10 +49,10 @@ export default function DetailProduct() {
             try {
                 setIsToggling(true)
                 await deleteProduct(params.id)
-                showToast('Producto inhabilitado', 'success');
+                showToast('Producto deshabilitado', 'success');
                 router.back()
             } catch (error) {
-                showToast('No se pudo inhabilitar el producto', 'error');
+                showToast('No se pudo deshabilitar producto', 'error');
                 console.error(error);
             } finally {
                 setIsToggling(false)
@@ -65,7 +65,7 @@ export default function DetailProduct() {
                 showToast('Producto habilitado', 'success');
                 router.back()
             } catch (error) {
-                showToast('No se pudo habilitar el producto', 'error');
+                showToast('No se pudo habilitar producto', 'error');
                 console.error(error);
             } finally {
                 setIsToggling(false)

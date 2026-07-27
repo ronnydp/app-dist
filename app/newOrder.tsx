@@ -44,6 +44,10 @@ export default function NewOrderScreen() {
     const [selectedPresentation, setSelectedPresentation] = useState<Presentation | null>(null); // Estado para almacenar la presentación seleccionada
     const customerSearchInputRef = useRef<TextInput>(null);
     const productSearchInputRef = useRef<TextInput>(null);
+    const [currentDraftItem, setCurrentDraftItem] = useState<
+        Array<{ product: Product; amount: number; unitPrice: number; presentationName?: string }>
+    >([]);
+    console.log(currentDraftItem)
     const { showToast } = useToast();
     // Buscar clientes desde Supabase con debounce
     console.log(orderItems)
@@ -96,21 +100,20 @@ export default function NewOrderScreen() {
         normalizeText(product.name).includes(normalizeText(searchProduct))
     );
 
-    const handleAddProduct = (product: Product, presentation_price: number, presentationName?: string, ) => {
-        const existingItem = orderItems.find((item) => item.product.id === product.id);
-        
-        console.log(existingItem)
+    const handleAddPresentation = (product: Product, presentation_price: number, presentationName?: string, ) => {
+        const existingItem = currentDraftItem.find((item) => item.product.id === product.id);
+
         if (existingItem) {
-            setOrderItems(
-                orderItems.map((item) =>
+            setCurrentDraftItem(
+                currentDraftItem.map((item) =>
                     item.product.id === product.id ? {
                         ...item, amount: 1, unitPrice: presentation_price, presentationName
                     } : item)
             )
             setQuantityInputs((prev) => ({ ...prev, [product.id]: '1' }));
         } else {
-            setOrderItems([
-                ...orderItems,
+            setCurrentDraftItem([
+                ...currentDraftItem,
                 {
                     product,
                     amount: 1,
@@ -118,12 +121,33 @@ export default function NewOrderScreen() {
                     presentationName,
                 },
             ]);
-            console.log(orderItems)
             setQuantityInputs((prev) => ({
                 ...prev,
                 [product.id]: '1',
             }));
         }
+    };
+
+    const handleAddProduct = () => {
+        if (currentDraftItem.length === 0) return;
+
+        setOrderItems((prev) => {
+            const next = [...prev];
+
+            for (const draft of currentDraftItem) {
+                const existingIndex = next.findIndex((item) => item.product.id === draft.product.id);
+                if (existingIndex >= 0) {
+                    next[existingIndex] = draft;
+                } else {
+                    next.push(draft);
+                }
+            }
+
+            return next;
+        });
+
+        setCurrentDraftItem([]);
+        setSelectedPresentation(null);
     };
 
     const handleRemoveItem = (productId: string) => {
@@ -159,6 +183,33 @@ export default function NewOrderScreen() {
         const value = !text || isNaN(num) || num <= 0 ? 1 : num;
         setQuantityInputs((prev) => ({ ...prev, [productId]: String(value) }));
         handleUpdateAmount(productId, value);
+    };
+
+    const handleUpdateDraftAmount = (productId: string, newAmount: number) => {
+        if (newAmount <= 0) {
+            setCurrentDraftItem((prev) => prev.filter((item) => item.product.id !== productId));
+            setQuantityInputs((prev) => {
+                const next = { ...prev };
+                delete next[productId];
+                return next;
+            });
+            return;
+        }
+
+        setCurrentDraftItem((prev) =>
+            prev.map((item) =>
+                item.product.id === productId ? { ...item, amount: newAmount } : item
+            )
+        );
+        setQuantityInputs((prev) => ({ ...prev, [productId]: String(newAmount) }));
+    };
+
+    const commitDraftQuantityInput = (productId: string) => {
+        const text = quantityInputs[productId];
+        const num = parseInt(text ?? '');
+        const value = !text || isNaN(num) || num <= 0 ? 1 : num;
+        setQuantityInputs((prev) => ({ ...prev, [productId]: String(value) }));
+        handleUpdateDraftAmount(productId, value);
     };
 
     const calculateTotal = () => {
@@ -535,7 +586,31 @@ export default function NewOrderScreen() {
                                             setSelectedProduct(product);
                                             getPresentationsByProduct(product.id).then((presentations) => {
                                                 if (presentations.length === 0) {
-                                                    handleAddProduct(product, product.price);
+                                                    setOrderItems((prev) => {
+                                                        const existingIndex = prev.findIndex((item) => item.product.id === product.id);
+                                                        if (existingIndex >= 0) {
+                                                            const next = [...prev];
+                                                            next[existingIndex] = {
+                                                                ...next[existingIndex],
+                                                                amount: next[existingIndex].amount + 1,
+                                                                unitPrice: product.price,
+                                                            };
+                                                            return next;
+                                                        }
+
+                                                        return [
+                                                            ...prev,
+                                                            {
+                                                                product,
+                                                                amount: 1,
+                                                                unitPrice: product.price,
+                                                            },
+                                                        ];
+                                                    });
+                                                    setQuantityInputs((prev) => ({
+                                                        ...prev,
+                                                        [product.id]: '1',
+                                                    }));
                                                     return;
                                                 }
                                                 setPresentationsByProduct(presentations);
@@ -570,12 +645,12 @@ export default function NewOrderScreen() {
                     
                 </Pressable>
             </Modal>
-            {/* Modal de presentaciones por producto */}
+            {/* Modal de agregar por producto */}
             <Modal
                 visible={showPresentationsByProduct}
                 onRequestClose={() => {
                     setShowPresentationsByProduct(false);
-                    setOrderItems([])
+                    setCurrentDraftItem([])
                 }}
                 transparent
                 animationType="fade"
@@ -611,7 +686,7 @@ export default function NewOrderScreen() {
                                     selectedPresentation?.id === presentation.id && styles.modalOptionSelected,
                                 ]}
                                 onPress={() => {
-                                    handleAddProduct(
+                                    handleAddPresentation(
                                         { ...selectedProduct!},
                                         presentation.sale_price,
                                         presentation.name,
@@ -632,16 +707,16 @@ export default function NewOrderScreen() {
                         <Text style={{ fontWeight: 'bold', marginVertical: 10 }}>2. Ingresa la cantidad</Text>
                         <View style={styles.quantityCard}>
                             <View>
-                                {orderItems.length === 0 ? (
+                                {currentDraftItem.length === 0 ? (
                                     <Text style={{ color: '#bdb9b9', textAlign: 'center', width: '100%', marginVertical: 10 }}>
                                         No ha seleccionado presentación aún
                                     </Text>
                                 ) : (
                                     <>
-                                        {orderItems.map((item) => (
+                                        {currentDraftItem.map((item) => (
                                             <View key={item.product.id} style={styles.quantityRow}>
                                                 <TouchableOpacity style={styles.quantityButton} onPress={() =>
-                                                    handleUpdateAmount(item.product.id, item.amount - 1)
+                                                    handleUpdateDraftAmount(item.product.id, item.amount - 1)
                                                 }>
                                                     <Ionicons name="remove" size={20} color="#08859b" />
                                                 </TouchableOpacity>
@@ -649,12 +724,12 @@ export default function NewOrderScreen() {
                                                     style={{ fontWeight: 'bold', fontSize: 20, textAlign: 'center' }}
                                                     value={quantityInputs[item.product.id] ?? item.amount.toString()}
                                                     onChangeText={(text) => handleQuantityInputChange(item.product.id, text)}
-                                                    onEndEditing={() => commitQuantityInput(item.product.id)}
+                                                    onEndEditing={() => commitDraftQuantityInput(item.product.id)}
                                                     keyboardType="numeric"
                                                     selectTextOnFocus
                                                 />
                                                 <TouchableOpacity style={styles.quantityButton} onPress={() =>
-                                                    handleUpdateAmount(item.product.id, item.amount + 1)
+                                                    handleUpdateDraftAmount(item.product.id, item.amount + 1)
                                                 }>
                                                     <Ionicons name="add" size={20} color="#08859b" />
                                                 </TouchableOpacity>
@@ -663,11 +738,11 @@ export default function NewOrderScreen() {
                                         <View style={styles.divider} />
                                         <View style={styles.summaryRow}>
                                             <Text style={styles.summaryLabel}>Estás agregando:</Text>
-                                            <Text style={styles.summaryValue}>{orderItems.reduce((sum, item) => sum + item.amount, 0)} {orderItems.map((item) => item.presentationName)}(es)</Text>
+                                            <Text style={styles.summaryValue}>{currentDraftItem.reduce((sum, item) => sum + item.amount, 0)} {currentDraftItem.map((item) => item.presentationName)}(es)</Text>
                                         </View>
                                         <View style={styles.summaryRow}>
                                             <Text style={styles.summaryLabel}>Subtotal:</Text>
-                                            <Text style={styles.summaryValue}>S/ {orderItems.reduce((sum, item) => sum + item.amount * item.unitPrice, 0).toFixed(2)}</Text>
+                                            <Text style={styles.summaryValue}>S/ {currentDraftItem.reduce((sum, item) => sum + item.amount * item.unitPrice, 0).toFixed(2)}</Text>
                                         </View>
                                     </>
                                 )}
@@ -680,7 +755,7 @@ export default function NewOrderScreen() {
                                     setShowPresentationsByProduct(false);
                                     setShowProductModal(false);
                                     setSearchProduct('')
-                                    setOrderItems([])
+                                    setCurrentDraftItem([])
                                     setSelectedPresentation(null)
                                 }}
                                 disabled={loading}
@@ -691,6 +766,7 @@ export default function NewOrderScreen() {
                             <TouchableOpacity
                                 style={[styles.button, styles.submitButton, loading && styles.buttonDisabled]}
                                 onPress={() => {
+                                    handleAddProduct()
                                     setShowPresentationsByProduct(false);
                                     setShowProductModal(false);
                                 }}
