@@ -4,25 +4,25 @@ import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { RefObject, useEffect, useRef, useState } from "react";
 import {
-    ActivityIndicator,
-    FlatList,
-    KeyboardAvoidingView,
-    Modal,
-    Platform,
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  FlatList,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
-    createOrder,
-    getPresentationsByProduct,
-    getProducts,
-    searchCustomers,
+  createOrder,
+  getPresentationsByProduct,
+  getProducts,
+  searchCustomers,
 } from "../services/database";
 import { Customer, Presentation, Product } from "../types";
 
@@ -72,10 +72,8 @@ export default function NewOrderScreen() {
       presentationName?: string;
     }>
   >([]);
-  console.log(currentDraftItem);
   const { showToast } = useToast();
   // Buscar clientes desde Supabase con debounce
-  console.log(orderItems);
   useEffect(() => {
     if (!searchCustomer.trim()) {
       setCustomers([]);
@@ -128,7 +126,7 @@ export default function NewOrderScreen() {
     normalizeText(product.name).includes(normalizeText(searchProduct)),
   );
 
-  const handleAddPresentation = (
+  const addOrUpdateDraftItem = (
     product: Product,
     presentation_price: number,
     presentationName?: string,
@@ -136,36 +134,59 @@ export default function NewOrderScreen() {
     const existingItem = currentDraftItem.find(
       (item) => item.product.id === product.id,
     );
+    const newItem = {
+      product,
+      amount: 1,
+      unitPrice: presentation_price,
+      presentationName,
+    };
 
-    if (existingItem) {
-      setCurrentDraftItem(
-        currentDraftItem.map((item) =>
-          item.product.id === product.id
-            ? {
-                ...item,
-                amount: 1,
-                unitPrice: presentation_price,
-                presentationName,
-              }
-            : item,
-        ),
-      );
-      setQuantityInputs((prev) => ({ ...prev, [product.id]: "1" }));
+    setCurrentDraftItem(
+      existingItem
+        ? currentDraftItem.map((item) =>
+            item.product.id === product.id ? newItem : item,
+          )
+        : [...currentDraftItem, newItem],
+    );
+    setQuantityInputs((prev) => ({ ...prev, [product.id]: "1" }));
+  };
+
+  const addProductWithoutPresentation = (product: Product) => {
+    const existingItem = orderItems.find(
+      (i) => i.product.id === product.id,
+    );
+    setOrderItems((prev) =>
+      existingItem
+        ? prev.map((item) =>
+            item.product.id === product.id
+              ? { ...item, amount: item.amount + 1 }
+              : item,
+          )
+        : [...prev, { product, amount: 1, unitPrice: product.price }],
+    );
+    setQuantityInputs((prev) => ({ ...prev, [product.id]: "1" }));
+  };
+
+  const handleProductSelection = async (product: Product) => {
+    setSelectedProduct(product);
+    const presentations = await getPresentationsByProduct(product.id);
+
+    if (presentations.length === 0) {
+      addProductWithoutPresentation(product);
+      setShowProductModal(false);
+      setSearchProduct("");
     } else {
-      setCurrentDraftItem([
-        ...currentDraftItem,
-        {
-          product,
-          amount: 1,
-          unitPrice: presentation_price,
-          presentationName,
-        },
-      ]);
-      setQuantityInputs((prev) => ({
-        ...prev,
-        [product.id]: "1",
-      }));
+      setPresentationsByProduct(presentations);
+      setShowPresentationsByProduct(true);
     }
+  };
+
+  const handleAddPresentation = (
+    product: Product,
+    presentation_price: number,
+    presentationName?: string,
+  ) => {
+    addOrUpdateDraftItem(product, presentation_price, presentationName);
   };
 
   const handleAddProduct = () => {
@@ -175,13 +196,18 @@ export default function NewOrderScreen() {
       const next = [...prev];
 
       for (const draft of currentDraftItem) {
+        const inputAmount = quantityInputs[draft.product.id];
+        const finalAmount = inputAmount
+          ? Math.max(1, parseInt(inputAmount) || 1)
+          : draft.amount;
+
         const existingIndex = next.findIndex(
           (item) => item.product.id === draft.product.id,
         );
         if (existingIndex >= 0) {
-          next[existingIndex] = draft;
+          next[existingIndex] = { ...draft, amount: finalAmount };
         } else {
-          next.push(draft);
+          next.push({ ...draft, amount: finalAmount });
         }
       }
 
@@ -215,8 +241,33 @@ export default function NewOrderScreen() {
     setQuantityInputs((prev) => ({ ...prev, [productId]: String(newAmount) }));
   };
 
-  const handleQuantityInputChange = (productId: string, text: string) => {
+  const updateItemAmount = (
+    productId: string,
+    text: string,
+    isOrderItem: boolean = false,
+  ) => {
     setQuantityInputs((prev) => ({ ...prev, [productId]: text }));
+    
+    const num = parseInt(text);
+    if (!isNaN(num) && num > 0) {
+      if (isOrderItem) {
+        setOrderItems((prev) =>
+          prev.map((item) =>
+            item.product.id === productId ? { ...item, amount: num } : item,
+          ),
+        );
+      } else {
+        setCurrentDraftItem((prev) =>
+          prev.map((item) =>
+            item.product.id === productId ? { ...item, amount: num } : item,
+          ),
+        );
+      }
+    }
+  };
+
+  const handleQuantityInputChange = (productId: string, text: string) => {
+    updateItemAmount(productId, text, false);
   };
 
   const commitQuantityInput = (productId: string) => {
@@ -453,7 +504,7 @@ export default function NewOrderScreen() {
                           item.amount.toString()
                         }
                         onChangeText={(text) =>
-                          handleQuantityInputChange(item.product.id, text)
+                          updateItemAmount(item.product.id, text, true)
                         }
                         onEndEditing={() =>
                           commitQuantityInput(item.product.id)
@@ -691,45 +742,7 @@ export default function NewOrderScreen() {
                       styles.modalOption,
                       inCart && styles.modalOptionInCart,
                     ]}
-                    onPress={async () => {
-                      setSelectedProduct(product);
-                      getPresentationsByProduct(product.id).then(
-                        (presentations) => {
-                          if (presentations.length === 0) {
-                            setOrderItems((prev) => {
-                              const existingIndex = prev.findIndex(
-                                (item) => item.product.id === product.id,
-                              );
-                              if (existingIndex >= 0) {
-                                const next = [...prev];
-                                next[existingIndex] = {
-                                  ...next[existingIndex],
-                                  amount: next[existingIndex].amount + 1,
-                                  unitPrice: product.price,
-                                };
-                                return next;
-                              }
-
-                              return [
-                                ...prev,
-                                {
-                                  product,
-                                  amount: 1,
-                                  unitPrice: product.price,
-                                },
-                              ];
-                            });
-                            setQuantityInputs((prev) => ({
-                              ...prev,
-                              [product.id]: "1",
-                            }));
-                            return;
-                          }
-                          setPresentationsByProduct(presentations);
-                          setShowPresentationsByProduct(true);
-                        },
-                      );
-                    }}
+                    onPress={() => handleProductSelection(product)}
                   >
                     <View style={{ flex: 1 }}>
                       <Text style={styles.modalOptionText}>{product.name}</Text>
@@ -914,9 +927,8 @@ export default function NewOrderScreen() {
                         {currentDraftItem.reduce(
                           (sum, item) => sum + item.amount,
                           0,
-                        )}{" "}
+                        )}{" x "}
                         {currentDraftItem.map((item) => item.presentationName)}
-                        (es)
                       </Text>
                     </View>
                     <View style={styles.summaryRow}>
