@@ -9,6 +9,10 @@ const formatLocalDate = (date: Date): string => {
   return `${y}-${m}-${d}`;
 };
 
+const normalizeText = (text: string): string => {
+  return text.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+};
+
 // ==========================================
 // FUNCIONES PARA CLIENTES (CUSTOMERS)
 // ==========================================
@@ -53,10 +57,11 @@ export const getCustomersPaginated = async (
 
   if (search && search.trim()) {
     const term = search.trim();
+    const normalizedTerm = normalizeText(term);
     if (/^\d+$/.test(term)) {
       query = query.or(`name.ilike.%${term}%,cod_customer.eq.${term}`);
     } else {
-      query = query.ilike('name', `%${term}%`);
+      query = query.ilike('name', `%${normalizedTerm}%`);
     }
   }
 
@@ -68,8 +73,18 @@ export const getCustomersPaginated = async (
     .range(from, to);
 
   if (error) throw error;
+  
+  // Aplicar filtro normalizador en client-side para búsquedas de texto
+  let filteredData = data || [];
+  if (search && search.trim() && !/^\d+$/.test(search.trim())) {
+    const normalizedSearch = normalizeText(search.trim());
+    filteredData = filteredData.filter(item => 
+      normalizeText(item.name).includes(normalizedSearch)
+    );
+  }
+
   return {
-    data: data || [],
+    data: filteredData,
     hasMore: (count ?? 0) > to + 1,
   };
 };
@@ -89,10 +104,11 @@ export const searchCustomers = async (
       .eq('is_active', true);
 
     const isNumeric = /^\d+$/.test(trimmed);
+    const normalizedTerm = normalizeText(trimmed);
     if (isNumeric) {
       query = query.or(`name.ilike.%${trimmed}%,cod_customer.eq.${trimmed}`);
     } else {
-      query = query.ilike('name', `%${trimmed}%`);
+      query = query.ilike('name', `%${normalizedTerm}%`);
     }
 
     const { data, error } = await query
@@ -100,7 +116,16 @@ export const searchCustomers = async (
       .limit(limit);
 
     if (error) throw error;
-    return data || [];
+    
+    // Aplicar filtro normalizador en client-side para búsquedas de texto
+    let filteredData = data || [];
+    if (!isNumeric) {
+      filteredData = filteredData.filter(item => 
+        normalizeText(item.name).includes(normalizedTerm)
+      );
+    }
+
+    return filteredData;
   } catch (error) {
     console.error('Error al buscar clientes:', error);
     throw error;
@@ -229,7 +254,8 @@ export const getProductsPaginated = async (
   }
 
   if (search && search.trim()) {
-    query = query.ilike('name', `%${search.trim()}%`);
+    const normalizedSearch = normalizeText(search.trim());
+    query = query.ilike('name', `%${normalizedSearch}%`);
   }
 
   const from = page * pageSize;
@@ -249,8 +275,17 @@ export const getProductsPaginated = async (
     ),
   }));
 
+  // Aplicar filtro normalizador en client-side para búsquedas de texto
+  let filteredProducts = products;
+  if (search && search.trim()) {
+    const normalizedSearch = normalizeText(search.trim());
+    filteredProducts = filteredProducts.filter(item => 
+      normalizeText(item.name).includes(normalizedSearch)
+    );
+  }
+
   return {
-    data: products,
+    data: filteredProducts,
     hasMore: (count ?? 0) > to + 1,
   };
 };
