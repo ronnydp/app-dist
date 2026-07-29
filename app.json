@@ -40,6 +40,12 @@
           }
         }
       ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Necesitamos tu ubicación para registrar la asistencia en tiempo real."
+        }
+      ],
       "@react-native-community/datetimepicker"
     ],
     "experiments": {

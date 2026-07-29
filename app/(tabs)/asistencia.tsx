@@ -1,8 +1,11 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastsContext';
 import { Ionicons } from '@expo/vector-icons';
-import { useState } from 'react';
+import { useFocusEffect } from 'expo-router';
+import * as Location from 'expo-location';
+import { useCallback, useState } from 'react';
 import {
+  ActivityIndicator,
   Linking,
   Pressable,
   ScrollView,
@@ -11,47 +14,18 @@ import {
   View,
 } from 'react-native';
 import AttendanceAdminScreen from '../attendanceAdmin';
-
-type AttendanceRecord = {
-  id: string;
-  dateLabel: string;
-  entryTime: string;
-  exitTime: string;
-  statusLabel: string;
-  statusTone: 'success' | 'neutral' | 'warning';
-};
+import * as attendanceService from '@/services/attendance';
+import { AttendanceRecord, Attendance } from '@/types';
 
 type StatusTone = 'success' | 'neutral' | 'warning';
+type DeviceLocation = {
+  label: string;
+  mapUrl: string;
+  latitude: number;
+  longitude: number;
+};
 
-const LOCATION_LABEL = 'Av. Grau 250, Ica, Ica, Perú';
 const MAP_URL = 'https://www.google.com/maps/search/?api=1&query=Av.+Grau+250,+Ica,+Ica,+Per%C3%BA';
-
-const RECENT_HISTORY: AttendanceRecord[] = [
-  {
-    id: '2025-06-21',
-    dateLabel: 'Sábado, 21 jun. 2025',
-    entryTime: '08:07 a. m.',
-    exitTime: '06:12 p. m.',
-    statusLabel: 'Completo',
-    statusTone: 'success',
-  },
-  {
-    id: '2025-06-20',
-    dateLabel: 'Viernes, 20 jun. 2025',
-    entryTime: '08:10 a. m.',
-    exitTime: '06:05 p. m.',
-    statusLabel: 'Completo',
-    statusTone: 'success',
-  },
-  {
-    id: '2025-06-19',
-    dateLabel: 'Jueves, 19 jun. 2025',
-    entryTime: '08:05 a. m.',
-    exitTime: '05:58 p. m.',
-    statusLabel: 'Completo',
-    statusTone: 'success',
-  },
-];
 
 function formatDateLabel(date: Date) {
   return new Intl.DateTimeFormat('es-PE', {
@@ -72,7 +46,7 @@ function formatTime(date: Date) {
     .toLowerCase();
 }
 
-function getStatusTone(entryTime: Date | null, exitTime: Date | null): StatusTone {
+function getStatusTone(entryTime: string | null, exitTime: string | null): StatusTone {
   if (entryTime && exitTime) {
     return 'success';
   }
@@ -80,6 +54,52 @@ function getStatusTone(entryTime: Date | null, exitTime: Date | null): StatusTon
     return 'warning';
   }
   return 'neutral';
+}
+
+function buildMapUrl(latitude: number, longitude: number) {
+  return `https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`;
+}
+
+function formatLocationLabel(
+  address: Location.LocationGeocodedAddress | null,
+  latitude: number,
+  longitude: number
+) {
+  const parts = [
+    address?.name,
+    address?.street,
+    address?.streetNumber,
+    address?.city,
+    address?.region,
+    address?.country,
+  ].filter((part): part is string => Boolean(part));
+
+  if (parts.length > 0) {
+    return parts.join(', ');
+  }
+
+  return `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
+}
+
+async function getCurrentDeviceLocation(): Promise<DeviceLocation> {
+  const { status } = await Location.requestForegroundPermissionsAsync();
+  if (status !== 'granted') {
+    throw new Error('Activa los permisos de ubicación para registrar asistencia');
+  }
+
+  const position = await Location.getCurrentPositionAsync({
+    accuracy: Location.Accuracy.Highest,
+  });
+
+  const { latitude, longitude } = position.coords;
+  const [address] = await Location.reverseGeocodeAsync({ latitude, longitude });
+
+  return {
+    latitude,
+    longitude,
+    label: formatLocationLabel(address ?? null, latitude, longitude),
+    mapUrl: buildMapUrl(latitude, longitude),
+  };
 }
 
 function StatusPill({
@@ -174,17 +194,61 @@ function HistoryRow({ item }: { item: AttendanceRecord }) {
 export default function AttendanceScreen() {
   const { role } = useAuth();
   const { showToast } = useToast();
-  const [entryTime, setEntryTime] = useState<Date | null>(null);
-  const [exitTime, setExitTime] = useState<Date | null>(null);
-  const [history] = useState(RECENT_HISTORY);
+  const [todayAttendance, setTodayAttendance] = useState<Attendance | null>(null);
+  const [history, setHistory] = useState<AttendanceRecord[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [currentLocation, setCurrentLocation] = useState<DeviceLocation | null>(null);
+  const [locationLoading, setLocationLoading] = useState(false);
+
+  const loadAttendanceData = useCallback(async () => {
+    try {
+      setLoading(true);
+      const [today, historyData] = await Promise.all([
+        attendanceService.getTodayAttendance(),
+        attendanceService.getUserAttendanceHistory(10),
+      ]);
+      setTodayAttendance(today);
+      setHistory(historyData);
+    } catch (error) {
+      console.error('Error al cargar asistencia:', error);
+      showToast('Error al cargar asistencia', 'error');
+    } finally {
+      setLoading(false);
+    }
+  }, [showToast]);
+
+  const refreshCurrentLocation = useCallback(async () => {
+    try {
+      setLocationLoading(true);
+      const location = await getCurrentDeviceLocation();
+      setCurrentLocation(location);
+    } catch (error) {
+      console.error('Error al obtener ubicación actual:', error);
+      setCurrentLocation(null);
+    } finally {
+      setLocationLoading(false);
+    }
+  }, []);
+
+  // Cargar datos de asistencia y ubicación cuando la pantalla recibe el foco
+  useFocusEffect(
+    useCallback(() => {
+      void loadAttendanceData();
+      void refreshCurrentLocation();
+    }, [loadAttendanceData, refreshCurrentLocation])
+  );
 
   const today = new Date();
-  const hasEntry = entryTime !== null;
-  const hasExit = exitTime !== null;
-  const dayTone = getStatusTone(entryTime, exitTime);
+  const hasEntry = todayAttendance?.entry_time !== null && todayAttendance?.entry_time !== undefined;
+  const hasExit = todayAttendance?.exit_time !== null && todayAttendance?.exit_time !== undefined;
+  const dayTone = getStatusTone(todayAttendance?.entry_time || null, todayAttendance?.exit_time || null);
   const dayLabel = formatDateLabel(today);
-  const todayEntryLabel = entryTime ? formatTime(entryTime) : '--:--';
-  const todayExitLabel = exitTime ? formatTime(exitTime) : '--:--';
+  const todayEntryLabel = hasEntry && todayAttendance?.entry_time
+    ? formatTime(new Date(todayAttendance.entry_time))
+    : '--:--';
+  const todayExitLabel = hasExit && todayAttendance?.exit_time
+    ? formatTime(new Date(todayAttendance.exit_time))
+    : '--:--';
 
   const statusLabel =
     dayTone === 'success'
@@ -199,18 +263,27 @@ export default function AttendanceScreen() {
       : 'Recuerda registrar tu salida al finalizar tu jornada.'
     : 'Toca una vez para marcar tu entrada y empezar el día.';
 
-  const handleRegisterEntry = () => {
+  const handleRegisterEntry = async () => {
     if (hasEntry) {
       showToast('La entrada de hoy ya fue registrada', 'error');
       return;
     }
 
-    const now = new Date();
-    setEntryTime(now);
-    showToast(`Entrada registrada a las ${formatTime(now)}`, 'success');
+    try {
+      setLoading(true);
+      const location = await getCurrentDeviceLocation();
+      setCurrentLocation(location);
+      const result = await attendanceService.registerEntry(location.label);
+      setTodayAttendance(result);
+      showToast(`Entrada registrada a las ${formatTime(new Date(result.entry_time!))}`, 'success');
+    } catch (error: any) {
+      showToast(error.message || 'Error al registrar entrada', 'error');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleRegisterExit = () => {
+  const handleRegisterExit = async () => {
     if (!hasEntry) {
       showToast('Primero registra tu entrada', 'error');
       return;
@@ -221,23 +294,41 @@ export default function AttendanceScreen() {
       return;
     }
 
-    const now = new Date();
-    setExitTime(now);
-    showToast(`Salida registrada a las ${formatTime(now)}`, 'success');
+    try {
+      setLoading(true);
+      const location = await getCurrentDeviceLocation();
+      setCurrentLocation(location);
+      const result = await attendanceService.registerExit(location.label);
+      setTodayAttendance(result);
+      showToast(`Salida registrada a las ${formatTime(new Date(result.exit_time!))}`, 'success');
+    } catch (error: any) {
+      showToast(error.message || 'Error al registrar salida', 'error');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const openMap = async () => {
-    const canOpen = await Linking.canOpenURL(MAP_URL);
+    const targetMapUrl = currentLocation?.mapUrl ?? MAP_URL;
+    const canOpen = await Linking.canOpenURL(targetMapUrl);
     if (!canOpen) {
       showToast('No se pudo abrir el mapa', 'error');
       return;
     }
 
-    await Linking.openURL(MAP_URL);
+    await Linking.openURL(targetMapUrl);
   };
 
   if (role === 'admin') {
     return <AttendanceAdminScreen />;
+  }
+
+  if (loading && !todayAttendance) {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color="#1d4ed8" />
+      </View>
+    );
   }
 
   return (
@@ -300,7 +391,7 @@ export default function AttendanceScreen() {
             timeLabel={todayEntryLabel}
             icon="log-in-outline"
             tone="success"
-            disabled={hasEntry}
+            disabled={hasEntry || loading}
             onPress={handleRegisterEntry}
           />
 
@@ -310,7 +401,7 @@ export default function AttendanceScreen() {
             timeLabel={todayExitLabel}
             icon="log-out-outline"
             tone="neutral"
-            disabled={!hasEntry || hasExit}
+            disabled={!hasEntry || hasExit || loading}
             onPress={handleRegisterExit}
           />
         </View>
@@ -321,7 +412,9 @@ export default function AttendanceScreen() {
           </View>
           <View style={styles.locationBody}>
             <Text style={styles.locationLabel}>Ubicación actual</Text>
-            <Text style={styles.locationValue}>{LOCATION_LABEL}</Text>
+            <Text style={styles.locationValue}>
+              {currentLocation?.label ?? (locationLoading ? 'Obteniendo ubicación...' : 'Ubicación no disponible')}
+            </Text>
           </View>
           <View style={styles.locationAction}>
             <Text style={styles.locationActionText}>Ver en mapa</Text>
@@ -329,20 +422,22 @@ export default function AttendanceScreen() {
           </View>
         </Pressable>
 
-        {/* <View style={styles.historyHeader}>
-          <Text style={styles.sectionTitle}>Historial de asistencia</Text>
-          <Text style={styles.historyLink}>Ver historial completo</Text>
-          <Ionicons name="chevron-forward" size={16} color="#1d4ed8" />
-        </View> */}
-
-        {/* <View style={styles.historyCard}>
-          {history.map((item, index) => (
-            <View key={item.id}>
-              <HistoryRow item={item} />
-              {index < history.length - 1 ? <View style={styles.historyDivider} /> : null}
+        {history.length > 0 && (
+          <>
+            <View style={styles.historyHeader}>
+              <Text style={styles.sectionTitle}>Historial de asistencia</Text>
             </View>
-          ))}
-        </View> */}
+
+            <View style={styles.historyCard}>
+              {history.map((item, index) => (
+                <View key={item.id}>
+                  <HistoryRow item={item} />
+                  {index < history.length - 1 ? <View style={styles.historyDivider} /> : null}
+                </View>
+              ))}
+            </View>
+          </>
+        )}
       </ScrollView>
     </View>
   );
@@ -723,7 +818,7 @@ const toneStyles: Record<
 };
 
 const toneChipStyles: Record<
-  StatusTone,
+  AttendanceRecord['statusTone'],
   { chip: { backgroundColor: string }; text: { color: string } }
 > = {
   success: {
@@ -748,6 +843,14 @@ const toneChipStyles: Record<
     },
     text: {
       color: '#a16207',
+    },
+  },
+  error: {
+    chip: {
+      backgroundColor: '#fee2e2',
+    },
+    text: {
+      color: '#dc2626',
     },
   },
 };

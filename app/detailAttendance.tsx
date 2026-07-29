@@ -12,22 +12,30 @@ type AttendanceParams = {
   statusLabel?: string;
   statusTone?: 'success' | 'warning' | 'error';
   dateLabel?: string;
-  location?: string;
+  entryLocation?: string;
+  exitLocation?: string;
   workedTime?: string;
 };
 
 export default function DetailAttendance() {
   const params = useLocalSearchParams<AttendanceParams>();
-  const name = params.name ?? 'Carlos Mendoza';
-  const roleLabel = params.roleLabel ?? 'Vendedor';
-  const initials = params.initials ?? 'CM';
-  const entryTime = params.entryTime ?? '08:15 a. m.';
-  const exitTime = params.exitTime ?? '06:12 p. m.';
-  const statusLabel = params.statusLabel ?? 'Presente';
-  const statusTone = params.statusTone ?? 'success';
-  const dateLabel = params.dateLabel ?? 'Hoy, 22 de junio de 2025';
-  const location = params.location ?? 'Av. Grau 250, Ica';
-  const workedTime = params.workedTime ?? '9h 57m';
+  const name = params.name ?? 'Empleado';
+  const roleLabel = params.roleLabel ?? 'Sin rol asignado';
+  const initials = params.initials ?? 'E';
+  const entryTime = params.entryTime ?? '--:--';
+  const exitTime = params.exitTime ?? '--:--';
+  const statusLabel = params.statusLabel ?? 'Ausente';
+  const statusTone = params.statusTone ?? 'error';
+  const dateLabel = params.dateLabel ?? 'Hoy';
+  const entryLocation = params.entryLocation ?? 'Ubicación no registrada';
+  const exitLocation = params.exitLocation ?? 'Ubicación no registrada';
+  const workedTime = params.workedTime ?? '0h 00m';
+  const entryMapUrl = entryLocation !== 'Ubicación no registrada'
+    ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(entryLocation)}`
+    : null;
+  const exitMapUrl = exitLocation !== 'Ubicación no registrada'
+    ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(exitLocation)}`
+    : null;
 
   return (
     <View style={styles.container}>
@@ -55,23 +63,29 @@ export default function DetailAttendance() {
 
         <ActionDetail
           title="Entrada"
+          locationTitle="Ubicación de entrada"
           time={entryTime}
           tone={statusTone === 'error' ? 'neutral' : statusTone}
           label={statusTone === 'error' ? 'No registrada' : 'Registrada'}
-          location={location}
+          location={entryLocation}
+          mapUrl={entryMapUrl}
         />
 
         <ActionDetail
           title="Salida"
+          locationTitle="Ubicación de salida"
           time={exitTime}
           tone={statusTone === 'error' ? 'neutral' : statusTone}
           label={statusTone === 'error' ? 'No registrada' : 'Registrada'}
-          location={location}
+          location={exitLocation}
+          mapUrl={exitMapUrl}
         />
 
         <View style={styles.summaryCard}>
           <SummaryRow label="Tiempo trabajado" value={workedTime} />
           <SummaryRow label="Estado del día" value={statusLabel} valueTone={statusTone} />
+          <SummaryRow label="Ubicación de entrada" value={entryLocation} />
+          <SummaryRow label="Ubicación de salida" value={exitLocation} />
           <SummaryRow label="Registro completo" value="" icon="checkmark-circle" valueTone="success" />
         </View>
       </ScrollView>
@@ -81,15 +95,19 @@ export default function DetailAttendance() {
 
 function ActionDetail({
   title,
+  locationTitle,
   time,
   label,
   location,
+  mapUrl,
   tone,
 }: {
   title: string;
+  locationTitle: string;
   time: string;
   label: string;
   location: string;
+  mapUrl: string | null;
   tone: 'success' | 'warning' | 'neutral';
 }) {
   const icon = tone === 'success' ? 'log-in-outline' : tone === 'warning' ? 'time-outline' : 'remove-outline';
@@ -108,14 +126,19 @@ function ActionDetail({
       <Text style={[styles.actionStatus, { color }]}>{label}</Text>
       <View style={styles.locationRow}>
         <Ionicons name="location-outline" size={16} color="#64748b" />
-        <Text style={styles.locationText}>{location}</Text>
+        <View style={styles.locationBody}>
+          <Text style={styles.locationLabel}>{locationTitle}</Text>
+          <Text style={styles.locationText}>{location}</Text>
+        </View>
       </View>
       <Pressable
+        disabled={!mapUrl}
         onPress={async () => {
-          await Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location)}`);
+          if (!mapUrl) return;
+          await Linking.openURL(mapUrl);
         }}
       >
-        <Text style={styles.mapLink}>Ver en mapa</Text>
+        <Text style={[styles.mapLink, !mapUrl && styles.mapLinkDisabled]}>Ver en mapa</Text>
       </Pressable>
     </View>
   );
@@ -282,8 +305,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
   },
-  locationText: {
+  locationBody: {
     flex: 1,
+    gap: 2,
+  },
+  locationLabel: {
+    fontSize: 12,
+    color: '#64748b',
+    fontWeight: '600',
+  },
+  locationText: {
     fontSize: 13,
     color: '#64748b',
   },
@@ -291,6 +322,9 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '700',
     color: '#4338ca',
+  },
+  mapLinkDisabled: {
+    color: '#94a3b8',
   },
   summaryCard: {
     borderRadius: 16,

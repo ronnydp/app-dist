@@ -1,69 +1,154 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { useFocusEffect } from 'expo-router';
+import { useCallback, useMemo, useState } from 'react';
 import {
+  ActivityIndicator,
   FlatList,
   Pressable,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
+import * as attendanceService from '@/services/attendance';
+import { AttendanceWithUser } from '@/types';
 
 type AttendanceTone = 'success' | 'warning' | 'error';
 
-type AttendanceItem = {
-  id: string;
-  name: string;
-  roleLabel: string;
-  initials: string;
-  entryTime: string;
-  exitTime: string;
-  statusLabel: string;
-  statusTone: AttendanceTone;
-};
-
 function formatDateLabel(date: Date) {
-    return new Intl.DateTimeFormat('es-PE', {
-      day: '2-digit',
-      month: 'long',
-      year: 'numeric',
-    }).format(date);
-  }
+  return new Intl.DateTimeFormat('es-PE', {
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
+  }).format(date);
+}
 
-const ITEMS: AttendanceItem[] = [
-  { id: '1', name: 'Carlos Mendoza', roleLabel: 'Vendedor', initials: 'CM', entryTime: '08:15 a. m.', exitTime: '06:12 p. m.', statusLabel: 'Presente', statusTone: 'success' },
-  { id: '2', name: 'Luis Ramirez', roleLabel: 'Vendedor', initials: 'LR', entryTime: '08:27 a. m.', exitTime: '05:48 p. m.', statusLabel: 'Tardanza', statusTone: 'warning' },
-  { id: '3', name: 'Andrea Quispe', roleLabel: 'Vendedora', initials: 'AQ', entryTime: '08:05 a. m.', exitTime: '06:02 p. m.', statusLabel: 'Presente', statusTone: 'success' },
-  { id: '4', name: 'Miguel Torres', roleLabel: 'Vendedor', initials: 'MT', entryTime: '08:40 a. m.', exitTime: '--:--', statusLabel: 'Tardanza', statusTone: 'warning' },
-  { id: '5', name: 'Maria Fernández', roleLabel: 'Vendedora', initials: 'MF', entryTime: '--:--', exitTime: '--:--', statusLabel: 'Ausente', statusTone: 'error' },
-  { id: '6', name: 'Juan Flores', roleLabel: 'Vendedor', initials: 'JF', entryTime: '08:10 a. m.', exitTime: '06:15 p. m.', statusLabel: 'Presente', statusTone: 'success' },
-  { id: '7', name: 'Pedro Huamán', roleLabel: 'Vendedor', initials: 'PH', entryTime: '08:18 a. m.', exitTime: '06:00 p. m.', statusLabel: 'Presente', statusTone: 'success' },
-  { id: '8', name: 'Rosa Paredes', roleLabel: 'Vendedora', initials: 'RP', entryTime: '08:30 a. m.', exitTime: '05:50 p. m.', statusLabel: 'Tardanza', statusTone: 'warning' },
-];
+function formatTimeLabel(dateString?: string): string {
+  if (!dateString) return '--:--';
+  const date = new Date(dateString);
+  return new Intl.DateTimeFormat('es-PE', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true,
+  })
+    .format(date)
+    .replace(/\s+/g, ' ')
+    .toLowerCase();
+}
+
+function calculateWorkedTime(entryTime?: string, exitTime?: string): string {
+  if (!entryTime || !exitTime) return '0h 00m';
+
+  const entry = new Date(entryTime);
+  const exit = new Date(exitTime);
+  const diffMs = exit.getTime() - entry.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const hours = Math.floor(diffMins / 60);
+  const mins = diffMins % 60;
+
+  return `${hours}h ${String(mins).padStart(2, '0')}m`;
+}
 
 export default function AttendanceAdminScreen() {
+  const [attendanceList, setAttendanceList] = useState<AttendanceWithUser[]>([]);
+  const [loading, setLoading] = useState(false);
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState<'all' | AttendanceTone>('all');
 
+  // Cargar datos cuando la pantalla recibe el foco
+  useFocusEffect(
+    useCallback(() => {
+      loadAttendanceData();
+    }, [])
+  );
+
+  const loadAttendanceData = async () => {
+    try {
+      setLoading(true);
+      const data = await attendanceService.getAttendanceByDate();
+      setAttendanceList(data);
+    } catch (error) {
+      console.error('Error al cargar asistencia:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Convertir datos de Attendance a AttendanceItem para mostrar
+  const attendanceItems = useMemo(() => {
+    return attendanceList.map((att) => {
+      let statusTone: AttendanceTone = 'error';
+      let statusLabel = 'Ausente';
+
+      if (att.status === 'present') {
+        statusTone = 'success';
+        statusLabel = 'Presente';
+      } else if (att.status === 'late') {
+        statusTone = 'warning';
+        statusLabel = 'Tardanza';
+      } else if (att.status === 'half_day') {
+        statusTone = 'warning';
+        statusLabel = 'Media jornada';
+      }
+
+      const formatTimeLabel = (dateString?: string): string => {
+        if (!dateString) return '--:--';
+        const date = new Date(dateString);
+        return new Intl.DateTimeFormat('es-PE', {
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: true,
+        })
+          .format(date)
+          .replace(/\s+/g, ' ')
+          .toLowerCase();
+      };
+
+      return {
+        id: att.id,
+        name: att.user_name,
+        roleLabel: att.user_role,
+        initials: att.initials,
+        entryTime: formatTimeLabel(att.entry_time),
+        exitTime: formatTimeLabel(att.exit_time),
+        statusLabel,
+        statusTone,
+        entryLocation: att.entry_location || 'Ubicación no registrada',
+        exitLocation: att.exit_location || 'Ubicación no registrada',
+        workedTime: calculateWorkedTime(att.entry_time, att.exit_time),
+      };
+    });
+  }, [attendanceList]);
+
   const filteredItems = useMemo(() => {
     const term = query.trim().toLowerCase();
-    return ITEMS.filter((item) => {
+    return attendanceItems.filter((item) => {
       const matchesFilter = filter === 'all' || item.statusTone === filter;
       const matchesQuery = !term || item.name.toLowerCase().includes(term);
       return matchesFilter && matchesQuery;
     });
-  }, [query, filter]);
+  }, [query, filter, attendanceItems]);
 
-  const counts = useMemo(() => ({
-    all: ITEMS.length,
-    success: ITEMS.filter((i) => i.statusTone === 'success').length,
-    warning: ITEMS.filter((i) => i.statusTone === 'warning').length,
-    error: ITEMS.filter((i) => i.statusTone === 'error').length,
-  }), []);
+  const counts = useMemo(
+    () => ({
+      all: attendanceItems.length,
+      success: attendanceItems.filter((i) => i.statusTone === 'success').length,
+      warning: attendanceItems.filter((i) => i.statusTone === 'warning').length,
+      error: attendanceItems.filter((i) => i.statusTone === 'error').length,
+    }),
+    [attendanceItems]
+  );
+
   const today = new Date();
   const dayLabel = formatDateLabel(today);
 
-  
+  if (loading && attendanceList.length === 0) {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color="#1d4ed8" />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -89,9 +174,10 @@ export default function AttendanceAdminScreen() {
                   exitTime: item.exitTime,
                   statusLabel: item.statusLabel,
                   statusTone: item.statusTone,
-                  dateLabel: 'Hoy, 22 de junio de 2025',
-                  location: 'Av. Grau 250, Ica',
-                  workedTime: item.statusTone === 'error' ? '0h 00m' : item.statusTone === 'warning' ? '9h 10m' : '9h 57m',
+                  dateLabel: dayLabel,
+                  entryLocation: item.entryLocation,
+                  exitLocation: item.exitLocation,
+                  workedTime: item.workedTime,
                 },
               })
             }
@@ -113,24 +199,10 @@ export default function AttendanceAdminScreen() {
         )}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
         contentContainerStyle={styles.list}
+        refreshing={loading}
+        onRefresh={loadAttendanceData}
       />
     </View>
-  );
-}
-
-function FilterPill({
-  label,
-  active,
-  onPress,
-}: {
-  label: string;
-  active: boolean;
-  onPress: () => void;
-}) {
-  return (
-    <Pressable onPress={onPress} style={[styles.filterPill, active ? styles.filterPillActive : styles.filterPillInactive]}>
-      <Text style={[styles.filterPillText, active ? styles.filterPillTextActive : styles.filterPillTextInactive]}>{label}</Text>
-    </Pressable>
   );
 }
 

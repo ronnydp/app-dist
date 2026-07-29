@@ -116,3 +116,50 @@ export interface SellerWeeklySales extends WeeklySales {
   sellerId: string;
   sellerName: string;
 }
+
+// Tabla: attendance (asistencia)
+export interface Attendance {
+  id: string; // uuid
+  user_id: string; // uuid referencia a users
+  date: string; // date (YYYY-MM-DD)
+  entry_time?: string; // timestamp con hora de entrada
+  exit_time?: string; // timestamp con hora de salida
+  entry_location?: string; // ubicación GPS al registrar entrada
+  exit_location?: string; // ubicación GPS al registrar salida
+  status: 'present' | 'late' | 'absent' | 'half_day'; // estado de asistencia
+  notes?: string; // notas adicionales
+  created_at: string; // timestamp
+  updated_at: string; // timestamp
+}
+
+// Tipo extendido: asistencia con datos del usuario
+export interface AttendanceWithUser extends Attendance {
+  user_name: string; // nombre del usuario
+  user_role: string; // rol del usuario
+  initials: string; // iniciales del usuario (generadas)
+}
+
+// Tipo para crear/actualizar asistencia
+export interface NewAttendance {
+  user_id: string;
+  date: string;
+  entry_time?: string;
+  exit_time?: string;
+  entry_location?: string;
+  exit_location?: string;
+  status?: 'present' | 'late' | 'absent' | 'half_day';
+  notes?: string;
+}
+
+// Tipo para respuesta de registros de asistencia
+export interface AttendanceRecord {
+  id: string;
+  dateLabel: string;
+  entryTime: string;
+  exitTime: string;
+  statusLabel: string;
+  statusTone: 'success' | 'neutral' | 'warning' | 'error';
+  entryLocation: string;
+  exitLocation: string;
+  workedTime: string;
+}
