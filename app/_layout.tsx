@@ -32,6 +32,8 @@ export default function RootLayout() {
     "/newProduct",
     "/newCustomer",
     "/newOrder",
+    "/attendanceAdmin",
+    "/detailAttendance",
   ]);
   const showSessionMenu = !hiddenSessionMenuRoutes.has(pathname);
 
@@ -133,6 +135,16 @@ export default function RootLayout() {
                 options={{
                   presentation: "modal",
                   title: "Detalle de Producto",
+                  headerStyle: { backgroundColor: "#fff" },
+                  headerTitleStyle: { fontWeight: "bold", fontSize: 20 },
+                  headerTitleAlign: "center",
+                }}
+              />
+              <Stack.Screen
+                name="detailAttendance"
+                options={{
+                  presentation: "modal",
+                  title: "Detalle de Asistencia",
                   headerStyle: { backgroundColor: "#fff" },
                   headerTitleStyle: { fontWeight: "bold", fontSize: 20 },
                   headerTitleAlign: "center",
