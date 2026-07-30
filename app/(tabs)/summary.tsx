@@ -20,6 +20,11 @@ function getWeekRange() {
     return `${fmt(start)} - ${fmt(end)}, ${year}`;
 }
 
+function getTodayKey() {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+}
+
 function DailyBars({ daily }: { daily: WeeklySales['daily'] }) {
     const maxTotal = Math.max(...daily.map((d) => d.total), 1);
     const now = new Date();
@@ -55,7 +60,7 @@ function DailyBars({ daily }: { daily: WeeklySales['daily'] }) {
                                 isToday && styles.dailyLabelToday,
                             ]}
                         >
-                            {day.dayLabel}
+                            {isToday ? 'Hoy' : day.dayLabel}
                         </Text>
                     </View>
                 );
@@ -71,6 +76,7 @@ export default function SummaryScreen() {
     const [allSellers, setAllSellers] = useState<SellerWeeklySales[]>([]);
 
     const weekRange = useMemo(() => getWeekRange(), []);
+    const todayKey = useMemo(() => getTodayKey(), []);
 
     const loadData = useCallback(async () => {
         setLoading(true);
@@ -102,6 +108,29 @@ export default function SummaryScreen() {
         () => allSellers.reduce((sum, s) => sum + s.total, 0),
         [allSellers]
     );
+
+    const adminDailyTotals = useMemo(() => {
+        return allSellers.reduce<Array<{ date: string; dayLabel: string; total: number }>>((acc, seller) => {
+            seller.daily.forEach((day) => {
+                const existing = acc.find((item) => item.date === day.date);
+                if (existing) {
+                    existing.total += day.total;
+                } else {
+                    acc.push({ date: day.date, dayLabel: day.dayLabel, total: day.total });
+                }
+            });
+            return acc;
+        }, []);
+    }, [allSellers]);
+
+    const adminTodayTotal = useMemo(() => {
+        const todayEntry = adminDailyTotals.find((day) => day.date === todayKey);
+        return todayEntry?.total ?? 0;
+    }, [adminDailyTotals, todayKey]);
+
+    const adminTodayOrderCount = useMemo(() => {
+        return allSellers.reduce((sum, seller) => sum + seller.orderCount, 0);
+    }, [allSellers]);
 
     if (loading) {
         return (
@@ -147,29 +176,60 @@ export default function SummaryScreen() {
             <ScrollView contentContainerStyle={styles.content}>
                 <Text style={styles.weekRange}>{weekRange}</Text>
 
-                <View style={styles.totalCard}>
-                    <View style={[styles.totalIconContainer, styles.totalIconAdmin]}>
-                        <Ionicons name="stats-chart" size={28} color="#08859b" />
+                <View style={styles.metricCardsRow}>
+                    <View style={[styles.metricCard, styles.metricCardPrimary]}>
+                        <Text style={styles.metricCardLabel}>Total del día</Text>
+                        <Text style={styles.metricCardAmount}>S/ {adminTodayTotal.toFixed(2)}</Text>
+                        <Text style={styles.metricCardSubtext}>
+                            {adminTodayOrderCount} boleta{adminTodayOrderCount !== 1 ? 's' : ''}
+                        </Text>
                     </View>
-                    <Text style={styles.totalLabel}>Total general</Text>
-                    <Text style={[styles.totalAmount, styles.totalAmountAdmin]}>
-                        S/ {adminTotal.toFixed(2)}
-                    </Text>
-                    <Text style={styles.sellerCount}>
-                        {allSellers.length} vendedor{allSellers.length !== 1 ? 'es' : ''}
-                    </Text>
+
+                    <View style={styles.metricCard}>
+                        <Text style={styles.metricCardLabel}>Monto de la semana</Text>
+                        <Text style={styles.metricCardAmount}>S/ {adminTotal.toFixed(2)}</Text>
+                    </View>
+                </View>
+
+                <View style={styles.dailySummaryCard}>
+                    <Text style={styles.dailySummaryTitle}>Total por día</Text>
+                    {adminDailyTotals.length > 0 ? (
+                        adminDailyTotals.map((day) => {
+                            const isToday = day.date === todayKey;
+                            return (
+                                <View
+                                    key={day.date}
+                                    style={[styles.dailySummaryRow, isToday && styles.dailySummaryRowActive]}
+                                >
+                                    <Text style={[styles.dailySummaryLabel, isToday && styles.dailySummaryLabelActive]}>
+                                        {isToday ? 'Hoy' : day.dayLabel}
+                                    </Text>
+                                    <Text style={[styles.dailySummaryAmount, isToday && styles.dailySummaryAmountActive]}>
+                                        S/ {day.total.toFixed(2)}
+                                    </Text>
+                                </View>
+                            );
+                        })
+                    ) : (
+                        <Text style={styles.emptyText}>Sin ventas esta semana</Text>
+                    )}
                 </View>
 
                 {allSellers.map((seller) => (
                     <View key={seller.sellerId} style={styles.sellerCard}>
                         <View style={styles.sellerHeader}>
                             <View style={styles.sellerInfo}>
-                                <Ionicons name="person" size={18} color="#08859b" />
-                                <Text style={styles.sellerName}>{seller.sellerName}</Text>
+                                <View style={styles.sellerNameRow}>
+                                    <Ionicons name="person" size={18} color="#08859b" />
+                                    <Text style={styles.sellerName}>{seller.sellerName}</Text>
+                                </View>
                             </View>
-                            <Text style={styles.sellerTotal}>
-                                S/ {seller.total.toFixed(2)}
-                            </Text>
+                            <View style={styles.sellerAmountBlock}>
+                                <Text style={styles.sellerAmountLabel}>Semanal</Text>
+                                <Text style={styles.sellerTotal}>
+                                    S/ {seller.total.toFixed(2)}
+                                </Text>
+                            </View>
                         </View>
                         <DailyBars daily={seller.daily} />
                     </View>
@@ -257,6 +317,86 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: '#e5e7eb',
     },
+    metricCardsRow: {
+        flexDirection: 'row',
+        gap: 10,
+        marginBottom: 12,
+    },
+    metricCard: {
+        flex: 1,
+        backgroundColor: '#f9fafb',
+        borderRadius: 12,
+        padding: 14,
+        borderWidth: 1,
+        borderColor: '#e5e7eb',
+        minHeight: 110,
+        justifyContent: 'center',
+    },
+    metricCardPrimary: {
+        backgroundColor: '#ecfeff',
+        borderColor: '#a7f3d0',
+    },
+    metricCardLabel: {
+        fontSize: 12,
+        color: '#6b7280',
+        fontWeight: '600',
+        marginBottom: 6,
+    },
+    metricCardAmount: {
+        fontSize: 18,
+        fontWeight: '800',
+        color: '#111827',
+    },
+    metricCardSubtext: {
+        fontSize: 12,
+        color: '#0f766e',
+        marginTop: 6,
+        fontWeight: '600',
+    },
+    dailySummaryCard: {
+        backgroundColor: '#fff',
+        borderRadius: 12,
+        padding: 14,
+        borderWidth: 1,
+        borderColor: '#e5e7eb',
+        marginBottom: 12,
+    },
+    dailySummaryTitle: {
+        fontSize: 14,
+        fontWeight: '700',
+        color: '#374151',
+        marginBottom: 8,
+    },
+    dailySummaryRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingVertical: 8,
+        borderBottomWidth: 1,
+        borderBottomColor: '#f3f4f6',
+    },
+    dailySummaryRowActive: {
+        backgroundColor: '#f0fdf4',
+        borderRadius: 8,
+        paddingHorizontal: 8,
+    },
+    dailySummaryLabel: {
+        fontSize: 12,
+        color: '#6b7280',
+        fontWeight: '600',
+    },
+    dailySummaryLabelActive: {
+        color: '#16a34a',
+        fontWeight: '700',
+    },
+    dailySummaryAmount: {
+        fontSize: 12,
+        color: '#111827',
+        fontWeight: '700',
+    },
+    dailySummaryAmountActive: {
+        color: '#16a34a',
+    },
     chartTitle: {
         fontSize: 14,
         fontWeight: '600',
@@ -275,18 +415,40 @@ const styles = StyleSheet.create({
     sellerHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        alignItems: 'center',
+        alignItems: 'flex-start',
+        gap: 12,
     },
     sellerInfo: {
+        flexDirection: 'column',
+        alignItems: 'flex-start',
+        gap: 2,
+        flex: 1,
+    },
+    sellerNameRow: {
         flexDirection: 'row',
         alignItems: 'center',
         gap: 8,
-        flex: 1,
     },
     sellerName: {
         fontSize: 15,
         fontWeight: '600',
         color: '#111827',
+    },
+    sellerOrderCount: {
+        fontSize: 12,
+        color: '#6b7280',
+        fontWeight: '500',
+    },
+    sellerAmountBlock: {
+        alignItems: 'flex-end',
+        minWidth: 96,
+    },
+    sellerAmountLabel: {
+        fontSize: 11,
+        color: '#9ca3af',
+        fontWeight: '600',
+        textTransform: 'uppercase',
+        letterSpacing: 0.4,
     },
     sellerTotal: {
         fontSize: 16,
@@ -318,6 +480,12 @@ const styles = StyleSheet.create({
     },
     dailyBarToday: {
         backgroundColor: '#16a34a',
+        width: 24,
+        shadowColor: '#16a34a',
+        shadowOpacity: 0.25,
+        shadowRadius: 4,
+        shadowOffset: { width: 0, height: 2 },
+        elevation: 3,
     },
     dailyBarEmpty: {
         backgroundColor: '#e5e7eb',
@@ -330,6 +498,7 @@ const styles = StyleSheet.create({
     dailyLabelToday: {
         fontWeight: '700',
         color: '#16a34a',
+        transform: [{ scale: 1.02 }],
     },
     emptyState: {
         alignItems: 'center',

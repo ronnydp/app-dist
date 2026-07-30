@@ -115,6 +115,7 @@ export interface WeeklySales {
 export interface SellerWeeklySales extends WeeklySales {
   sellerId: string;
   sellerName: string;
+  orderCount: number;
 }
 
 // Tabla: attendance (asistencia)

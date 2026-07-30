@@ -623,11 +623,13 @@ export const getAllSellersWeeklySales = async (): Promise<SellerWeeklySales[]> =
   }
 
   const dayNames = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+  const todayStr = formatLocalDate(now);
 
   const result: SellerWeeklySales[] = [];
   for (const [sellerId, { name, orders: sellerOrders }] of sellerMap) {
     const total = sellerOrders.reduce((sum, o) => sum + (o.total || 0), 0);
     const daily: WeeklySales['daily'] = [];
+    const todayOrderCount = sellerOrders.filter((o) => o.date?.startsWith(todayStr)).length;
 
     for (let i = 1; i <= 6; i++) {
       const d = new Date(startOfWeek);
@@ -639,7 +641,7 @@ export const getAllSellersWeeklySales = async (): Promise<SellerWeeklySales[]> =
       daily.push({ date: dateStr, dayLabel: dayNames[i], total: dayTotal });
     }
 
-    result.push({ sellerId, sellerName: name, total, daily });
+    result.push({ sellerId, sellerName: name, total, daily, orderCount: todayOrderCount });
   }
 
   // Ordenar por total descendente
