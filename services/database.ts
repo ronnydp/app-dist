@@ -1,16 +1,28 @@
 // services/database.ts
-import { supabase } from '../lib/supabase';
-import { Customer, NewOrder, Order, Presentation, Product, ProductWithPresentations, SellerWeeklySales, WeeklySales } from '../types';
+import { supabase } from "../lib/supabase";
+import {
+    Customer,
+    NewOrder,
+    Order,
+    Presentation,
+    Product,
+    ProductWithPresentations,
+    SellerWeeklySales,
+    WeeklySales,
+} from "../types";
 
 const formatLocalDate = (date: Date): string => {
   const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, '0');
-  const d = String(date.getDate()).padStart(2, '0');
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
   return `${y}-${m}-${d}`;
 };
 
 const normalizeText = (text: string): string => {
-  return text.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+  return text
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
 };
 
 // ==========================================
@@ -23,14 +35,14 @@ const normalizeText = (text: string): string => {
 export const getCustomers = async (): Promise<Customer[]> => {
   try {
     const { data, error } = await supabase
-      .from('customers')
-      .select('*')
-      .order('created_at', { ascending: false });
+      .from("customers")
+      .select("*")
+      .order("created_at", { ascending: false });
 
     if (error) throw error;
     return data || [];
   } catch (error) {
-    console.error('Error al obtener clientes:', error);
+    console.error("Error al obtener clientes:", error);
     throw error;
   }
 };
@@ -42,17 +54,16 @@ export const getCustomersPaginated = async (
   page: number,
   pageSize: number,
   search?: string,
-  role?: string
+  role?: string,
 ): Promise<{ data: Customer[]; hasMore: boolean }> => {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
 
-  const { data: { session } } = await supabase.auth.getSession();
+  let query = supabase.from("customers").select("*", { count: "exact" });
 
-  let query = supabase
-    .from('customers')
-    .select('*', { count: 'exact' });
-
-  if (role !== 'admin') {
-    query = query.eq('is_active', true);
+  if (role !== "admin") {
+    query = query.eq("is_active", true);
   }
 
   if (search && search.trim()) {
@@ -61,7 +72,7 @@ export const getCustomersPaginated = async (
     if (/^\d+$/.test(term)) {
       query = query.or(`name.ilike.%${term}%,cod_customer.eq.${term}`);
     } else {
-      query = query.ilike('name', `%${normalizedTerm}%`);
+      query = query.ilike("name", `%${normalizedTerm}%`);
     }
   }
 
@@ -69,17 +80,17 @@ export const getCustomersPaginated = async (
   const to = from + pageSize - 1;
 
   const { data, error, count } = await query
-    .order('name', { ascending: true })
+    .order("name", { ascending: true })
     .range(from, to);
 
   if (error) throw error;
-  
+
   // Aplicar filtro normalizador en client-side para búsquedas de texto
   let filteredData = data || [];
   if (search && search.trim() && !/^\d+$/.test(search.trim())) {
     const normalizedSearch = normalizeText(search.trim());
-    filteredData = filteredData.filter(item => 
-      normalizeText(item.name).includes(normalizedSearch)
+    filteredData = filteredData.filter((item) =>
+      normalizeText(item.name).includes(normalizedSearch),
     );
   }
 
@@ -94,40 +105,39 @@ export const getCustomersPaginated = async (
  */
 export const searchCustomers = async (
   term: string,
-  limit: number = 50
+  limit: number = 50,
 ): Promise<Customer[]> => {
   try {
     const trimmed = term.trim();
     if (!trimmed) return [];
 
-    let query = supabase.from('customers').select('*')
-      .eq('is_active', true);
+    let query = supabase.from("customers").select("*").eq("is_active", true);
 
     const isNumeric = /^\d+$/.test(trimmed);
     const normalizedTerm = normalizeText(trimmed);
     if (isNumeric) {
       query = query.or(`name.ilike.%${trimmed}%,cod_customer.eq.${trimmed}`);
     } else {
-      query = query.ilike('name', `%${normalizedTerm}%`);
+      query = query.ilike("name", `%${normalizedTerm}%`);
     }
 
     const { data, error } = await query
-      .order('name', { ascending: true })
+      .order("name", { ascending: true })
       .limit(limit);
 
     if (error) throw error;
-    
+
     // Aplicar filtro normalizador en client-side para búsquedas de texto
     let filteredData = data || [];
     if (!isNumeric) {
-      filteredData = filteredData.filter(item => 
-        normalizeText(item.name).includes(normalizedTerm)
+      filteredData = filteredData.filter((item) =>
+        normalizeText(item.name).includes(normalizedTerm),
       );
     }
 
     return filteredData;
   } catch (error) {
-    console.error('Error al buscar clientes:', error);
+    console.error("Error al buscar clientes:", error);
     throw error;
   }
 };
@@ -135,12 +145,14 @@ export const searchCustomers = async (
 /**
  * Crea o actualiza un cliente
  */
-export const saveCustomer = async (customer: Partial<Customer>): Promise<Customer> => {
+export const saveCustomer = async (
+  customer: Partial<Customer>,
+): Promise<Customer> => {
   try {
     // Si tiene ID, actualiza. Si no, crea nuevo
     if (customer.id) {
       const { data, error } = await supabase
-        .from('customers')
+        .from("customers")
         .update({
           name: customer.name,
           ruc: customer.ruc,
@@ -149,7 +161,7 @@ export const saveCustomer = async (customer: Partial<Customer>): Promise<Custome
           phone: customer.phone,
           updated_at: new Date().toISOString(),
         })
-        .eq('id', customer.id)
+        .eq("id", customer.id)
         .select()
         .single();
 
@@ -157,7 +169,7 @@ export const saveCustomer = async (customer: Partial<Customer>): Promise<Custome
       return data;
     } else {
       const { data, error } = await supabase
-        .from('customers')
+        .from("customers")
         .insert({
           name: customer.name,
           ruc: customer.ruc,
@@ -172,7 +184,7 @@ export const saveCustomer = async (customer: Partial<Customer>): Promise<Custome
       return data;
     }
   } catch (error) {
-    console.error('Error al guardar cliente:', error);
+    console.error("Error al guardar cliente:", error);
     throw error;
   }
 };
@@ -183,13 +195,13 @@ export const saveCustomer = async (customer: Partial<Customer>): Promise<Custome
 export const deleteCustomer = async (id: string): Promise<void> => {
   try {
     const { error } = await supabase
-      .from('customers')
+      .from("customers")
       .update({ is_active: false, updated_at: new Date().toISOString() })
-      .eq('id', id);
+      .eq("id", id);
 
     if (error) throw error;
   } catch (error) {
-    console.error('Error al inhabilitar cliente:', error);
+    console.error("Error al inhabilitar cliente:", error);
     throw error;
   }
 };
@@ -200,13 +212,13 @@ export const deleteCustomer = async (id: string): Promise<void> => {
 export const activateCustomer = async (id: string): Promise<void> => {
   try {
     const { error } = await supabase
-      .from('customers')
+      .from("customers")
       .update({ is_active: true, updated_at: new Date().toISOString() })
-      .eq('id', id);
+      .eq("id", id);
 
     if (error) throw error;
   } catch (error) {
-    console.error('Error al habilitar cliente:', error);
+    console.error("Error al habilitar cliente:", error);
     throw error;
   }
 };
@@ -221,15 +233,15 @@ export const activateCustomer = async (id: string): Promise<void> => {
 export const getProducts = async (): Promise<Product[]> => {
   try {
     const { data, error } = await supabase
-      .from('products')
-      .select('*')
-      .eq('is_active', true)
-      .order('name', { ascending: true });
+      .from("products")
+      .select("*")
+      .eq("is_active", true)
+      .order("name", { ascending: true });
 
     if (error) throw error;
     return data || [];
   } catch (error) {
-    console.error('Error al obtener productos:', error);
+    console.error("Error al obtener productos:", error);
     throw error;
   }
 };
@@ -241,28 +253,28 @@ export const getProductsPaginated = async (
   page: number,
   pageSize: number,
   search?: string,
-  role?: string
+  role?: string,
 ): Promise<{ data: ProductWithPresentations[]; hasMore: boolean }> => {
   await supabase.auth.getSession();
 
   let query = supabase
-    .from('products')
-    .select('*, presentations(*)', { count: 'exact' });
+    .from("products")
+    .select("*, presentations(*)", { count: "exact" });
 
-  if (role !== 'admin') {
-    query = query.eq('is_active', true);
+  if (role !== "admin") {
+    query = query.eq("is_active", true);
   }
 
   if (search && search.trim()) {
     const normalizedSearch = normalizeText(search.trim());
-    query = query.ilike('name', `%${normalizedSearch}%`);
+    query = query.ilike("name", `%${normalizedSearch}%`);
   }
 
   const from = page * pageSize;
   const to = from + pageSize - 1;
 
   const { data, error, count } = await query
-    .order('name', { ascending: true })
+    .order("name", { ascending: true })
     .range(from, to);
 
   if (error) throw error;
@@ -270,8 +282,9 @@ export const getProductsPaginated = async (
   // Ordenar presentaciones: default primero
   const products = (data || []).map((p: any) => ({
     ...p,
-    presentations: (p.presentations || []).sort((a: Presentation, b: Presentation) =>
-      a.is_default === b.is_default ? 0 : a.is_default ? -1 : 1
+    presentations: (p.presentations || []).sort(
+      (a: Presentation, b: Presentation) =>
+        a.is_default === b.is_default ? 0 : a.is_default ? -1 : 1,
     ),
   }));
 
@@ -279,8 +292,8 @@ export const getProductsPaginated = async (
   let filteredProducts = products;
   if (search && search.trim()) {
     const normalizedSearch = normalizeText(search.trim());
-    filteredProducts = filteredProducts.filter(item => 
-      normalizeText(item.name).includes(normalizedSearch)
+    filteredProducts = filteredProducts.filter((item) =>
+      normalizeText(item.name).includes(normalizedSearch),
     );
   }
 
@@ -293,17 +306,19 @@ export const getProductsPaginated = async (
 /**
  * Crea o actualiza un producto
  */
-export const saveProduct = async (product: Partial<Product>): Promise<Product> => {
+export const saveProduct = async (
+  product: Partial<Product>,
+): Promise<Product> => {
   try {
     if (product.id) {
       const { data, error } = await supabase
-        .from('products')
+        .from("products")
         .update({
           name: product.name,
           price: product.price,
           image_url: product.image_url,
         })
-        .eq('id', product.id)
+        .eq("id", product.id)
         .select()
         .single();
 
@@ -311,7 +326,7 @@ export const saveProduct = async (product: Partial<Product>): Promise<Product> =
       return data;
     } else {
       const { data, error } = await supabase
-        .from('products')
+        .from("products")
         .insert({
           name: product.name,
           price: product.price,
@@ -324,7 +339,7 @@ export const saveProduct = async (product: Partial<Product>): Promise<Product> =
       return data;
     }
   } catch (error) {
-    console.error('Error al guardar producto:', error);
+    console.error("Error al guardar producto:", error);
     throw error;
   }
 };
@@ -335,13 +350,13 @@ export const saveProduct = async (product: Partial<Product>): Promise<Product> =
 export const deleteProduct = async (id: string): Promise<void> => {
   try {
     const { error } = await supabase
-      .from('products')
+      .from("products")
       .update({ is_active: false })
-      .eq('id', id);
+      .eq("id", id);
 
     if (error) throw error;
   } catch (error) {
-    console.error('Error al inhabilitar producto:', error);
+    console.error("Error al inhabilitar producto:", error);
     throw error;
   }
 };
@@ -352,13 +367,13 @@ export const deleteProduct = async (id: string): Promise<void> => {
 export const activateProduct = async (id: string): Promise<void> => {
   try {
     const { error } = await supabase
-      .from('products')
+      .from("products")
       .update({ is_active: true })
-      .eq('id', id);
+      .eq("id", id);
 
     if (error) throw error;
   } catch (error) {
-    console.error('Error al habilitar producto:', error);
+    console.error("Error al habilitar producto:", error);
     throw error;
   }
 };
@@ -370,18 +385,20 @@ export const activateProduct = async (id: string): Promise<void> => {
 /**
  * Obtiene las presentaciones de un producto
  */
-export const getPresentationsByProduct = async (productId: string): Promise<Presentation[]> => {
+export const getPresentationsByProduct = async (
+  productId: string,
+): Promise<Presentation[]> => {
   try {
     const { data, error } = await supabase
-      .from('presentations')
-      .select('*')
-      .eq('product_id', productId)
-      .order('is_default', { ascending: false });
+      .from("presentations")
+      .select("*")
+      .eq("product_id", productId)
+      .order("is_default", { ascending: false });
 
     if (error) throw error;
     return data || [];
   } catch (error) {
-    console.error('Error al obtener presentaciones:', error);
+    console.error("Error al obtener presentaciones:", error);
     throw error;
   }
 };
@@ -391,14 +408,14 @@ export const getPresentationsByProduct = async (productId: string): Promise<Pres
  */
 export const savePresentations = async (
   productId: string,
-  presentations: Omit<Presentation, 'id' | 'product_id' | 'created_at'>[]
+  presentations: Omit<Presentation, "id" | "product_id" | "created_at">[],
 ): Promise<Presentation[]> => {
   try {
     // Eliminar presentaciones existentes del producto
     const { error: deleteError } = await supabase
-      .from('presentations')
+      .from("presentations")
       .delete()
-      .eq('product_id', productId);
+      .eq("product_id", productId);
 
     if (deleteError) throw deleteError;
 
@@ -414,14 +431,14 @@ export const savePresentations = async (
     }));
 
     const { data, error } = await supabase
-      .from('presentations')
+      .from("presentations")
       .insert(rows)
       .select();
 
     if (error) throw error;
     return data || [];
   } catch (error) {
-    console.error('Error al guardar presentaciones:', error);
+    console.error("Error al guardar presentaciones:", error);
     throw error;
   }
 };
@@ -443,17 +460,19 @@ export const getOrders = async (params: GetOrdersParams = {}) => {
 
     // Traer pedidos con product_orders
     let query = supabase
-      .from('orders')
-      .select(`
+      .from("orders")
+      .select(
+        `
         *,
         customers (name, address, district, cod_customer, phone),
         users!seller_id (name),
         product_orders (*)
-      `)
-      .order('date', { ascending: false });
+      `,
+      )
+      .order("date", { ascending: false });
 
     if (sellerId) {
-      query = query.eq('seller_id', sellerId);
+      query = query.eq("seller_id", sellerId);
     }
 
     const { data, error } = await query;
@@ -462,32 +481,34 @@ export const getOrders = async (params: GetOrdersParams = {}) => {
 
     // Traer todos los productos para mapeo
     const { data: productsData, error: productsError } = await supabase
-      .from('products')
-      .select('id, name');
+      .from("products")
+      .select("id, name");
 
     if (productsError) throw productsError;
 
     // Crear mapa de productos para búsqueda rápida
-    const productMap = new Map(productsData?.map((p: any) => [p.id, p.name]) || []);
+    const productMap = new Map(
+      productsData?.map((p: any) => [p.id, p.name]) || [],
+    );
 
     // Transformar datos para que coincidan con OrderWithDetails
     const transformedData = (data || []).map((order: any) => ({
       ...order,
-      customer_name: order.customers?.name || '',
-      customer_address: order.customers?.address || '',
-      customer_district: order.customers?.district || '',
+      customer_name: order.customers?.name || "",
+      customer_address: order.customers?.address || "",
+      customer_district: order.customers?.district || "",
       customer_cod: order.customers?.cod_customer || 0,
-      customer_phone: order.customers?.phone || '',
-      seller_name: order.users?.name || '',
+      customer_phone: order.customers?.phone || "",
+      seller_name: order.users?.name || "",
       products: (order.product_orders || []).map((po: any) => ({
         ...po,
-        product_name: productMap.get(po.product_id) || 'Producto desconocido',
+        product_name: productMap.get(po.product_id) || "Producto desconocido",
       })),
     }));
 
     return transformedData;
   } catch (error) {
-    console.error('Error al obtener pedidos:', error);
+    console.error("Error al obtener pedidos:", error);
     throw error;
   }
 };
@@ -499,7 +520,7 @@ export const createOrder = async (order: NewOrder): Promise<Order> => {
   try {
     // 1. Crear el pedido
     const { data: newOrder, error: orderError } = await supabase
-      .from('orders')
+      .from("orders")
       .insert({
         customer_id: order.customer_id,
         seller_id: order.seller_id,
@@ -523,14 +544,14 @@ export const createOrder = async (order: NewOrder): Promise<Order> => {
     }));
 
     const { error: productsError } = await supabase
-      .from('product_orders')
+      .from("product_orders")
       .insert(productOrders);
 
     if (productsError) throw productsError;
 
     return newOrder;
   } catch (error) {
-    console.error('Error al crear pedido:', error);
+    console.error("Error al crear pedido:", error);
     throw error;
   }
 };
@@ -539,7 +560,9 @@ export const createOrder = async (order: NewOrder): Promise<Order> => {
  * Obtiene el total vendido en la semana actual (domingo a sábado)
  * para un vendedor específico, con desglose diario.
  */
-export const getWeeklySalesTotal = async (sellerId: string): Promise<WeeklySales> => {
+export const getWeeklySalesTotal = async (
+  sellerId: string,
+): Promise<WeeklySales> => {
   const now = new Date();
   const day = now.getDay(); // 0=domingo, 6=sábado
 
@@ -555,11 +578,11 @@ export const getWeeklySalesTotal = async (sellerId: string): Promise<WeeklySales
   const endStr = formatLocalDate(endOfWeek);
 
   const { data, error } = await supabase
-    .from('orders')
-    .select('total, date')
-    .eq('seller_id', sellerId)
-    .gte('date', startStr)
-    .lte('date', endStr);
+    .from("orders")
+    .select("total, date")
+    .eq("seller_id", sellerId)
+    .gte("date", startStr)
+    .lte("date", endStr);
 
   if (error) throw error;
 
@@ -567,8 +590,8 @@ export const getWeeklySalesTotal = async (sellerId: string): Promise<WeeklySales
   const weekTotal = orders.reduce((sum, o) => sum + (o.total || 0), 0);
 
   // Desglose lunes(1) a sábado(6), omitimos domingo(0)
-  const dayNames = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
-  const daily: WeeklySales['daily'] = [];
+  const dayNames = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
+  const daily: WeeklySales["daily"] = [];
 
   for (let i = 1; i <= 6; i++) {
     const d = new Date(startOfWeek);
@@ -586,7 +609,9 @@ export const getWeeklySalesTotal = async (sellerId: string): Promise<WeeklySales
 /**
  * Obtiene el resumen semanal de TODOS los vendedores (para admin).
  */
-export const getAllSellersWeeklySales = async (): Promise<SellerWeeklySales[]> => {
+export const getAllSellersWeeklySales = async (): Promise<
+  SellerWeeklySales[]
+> => {
   const now = new Date();
   const day = now.getDay();
 
@@ -602,10 +627,10 @@ export const getAllSellersWeeklySales = async (): Promise<SellerWeeklySales[]> =
   const endStr = formatLocalDate(endOfWeek);
 
   const { data, error } = await supabase
-    .from('orders')
-    .select('total, date, seller_id, users!seller_id (name)')
-    .gte('date', startStr)
-    .lte('date', endStr);
+    .from("orders")
+    .select("total, date, seller_id, users!seller_id (name)")
+    .gte("date", startStr)
+    .lte("date", endStr);
 
   if (error) throw error;
 
@@ -615,21 +640,23 @@ export const getAllSellersWeeklySales = async (): Promise<SellerWeeklySales[]> =
   const sellerMap = new Map<string, { name: string; orders: typeof orders }>();
   for (const order of orders) {
     const id = order.seller_id;
-    const name = (order as any).users?.name || 'Sin nombre';
+    const name = (order as any).users?.name || "Sin nombre";
     if (!sellerMap.has(id)) {
       sellerMap.set(id, { name, orders: [] });
     }
     sellerMap.get(id)!.orders.push(order);
   }
 
-  const dayNames = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+  const dayNames = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
   const todayStr = formatLocalDate(now);
 
   const result: SellerWeeklySales[] = [];
   for (const [sellerId, { name, orders: sellerOrders }] of sellerMap) {
     const total = sellerOrders.reduce((sum, o) => sum + (o.total || 0), 0);
-    const daily: WeeklySales['daily'] = [];
-    const todayOrderCount = sellerOrders.filter((o) => o.date?.startsWith(todayStr)).length;
+    const daily: WeeklySales["daily"] = [];
+    const todayOrderCount = sellerOrders.filter((o) =>
+      o.date?.startsWith(todayStr),
+    ).length;
 
     for (let i = 1; i <= 6; i++) {
       const d = new Date(startOfWeek);
@@ -641,7 +668,13 @@ export const getAllSellersWeeklySales = async (): Promise<SellerWeeklySales[]> =
       daily.push({ date: dateStr, dayLabel: dayNames[i], total: dayTotal });
     }
 
-    result.push({ sellerId, sellerName: name, total, daily, orderCount: todayOrderCount });
+    result.push({
+      sellerId,
+      sellerName: name,
+      total,
+      daily,
+      orderCount: todayOrderCount,
+    });
   }
 
   // Ordenar por total descendente
@@ -651,11 +684,11 @@ export const getAllSellersWeeklySales = async (): Promise<SellerWeeklySales[]> =
 
 export const getUsers = async () => {
   try {
-    const { data, error } = await supabase.from('users').select('*')
+    const { data, error } = await supabase.from("users").select("*");
     if (error) throw error;
     return data;
   } catch (error) {
-    console.error('Error al obtener usuarios: ', error)
-    throw error
+    console.error("Error al obtener usuarios: ", error);
+    throw error;
   }
-}
+};

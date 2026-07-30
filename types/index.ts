@@ -42,7 +42,7 @@ export interface ProductWithPresentations extends Product {
 export interface Order {
   id: string; // uuid
   customer_id: string; // uuid referencia a customers
-  seller_id: string // uuid referencia a users (vendedor)
+  seller_id: string; // uuid referencia a users (vendedor)
   total: number; // numeric
   date: string; // timestamp
   note?: string;
@@ -71,7 +71,7 @@ export interface OrderWithDetails extends Order {
 
 export interface ProductOrderWithDetails extends ProductOrder {
   product_name: string; // nombre del producto
-  presentation_name: string // presentacion del producto
+  presentation_name: string; // presentacion del producto
 }
 
 // Tipo para crear un nuevo pedido (antes de tener ID)
@@ -127,7 +127,7 @@ export interface Attendance {
   exit_time?: string; // timestamp con hora de salida
   entry_location?: string; // ubicación GPS al registrar entrada
   exit_location?: string; // ubicación GPS al registrar salida
-  status: 'present' | 'late' | 'absent' | 'half_day'; // estado de asistencia
+  status: "present" | "late" | "absent" | "half_day"; // estado de asistencia
   notes?: string; // notas adicionales
   created_at: string; // timestamp
   updated_at: string; // timestamp
@@ -148,7 +148,7 @@ export interface NewAttendance {
   exit_time?: string;
   entry_location?: string;
   exit_location?: string;
-  status?: 'present' | 'late' | 'absent' | 'half_day';
+  status?: "present" | "late" | "absent" | "half_day";
   notes?: string;
 }
 
@@ -159,7 +159,7 @@ export interface AttendanceRecord {
   entryTime: string;
   exitTime: string;
   statusLabel: string;
-  statusTone: 'success' | 'neutral' | 'warning' | 'error';
+  statusTone: "success" | "neutral" | "warning" | "error";
   entryLocation: string;
   exitLocation: string;
   workedTime: string;
