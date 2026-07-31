@@ -8,6 +8,7 @@ import {
     Product,
     ProductWithPresentations,
     SellerWeeklySales,
+    User,
     WeeklySales,
 } from "../types";
 
@@ -689,6 +690,98 @@ export const getUsers = async () => {
     return data;
   } catch (error) {
     console.error("Error al obtener usuarios: ", error);
+    throw error;
+  }
+};
+
+export const getUserById = async (userId: string): Promise<User | null> => {
+  try {
+    const { data, error } = await supabase
+      .from("users")
+      .select("*")
+      .eq("id", userId)
+      .maybeSingle();
+
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error("Error al obtener usuario por id:", error);
+    throw error;
+  }
+};
+
+export type SellerProfileStats = {
+  todayOrderCount: number;
+  weekOrderCount: number;
+  currentWeekTotal: number;
+  previousWeekTotal: number;
+};
+
+const getWeekBounds = (date: Date, weekOffset = 0) => {
+  const baseDate = new Date(date);
+  baseDate.setDate(baseDate.getDate() + weekOffset * 7);
+
+  const day = baseDate.getDay();
+  const startOfWeek = new Date(baseDate);
+  startOfWeek.setDate(baseDate.getDate() - day);
+  startOfWeek.setHours(0, 0, 0, 0);
+
+  const endOfWeek = new Date(startOfWeek);
+  endOfWeek.setDate(startOfWeek.getDate() + 6);
+  endOfWeek.setHours(23, 59, 59, 999);
+
+  return {
+    start: formatLocalDate(startOfWeek),
+    end: formatLocalDate(endOfWeek),
+  };
+};
+
+export const getSellerProfileStats = async (
+  sellerId: string,
+): Promise<SellerProfileStats> => {
+  try {
+    const now = new Date();
+    const currentWeek = getWeekBounds(now);
+    const previousWeek = getWeekBounds(now, -1);
+    const todayStr = formatLocalDate(now);
+
+    const [currentWeekResult, previousWeekResult] = await Promise.all([
+      supabase
+        .from("orders")
+        .select("total, date")
+        .eq("seller_id", sellerId)
+        .gte("date", currentWeek.start)
+        .lte("date", currentWeek.end),
+      supabase
+        .from("orders")
+        .select("total")
+        .eq("seller_id", sellerId)
+        .gte("date", previousWeek.start)
+        .lte("date", previousWeek.end),
+    ]);
+
+    if (currentWeekResult.error) throw currentWeekResult.error;
+    if (previousWeekResult.error) throw previousWeekResult.error;
+
+    const currentWeekOrders = currentWeekResult.data || [];
+    const previousWeekOrders = previousWeekResult.data || [];
+
+    return {
+      todayOrderCount: currentWeekOrders.filter((order) =>
+        order.date?.startsWith(todayStr),
+      ).length,
+      weekOrderCount: currentWeekOrders.length,
+      currentWeekTotal: currentWeekOrders.reduce(
+        (sum, order) => sum + (order.total || 0),
+        0,
+      ),
+      previousWeekTotal: previousWeekOrders.reduce(
+        (sum, order) => sum + (order.total || 0),
+        0,
+      ),
+    };
+  } catch (error) {
+    console.error("Error al obtener estadísticas del perfil:", error);
     throw error;
   }
 };
