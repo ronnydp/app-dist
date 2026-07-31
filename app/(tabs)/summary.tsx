@@ -6,6 +6,7 @@ import {
     ScrollView,
     StyleSheet,
     Text,
+    TouchableOpacity,
     View,
 } from "react-native";
 import { useAuth } from "../../contexts/AuthContext";
@@ -71,6 +72,91 @@ function DailyBars({ daily }: { daily: WeeklySales["daily"] }) {
           </View>
         );
       })}
+    </View>
+  );
+}
+
+function SellerCollapsibleCard({ seller }: { seller: SellerWeeklySales }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const todayAmount = useMemo(() => {
+    const today = new Date();
+    const todayKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+    return seller.daily.find((day) => day.date === todayKey)?.total ?? 0;
+  }, [seller.daily]);
+
+  return (
+    <View style={styles.sellerCard}>
+      <TouchableOpacity
+        activeOpacity={0.85}
+        onPress={() => setIsOpen((value) => !value)}
+        style={styles.sellerHeaderTouchable}
+      >
+        <View style={styles.sellerHeaderBlock}>
+          <View style={styles.sellerHeader}>
+          <View style={styles.sellerInfo}>
+            <View style={styles.sellerNameRow}>
+              <Ionicons name="person" size={18} color="#08859b" />
+              <Text style={styles.sellerName}>{seller.sellerName}</Text>
+            </View>
+          </View>
+
+            <View style={styles.sellerTodayBlock}>
+              <Text style={styles.sellerTodayLabel}>Hoy</Text>
+              <Text style={styles.sellerTodayTotal}>S/ {todayAmount.toFixed(2)}</Text>
+            </View>
+
+            <View style={styles.sellerAmountBlock}>
+              <Text style={styles.sellerAmountLabel}>Semanal</Text>
+              <Text style={styles.sellerTotal}>S/ {seller.total.toFixed(2)}</Text>
+            </View>
+          </View>
+
+          <View style={styles.sellerFooterToggle}>
+            <Ionicons
+              name={isOpen ? "chevron-up" : "chevron-down"}
+              size={18}
+              color="#6b7280"
+            />
+          </View>
+        </View>
+      </TouchableOpacity>
+
+      {isOpen && (
+        <View style={styles.sellerChartWrap}>
+          <DailyBars daily={seller.daily} />
+        </View>
+      )}
+    </View>
+  );
+}
+
+function AdminCollapsibleSection({
+  title,
+  children,
+  defaultOpen = false,
+}: {
+  title: string;
+  children: React.ReactNode;
+  defaultOpen?: boolean;
+}) {
+  const [isOpen, setIsOpen] = useState(defaultOpen);
+
+  return (
+    <View style={styles.collapsibleSection}>
+      <TouchableOpacity
+        activeOpacity={0.85}
+        onPress={() => setIsOpen((value) => !value)}
+        style={styles.collapsibleTrigger}
+      >
+        <Text style={styles.collapsibleTitle}>{title}</Text>
+        <Ionicons
+          name={isOpen ? "chevron-up" : "chevron-down"}
+          size={18}
+          color="#6b7280"
+        />
+      </TouchableOpacity>
+
+      {isOpen && <View style={styles.collapsibleContent}>{children}</View>}
     </View>
   );
 }
@@ -208,61 +294,46 @@ export default function SummaryScreen() {
           </View>
         </View>
 
-        <View style={styles.dailySummaryCard}>
-          <Text style={styles.dailySummaryTitle}>Total por día</Text>
-          {adminDailyTotals.length > 0 ? (
-            adminDailyTotals.map((day) => {
-              const isToday = day.date === todayKey;
-              return (
-                <View
-                  key={day.date}
-                  style={[
-                    styles.dailySummaryRow,
-                    isToday && styles.dailySummaryRowActive,
-                  ]}
-                >
-                  <Text
+        <AdminCollapsibleSection title="Total por día">
+          <View style={styles.dailySummaryCard}>
+            {adminDailyTotals.length > 0 ? (
+              adminDailyTotals.map((day) => {
+                const isToday = day.date === todayKey;
+                return (
+                  <View
+                    key={day.date}
                     style={[
-                      styles.dailySummaryLabel,
-                      isToday && styles.dailySummaryLabelActive,
+                      styles.dailySummaryRow,
+                      isToday && styles.dailySummaryRowActive,
                     ]}
                   >
-                    {isToday ? "Hoy" : day.dayLabel}
-                  </Text>
-                  <Text
-                    style={[
-                      styles.dailySummaryAmount,
-                      isToday && styles.dailySummaryAmountActive,
-                    ]}
-                  >
-                    S/ {day.total.toFixed(2)}
-                  </Text>
-                </View>
-              );
-            })
-          ) : (
-            <Text style={styles.emptyText}>Sin ventas esta semana</Text>
-          )}
-        </View>
+                    <Text
+                      style={[
+                        styles.dailySummaryLabel,
+                        isToday && styles.dailySummaryLabelActive,
+                      ]}
+                    >
+                      {isToday ? "Hoy" : day.dayLabel}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.dailySummaryAmount,
+                        isToday && styles.dailySummaryAmountActive,
+                      ]}
+                    >
+                      S/ {day.total.toFixed(2)}
+                    </Text>
+                  </View>
+                );
+              })
+            ) : (
+              <Text style={styles.emptyText}>Sin ventas esta semana</Text>
+            )}
+          </View>
+        </AdminCollapsibleSection>
 
         {allSellers.map((seller) => (
-          <View key={seller.sellerId} style={styles.sellerCard}>
-            <View style={styles.sellerHeader}>
-              <View style={styles.sellerInfo}>
-                <View style={styles.sellerNameRow}>
-                  <Ionicons name="person" size={18} color="#08859b" />
-                  <Text style={styles.sellerName}>{seller.sellerName}</Text>
-                </View>
-              </View>
-              <View style={styles.sellerAmountBlock}>
-                <Text style={styles.sellerAmountLabel}>Semanal</Text>
-                <Text style={styles.sellerTotal}>
-                  S/ {seller.total.toFixed(2)}
-                </Text>
-              </View>
-            </View>
-            <DailyBars daily={seller.daily} />
-          </View>
+          <SellerCollapsibleCard key={seller.sellerId} seller={seller} />
         ))}
 
         {allSellers.length === 0 && (
@@ -285,6 +356,7 @@ const styles = StyleSheet.create({
   content: {
     padding: 20,
     marginBottom: 70,
+    gap: 16,
   },
   loadingContainer: {
     flex: 1,
@@ -300,7 +372,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#000000",
     fontWeight: "900",
-    marginBottom: 16,
     textAlign: "center",
   },
   totalCard: {
@@ -349,8 +420,7 @@ const styles = StyleSheet.create({
   },
   metricCardsRow: {
     flexDirection: "row",
-    gap: 10,
-    marginBottom: 12,
+    gap: 12,
   },
   metricCard: {
     flex: 1,
@@ -383,13 +453,31 @@ const styles = StyleSheet.create({
     marginTop: 6,
     fontWeight: "600",
   },
+  collapsibleSection: {
+    gap: 12,
+  },
+  collapsibleTrigger: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+    paddingHorizontal: 4,
+    paddingVertical: 4,
+  },
+  collapsibleTitle: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#374151",
+  },
+  collapsibleContent: {
+    gap: 10,
+  },
   dailySummaryCard: {
     backgroundColor: "#fff",
     borderRadius: 12,
-    padding: 14,
+    padding: 16,
     borderWidth: 1,
     borderColor: "#e5e7eb",
-    marginBottom: 12,
   },
   dailySummaryTitle: {
     fontSize: 14,
@@ -401,7 +489,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingVertical: 8,
+    paddingVertical: 10,
     borderBottomWidth: 1,
     borderBottomColor: "#f3f4f6",
   },
@@ -436,16 +524,23 @@ const styles = StyleSheet.create({
   sellerCard: {
     backgroundColor: "#fff",
     borderRadius: 12,
-    padding: 14,
-    marginBottom: 10,
+    padding: 16,
     borderWidth: 1,
     borderColor: "#e5e7eb",
+    gap: 14,
+  },
+  sellerHeaderTouchable: {
+    marginHorizontal: -2,
+    paddingHorizontal: 2,
+    paddingVertical: 4,
+  },
+  sellerHeaderBlock: {
     gap: 12,
   },
   sellerHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "flex-start",
+    alignItems: "center",
     gap: 12,
   },
   sellerInfo: {
@@ -453,6 +548,24 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
     gap: 2,
     flex: 1,
+  },
+  sellerTodayBlock: {
+    alignItems: "center",
+    justifyContent: "center",
+    minWidth: 88,
+    gap: 2,
+  },
+  sellerTodayLabel: {
+    fontSize: 11,
+    color: "#9ca3af",
+    fontWeight: "600",
+    textTransform: "uppercase",
+    letterSpacing: 0.4,
+  },
+  sellerTodayTotal: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#0f766e",
   },
   sellerNameRow: {
     flexDirection: "row",
@@ -484,6 +597,14 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "700",
     color: "#16a34a",
+  },
+  sellerFooterToggle: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingTop: 2,
+  },
+  sellerChartWrap: {
+    paddingTop: 4,
   },
   dailyContainer: {
     flexDirection: "row",

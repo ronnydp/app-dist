@@ -1,24 +1,72 @@
-import { authService, AuthSession } from '@/services/auth-service';
+import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/contexts/ToastsContext';
+import {
+  getSellerProfileStats,
+  getUserById,
+  SellerProfileStats,
+} from '@/services/database';
 import { Ionicons } from '@expo/vector-icons';
-import { useEffect, useState } from 'react';
+import { useFocusEffect } from 'expo-router';
+import { useCallback, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { User } from '@/types';
+
+const formatCurrency = (value: number) => `S/ ${value.toFixed(2)}`;
+
+const formatDate = (value?: string) => {
+  if (!value) {
+    return 'No disponible';
+  }
+
+  const parsedDate = new Date(value);
+  if (Number.isNaN(parsedDate.getTime())) {
+    return 'No disponible';
+  }
+
+  return parsedDate.toLocaleDateString('es-PE', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  });
+};
 
 export default function ProfileScreen() {
-  const [session, setSession] = useState<AuthSession | null>(null);
+  const { session } = useAuth();
+  const { showToast } = useToast();
+  const [user, setUser] = useState<User | null>(null);
+  const [stats, setStats] = useState<SellerProfileStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    const loadProfile = async () => {
-      try {
-        const currentSession = await authService.getSession();
-        setSession(currentSession);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  const loadProfile = useCallback(async () => {
+    if (!session?.user?.id) {
+      setUser(null);
+      setStats(null);
+      setIsLoading(false);
+      return;
+    }
 
-    loadProfile();
-  }, []);
+    setIsLoading(true);
+    try {
+      const [userData, statsData] = await Promise.all([
+        getUserById(session.user.id),
+        getSellerProfileStats(session.user.id),
+      ]);
+
+      setUser(userData);
+      setStats(statsData);
+    } catch (error) {
+      showToast('No se pudo cargar el perfil', 'error');
+      console.error(error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [session?.user?.id, showToast]);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadProfile();
+    }, [loadProfile]),
+  );
 
   if (isLoading) {
     return (
@@ -34,29 +82,29 @@ export default function ProfileScreen() {
       <View style={styles.header}>
         <Ionicons name="person-circle-outline" size={100} color="#08859b" />
         <View style={{ flex: 1 }}>
-          <Text style={styles.title}>{session?.user?.name || 'Vendedor'}</Text>
-          <Text style={styles.subtitle}>{session?.user?.role || 'Sin rol'}</Text>
+          <Text style={styles.title}>{user?.name || session?.user?.name || 'Vendedor'}</Text>
+          <Text style={styles.subtitle}>{user?.role || session?.user?.role || 'Sin rol'}</Text>
         </View>
       </View>
       <View style={styles.statsGrid}>
         <View style={styles.statsRow}>
           <View style={styles.statCard}>
             <Text style={styles.statLabel}>Pedidos hoy</Text>
-            <Text style={styles.statValue}>12</Text>
+            <Text style={styles.statValue}>{stats?.todayOrderCount ?? 0}</Text>
           </View>
           <View style={styles.statCard}>
             <Text style={styles.statLabel}>Ventas semana pasada</Text>
-            <Text style={styles.statValue}>S/ 3,820.00</Text>
+            <Text style={styles.statValue}>{formatCurrency(stats?.previousWeekTotal ?? 0)}</Text>
           </View>
         </View>
         <View style={styles.statsRow}>
           <View style={styles.statCard}>
             <Text style={styles.statLabel}>Pedidos esta semana</Text>
-            <Text style={styles.statValue}>65</Text>
+            <Text style={styles.statValue}>{stats?.weekOrderCount ?? 0}</Text>
           </View>
           <View style={styles.statCard}>
             <Text style={styles.statLabel}>Ventas esta semana</Text>
-            <Text style={styles.statValue}>S/ 3,820.00</Text>
+            <Text style={styles.statValue}>{formatCurrency(stats?.currentWeekTotal ?? 0)}</Text>
           </View>
         </View>
       </View>
@@ -64,7 +112,19 @@ export default function ProfileScreen() {
       <View style={styles.infoCard}>
         <View style={styles.infoRow}>
           <Text style={{color: '#6b7280', fontSize: 14}}>Correo</Text>
-          <Text style={{color: '#6b7280', fontSize: 14}}>{session?.user?.email || 'Vendedor'}</Text>
+          <Text style={{color: '#6b7280', fontSize: 14}}>{user?.email || session?.user?.email || 'No registrado'}</Text>
+        </View>
+        <View style={styles.infoRow}>
+          <Text style={{color: '#6b7280', fontSize: 14}}>Teléfono</Text>
+          <Text style={{color: '#6b7280', fontSize: 14}}>{user?.phone || 'No registrado'}</Text>
+        </View>
+        <View style={styles.infoRow}>
+          <Text style={{color: '#6b7280', fontSize: 14}}>Estado</Text>
+          <Text style={{color: '#6b7280', fontSize: 14}}>{user?.is_active ? 'Activo' : 'Inactivo'}</Text>
+        </View>
+        <View style={styles.infoRow}>
+          <Text style={{color: '#6b7280', fontSize: 14}}>Registrado</Text>
+          <Text style={{color: '#6b7280', fontSize: 14}}>{formatDate(user?.created_at)}</Text>
         </View>
       </View>
     </View>
@@ -94,11 +154,13 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 12,
     borderColor: '#ecedf0',
-    padding: 16
+    padding: 16,
+    gap: 12,
   },
   infoRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between'
+    justifyContent: 'space-between',
+    gap: 12,
   },
   header: {
     flexDirection: 'row',
