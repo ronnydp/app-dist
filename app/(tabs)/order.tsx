@@ -138,7 +138,6 @@ export default function OrderScreen() {
 
     const renderSectionHeader = ({ section }: { section: { title: string; data: OrderWithDetails[] } }) => (
         <View style={styles.sectionHeader}>
-            <Ionicons name="person-outline" size={16} color="#08859b" />
             <Text style={styles.sectionTitle}>{section.title}</Text>
             <Text style={styles.sectionCount}>{section.data.length} pedido{section.data.length !== 1 ? 's' : ''}</Text>
         </View>

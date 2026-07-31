@@ -53,11 +53,11 @@ export default function TabLayout() {
       />
       <Tabs.Screen
         name="summary"
-        options={getScreenOptions('Estadísticas', "stats-chart")}
+        options={getScreenOptions('Reportes', "stats-chart")}
       />
       <Tabs.Screen
         name="asistencia"
-        options={getScreenOptions('Asistencia', 'calendar-outline')}
+        options={getScreenOptions('Asistencia', 'pencil-outline')}
       />
     </Tabs>
   );

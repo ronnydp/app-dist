@@ -9,13 +9,33 @@ type Props = {
   onOpen?: (o: OrderWithDetails) => void;
 };
 
+const formatOrderTime = (value?: string) => {
+  if (!value) return null;
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+
+  return new Intl.DateTimeFormat('es-PE', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).format(date);
+};
+
 export default memo(function OrderCard({ item, onOpen }: Props) {
+  const orderTime = formatOrderTime(item.created_at || item.date);
+
   return (
     <View style={cardStyles.card}>
       <View style={{ flex: 1 }}>
         <View style={cardStyles.cardContent}>
           <View style={cardStyles.header}>
-            <Text style={cardStyles.nombre}>{item.customer_name}</Text>
+            <View style={cardStyles.headerLeft}>
+              <Text style={cardStyles.nombre} numberOfLines={1} ellipsizeMode="tail">
+                {item.customer_name}
+              </Text>
+              {orderTime ? <Text style={cardStyles.orderTime}>{orderTime}</Text> : null}
+            </View>
             <View style={cardStyles.headerRight}>
               <Text style={cardStyles.codigo}>#{item.customer_cod}</Text>
               <Text style={cardStyles.total}>S/ {item.total.toFixed(2)}</Text>

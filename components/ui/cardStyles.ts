@@ -20,8 +20,14 @@ export default StyleSheet.create({
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     marginBottom: 6,
+    gap: 8,
+  },
+  headerLeft: {
+    flex: 1,
+    minWidth: 0,
+    marginRight: 8,
   },
   nombre: {
     fontSize: 16,
@@ -29,6 +35,11 @@ export default StyleSheet.create({
     color: '#111827',
     flexShrink: 1,
     marginRight: 6,
+  },
+  orderTime: {
+    fontSize: 12,
+    color: '#6b7280',
+    marginTop: 1,
   },
   codigo: {
     fontSize: 12,
@@ -43,6 +54,7 @@ export default StyleSheet.create({
   headerRight: {
     flexDirection: 'row',
     alignItems: 'center',
+    flexShrink: 0,
     marginLeft: 8,
   },
   total: {
