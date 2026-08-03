@@ -1,12 +1,15 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { memo } from 'react';
 import { Text, View } from 'react-native';
+import { decodeOrderObservation } from '../lib/utils/orderObservation';
 import { OrderWithDetails } from '../types';
 import cardStyles from './ui/cardStyles';
 
 type Props = {
   item: OrderWithDetails;
   onOpen?: (o: OrderWithDetails) => void;
+  onAddObservation?: (o: OrderWithDetails) => void;
+  canAddObservation?: boolean;
 };
 
 const formatOrderTime = (value?: string) => {
@@ -22,8 +25,20 @@ const formatOrderTime = (value?: string) => {
   }).format(date);
 };
 
-export default memo(function OrderCard({ item, onOpen }: Props) {
+export default memo(function OrderCard({ item, onOpen, onAddObservation, canAddObservation = false }: Props) {
   const orderTime = formatOrderTime(item.created_at || item.date);
+  const decodedObservation = decodeOrderObservation(item.note);
+  const hasObservation = Boolean(decodedObservation.text);
+  const lastObservation = decodedObservation.text
+    ? decodedObservation.text
+        .split('\n')
+        .map((line) => line.trim())
+        .filter(Boolean)
+        .slice(-1)[0]
+    : null;
+  const observationEditedTime = decodedObservation.editedAt
+    ? formatOrderTime(decodedObservation.editedAt)
+    : null;
 
   return (
     <View style={cardStyles.card}>
@@ -69,11 +84,31 @@ export default memo(function OrderCard({ item, onOpen }: Props) {
             ) : null}
           </View>
 
-          {item.note ? (
+          {lastObservation ? (
             <View style={cardStyles.noteSnippet}>
               <Ionicons name="chatbubble-ellipses-outline" size={14} color="#92400e" style={{marginRight:8}} />
-              <Text style={cardStyles.noteSnippetText} numberOfLines={1} ellipsizeMode="tail">
-                {item.note.length > 80 ? item.note.slice(0, 80) + '…' : item.note}
+              <View style={{ flex: 1 }}>
+                <Text style={cardStyles.noteSnippetText} numberOfLines={1} ellipsizeMode="tail">
+                  {lastObservation.length > 80 ? lastObservation.slice(0, 80) + '…' : lastObservation}
+                </Text>
+                {observationEditedTime ? (
+                  <Text style={{ fontSize: 11, color: '#92400e', marginTop: 2 }}>
+                    Editado {observationEditedTime}
+                  </Text>
+                ) : null}
+              </View>
+            </View>
+          ) : observationEditedTime ? (
+            <View style={cardStyles.noteSnippet}>
+              <Ionicons name="time-outline" size={14} color="#92400e" style={{marginRight:8}} />
+              <Text style={cardStyles.noteSnippetText}>Editado {observationEditedTime}</Text>
+            </View>
+          ) : null}
+
+          {canAddObservation && onAddObservation ? (
+            <View style={cardStyles.actionsRow}>
+              <Text style={cardStyles.actionButton} onPress={() => onAddObservation(item)}>
+                {hasObservation ? 'Editar observación' : 'Agregar observación'}
               </Text>
             </View>
           ) : null}
@@ -86,6 +121,7 @@ export default memo(function OrderCard({ item, onOpen }: Props) {
     prev.item.id === next.item.id &&
     prev.item.total === next.item.total &&
     prev.item.note === next.item.note &&
-    prev.item.customer_phone === next.item.customer_phone
+    prev.item.customer_phone === next.item.customer_phone &&
+    prev.canAddObservation === next.canAddObservation
   );
 });

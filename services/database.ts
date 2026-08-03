@@ -1,15 +1,16 @@
 // services/database.ts
 import { supabase } from "../lib/supabase";
+import { encodeOrderObservation } from "../lib/utils/orderObservation";
 import {
-    Customer,
-    NewOrder,
-    Order,
-    Presentation,
-    Product,
-    ProductWithPresentations,
-    SellerWeeklySales,
-    User,
-    WeeklySales,
+  Customer,
+  NewOrder,
+  Order,
+  Presentation,
+  Product,
+  ProductWithPresentations,
+  SellerWeeklySales,
+  User,
+  WeeklySales,
 } from "../types";
 
 const formatLocalDate = (date: Date): string => {
@@ -557,23 +558,56 @@ export const createOrder = async (order: NewOrder): Promise<Order> => {
   }
 };
 
+export const saveOrderObservation = async (
+  orderId: string,
+  sellerId: string,
+  observation: string,
+): Promise<void> => {
+  const trimmedObservation = observation.trim();
+  if (!trimmedObservation) {
+    throw new Error("La observación no puede estar vacía");
+  }
+
+  try {
+    const { data: orderData, error: fetchError } = await supabase
+      .from("orders")
+      .select("id, seller_id, note")
+      .eq("id", orderId)
+      .eq("seller_id", sellerId)
+      .maybeSingle();
+
+    if (fetchError) throw fetchError;
+    if (!orderData) {
+      throw new Error("No autorizado para observar este pedido");
+    }
+
+    const encodedNote = encodeOrderObservation(
+      trimmedObservation,
+      new Date().toISOString(),
+    );
+
+    const { error: updateError } = await supabase
+      .from("orders")
+      .update({ note: encodedNote })
+      .eq("id", orderId)
+      .eq("seller_id", sellerId);
+
+    if (updateError) throw updateError;
+  } catch (error) {
+    console.error("Error al guardar observación del pedido:", error);
+    throw error;
+  }
+};
+
 /**
- * Obtiene el total vendido en la semana actual (domingo a sábado)
+ * Obtiene el total vendido en la semana actual (lunes a sábado)
  * para un vendedor específico, con desglose diario.
  */
 export const getWeeklySalesTotal = async (
   sellerId: string,
 ): Promise<WeeklySales> => {
   const now = new Date();
-  const day = now.getDay(); // 0=domingo, 6=sábado
-
-  const startOfWeek = new Date(now);
-  startOfWeek.setDate(now.getDate() - day);
-  startOfWeek.setHours(0, 0, 0, 0);
-
-  const endOfWeek = new Date(startOfWeek);
-  endOfWeek.setDate(startOfWeek.getDate() + 6);
-  endOfWeek.setHours(23, 59, 59, 999);
+  const { start: startOfWeek, end: endOfWeek } = getWeekBounds(now);
 
   const startStr = formatLocalDate(startOfWeek);
   const endStr = formatLocalDate(endOfWeek);
@@ -590,11 +624,10 @@ export const getWeeklySalesTotal = async (
   const orders = data || [];
   const weekTotal = orders.reduce((sum, o) => sum + (o.total || 0), 0);
 
-  // Desglose lunes(1) a sábado(6), omitimos domingo(0)
-  const dayNames = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
+  const dayNames = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
   const daily: WeeklySales["daily"] = [];
 
-  for (let i = 1; i <= 6; i++) {
+  for (let i = 0; i < dayNames.length; i++) {
     const d = new Date(startOfWeek);
     d.setDate(startOfWeek.getDate() + i);
     const dateStr = formatLocalDate(d);
@@ -614,15 +647,7 @@ export const getAllSellersWeeklySales = async (): Promise<
   SellerWeeklySales[]
 > => {
   const now = new Date();
-  const day = now.getDay();
-
-  const startOfWeek = new Date(now);
-  startOfWeek.setDate(now.getDate() - day);
-  startOfWeek.setHours(0, 0, 0, 0);
-
-  const endOfWeek = new Date(startOfWeek);
-  endOfWeek.setDate(startOfWeek.getDate() + 6);
-  endOfWeek.setHours(23, 59, 59, 999);
+  const { start: startOfWeek, end: endOfWeek } = getWeekBounds(now);
 
   const startStr = formatLocalDate(startOfWeek);
   const endStr = formatLocalDate(endOfWeek);
@@ -648,7 +673,7 @@ export const getAllSellersWeeklySales = async (): Promise<
     sellerMap.get(id)!.orders.push(order);
   }
 
-  const dayNames = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
+  const dayNames = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
   const todayStr = formatLocalDate(now);
 
   const result: SellerWeeklySales[] = [];
@@ -659,7 +684,7 @@ export const getAllSellersWeeklySales = async (): Promise<
       o.date?.startsWith(todayStr),
     ).length;
 
-    for (let i = 1; i <= 6; i++) {
+    for (let i = 0; i < dayNames.length; i++) {
       const d = new Date(startOfWeek);
       d.setDate(startOfWeek.getDate() + i);
       const dateStr = formatLocalDate(d);
@@ -722,17 +747,20 @@ const getWeekBounds = (date: Date, weekOffset = 0) => {
   baseDate.setDate(baseDate.getDate() + weekOffset * 7);
 
   const day = baseDate.getDay();
+  const daysToMonday = day === 0 ? -6 : 1 - day;
   const startOfWeek = new Date(baseDate);
-  startOfWeek.setDate(baseDate.getDate() - day);
+  startOfWeek.setDate(baseDate.getDate() + daysToMonday);
   startOfWeek.setHours(0, 0, 0, 0);
 
   const endOfWeek = new Date(startOfWeek);
-  endOfWeek.setDate(startOfWeek.getDate() + 6);
+  endOfWeek.setDate(startOfWeek.getDate() + 5);
   endOfWeek.setHours(23, 59, 59, 999);
 
   return {
-    start: formatLocalDate(startOfWeek),
-    end: formatLocalDate(endOfWeek),
+    start: startOfWeek,
+    end: endOfWeek,
+    startStr: formatLocalDate(startOfWeek),
+    endStr: formatLocalDate(endOfWeek),
   };
 };
 
@@ -750,14 +778,14 @@ export const getSellerProfileStats = async (
         .from("orders")
         .select("total, date")
         .eq("seller_id", sellerId)
-        .gte("date", currentWeek.start)
-        .lte("date", currentWeek.end),
+        .gte("date", currentWeek.startStr)
+        .lte("date", currentWeek.endStr),
       supabase
         .from("orders")
         .select("total")
         .eq("seller_id", sellerId)
-        .gte("date", previousWeek.start)
-        .lte("date", previousWeek.end),
+        .gte("date", previousWeek.startStr)
+        .lte("date", previousWeek.endStr),
     ]);
 
     if (currentWeekResult.error) throw currentWeekResult.error;

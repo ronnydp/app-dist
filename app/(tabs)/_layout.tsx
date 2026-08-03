@@ -1,16 +1,18 @@
 import { HapticTab } from '@/components/haptic-tab';
 import { Colors } from '@/constants/theme';
-import { useAuth } from '@/contexts/AuthContext';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { Ionicons } from '@expo/vector-icons';
 import { router, Tabs } from 'expo-router';
 import React from 'react';
 import { TouchableOpacity } from 'react-native';
 
+export const unstable_settings = {
+  initialRouteName: 'order',
+};
+
 export default function TabLayout() {
   type ScreenOptions = React.ComponentProps<typeof Tabs.Screen>['options'];
   const colorScheme = useColorScheme();
-  const { role } = useAuth();
   const getScreenOptions = (title: string, iconName: keyof typeof Ionicons.glyphMap): ScreenOptions => ({
     title,
     tabBarIcon: ({ color }: { color: string }) => (<Ionicons size={28} name={iconName} color={color} />),
@@ -40,24 +42,24 @@ export default function TabLayout() {
         tabBarButton: HapticTab,
       }}>
       <Tabs.Screen
-        name="customer"
-        options={getScreenOptions('Clientes', 'people')}
+        name="order"
+        options={getScreenOptions('Pedidos', "receipt")}
       />
       <Tabs.Screen
         name="product"
         options={getScreenOptions('Productos', 'bag')}
       />
       <Tabs.Screen
-        name="order"
-        options={getScreenOptions('Pedidos', "receipt")}
+        name="customer"
+        options={getScreenOptions('Clientes', 'people')}
       />
       <Tabs.Screen
         name="summary"
-        options={getScreenOptions('Reportes', "stats-chart")}
+        options={getScreenOptions('Montos', "wallet")}
       />
       <Tabs.Screen
         name="asistencia"
-        options={getScreenOptions('Asistencia', 'pencil-outline')}
+        options={getScreenOptions('Asistencia', 'time')}
       />
     </Tabs>
   );

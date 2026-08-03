@@ -60,7 +60,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } catch (err) {
             const message = err instanceof Error ? err.message : 'Error al iniciar sesión';
             setError(message);
-            console.log(err)
         } finally {
             setIsLoading(false);
         }

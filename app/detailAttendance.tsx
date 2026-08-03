@@ -1,6 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
-import { router, useLocalSearchParams } from 'expo-router';
-import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useLocalSearchParams } from 'expo-router';
+import { useEffect, useState } from 'react';
+import { ActivityIndicator, Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import * as attendanceService from '@/services/attendance';
+import { AttendanceRecord } from '@/types';
 
 type AttendanceParams = {
   id?: string;
@@ -17,8 +20,34 @@ type AttendanceParams = {
   workedTime?: string;
 };
 
+type DisplayAttendance = {
+  entryRegistered: boolean;
+  exitRegistered: boolean;
+  entryTone: 'success' | 'warning' | 'neutral';
+  exitTone: 'success' | 'warning' | 'neutral';
+  entryLabel: string;
+  exitLabel: string;
+};
+
+function buildDisplayAttendance(params: AttendanceParams): DisplayAttendance {
+  const entryRegistered = Boolean(params.entryTime && params.entryTime !== '--:--');
+  const exitRegistered = Boolean(params.exitTime && params.exitTime !== '--:--');
+
+  return {
+    entryRegistered,
+    exitRegistered,
+    entryTone: entryRegistered ? 'success' : 'neutral',
+    exitTone: exitRegistered ? 'success' : 'neutral',
+    entryLabel: entryRegistered ? 'Registrada' : 'No registrada',
+    exitLabel: exitRegistered ? 'Registrada' : 'No registrada',
+  };
+}
+
 export default function DetailAttendance() {
   const params = useLocalSearchParams<AttendanceParams>();
+  const [history, setHistory] = useState<AttendanceRecord[]>([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
+  const hasDetailParams = Boolean(params.id || params.name || params.entryTime || params.exitTime);
   const name = params.name ?? 'Empleado';
   const roleLabel = params.roleLabel ?? 'Sin rol asignado';
   const initials = params.initials ?? 'E';
@@ -26,16 +55,88 @@ export default function DetailAttendance() {
   const exitTime = params.exitTime ?? '--:--';
   const statusLabel = params.statusLabel ?? 'Ausente';
   const statusTone = params.statusTone ?? 'error';
-  const dateLabel = params.dateLabel ?? 'Hoy';
   const entryLocation = params.entryLocation ?? 'Ubicación no registrada';
   const exitLocation = params.exitLocation ?? 'Ubicación no registrada';
   const workedTime = params.workedTime ?? '0h 00m';
+  const displayAttendance = buildDisplayAttendance(params);
   const entryMapUrl = entryLocation !== 'Ubicación no registrada'
     ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(entryLocation)}`
     : null;
   const exitMapUrl = exitLocation !== 'Ubicación no registrada'
     ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(exitLocation)}`
     : null;
+
+  useEffect(() => {
+    if (hasDetailParams) {
+      return;
+    }
+
+    let active = true;
+
+    const loadHistory = async () => {
+      try {
+        setLoadingHistory(true);
+        const data = await attendanceService.getUserAttendanceHistory(10);
+        if (active) {
+          setHistory(data);
+        }
+      } catch (error) {
+        console.error('Error al cargar historial de asistencia:', error);
+      } finally {
+        if (active) {
+          setLoadingHistory(false);
+        }
+      }
+    };
+
+    void loadHistory();
+
+    return () => {
+      active = false;
+    };
+  }, [hasDetailParams]);
+
+  if (!hasDetailParams) {
+    return (
+      <View style={styles.container}>
+        <ScrollView contentContainerStyle={styles.content}>
+          <View style={styles.profileCard}>
+            <View style={styles.avatar}>
+              <Text style={styles.avatarText}>{initials}</Text>
+            </View>
+            <View style={styles.profileInfo}>
+              <Text style={styles.name}>Mi historial</Text>
+              <Text style={styles.role}>Últimos registros de asistencia</Text>
+              <View style={styles.activeRow}>
+                <View style={styles.activeDot} />
+                <Text style={styles.activeText}>Vendedor</Text>
+              </View>
+            </View>
+          </View>
+
+          {loadingHistory ? (
+            <View style={styles.historyLoadingCard}>
+              <ActivityIndicator size="large" color="#1d4ed8" />
+            </View>
+          ) : history.length > 0 ? (
+            <View style={styles.historyListCard}>
+              {history.map((item, index) => (
+                <View key={item.id}>
+                  <HistoryRow item={item} />
+                  {index < history.length - 1 ? <View style={styles.historyDivider} /> : null}
+                </View>
+              ))}
+            </View>
+          ) : (
+            <View style={styles.emptyHistoryCard}>
+              <Ionicons name="time-outline" size={28} color="#94a3b8" />
+              <Text style={styles.emptyHistoryText}>Todavía no tienes registros de asistencia</Text>
+            </View>
+          )}
+        </ScrollView>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -55,18 +156,12 @@ export default function DetailAttendance() {
           </View>
         </View>
 
-        <View style={styles.dateCard}>
-          <Ionicons name="calendar-outline" size={18} color="#4338ca" />
-          <Text style={styles.dateText}>{dateLabel}</Text>
-          <Ionicons name="chevron-down" size={18} color="#64748b" />
-        </View>
-
         <ActionDetail
           title="Entrada"
           locationTitle="Ubicación de entrada"
           time={entryTime}
-          tone={statusTone === 'error' ? 'neutral' : statusTone}
-          label={statusTone === 'error' ? 'No registrada' : 'Registrada'}
+          tone={displayAttendance.entryTone}
+          label={displayAttendance.entryLabel}
           location={entryLocation}
           mapUrl={entryMapUrl}
         />
@@ -75,8 +170,8 @@ export default function DetailAttendance() {
           title="Salida"
           locationTitle="Ubicación de salida"
           time={exitTime}
-          tone={statusTone === 'error' ? 'neutral' : statusTone}
-          label={statusTone === 'error' ? 'No registrada' : 'Registrada'}
+          tone={displayAttendance.exitTone}
+          label={displayAttendance.exitLabel}
           location={exitLocation}
           mapUrl={exitMapUrl}
         />
@@ -120,7 +215,6 @@ function ActionDetail({
           <Ionicons name={icon} size={20} color={color} />
         </View>
         <Text style={styles.actionTitle}>{title}</Text>
-        <Ionicons name="chevron-forward" size={18} color="#94a3b8" />
       </View>
       <Text style={styles.actionTime}>{time}</Text>
       <Text style={[styles.actionStatus, { color }]}>{label}</Text>
@@ -198,6 +292,39 @@ const styles = StyleSheet.create({
   content: {
     padding: 16,
     gap: 12,
+  },
+  historyLoadingCard: {
+    minHeight: 180,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    backgroundColor: '#fff',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  historyListCard: {
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    backgroundColor: '#fff',
+    overflow: 'hidden',
+  },
+  emptyHistoryCard: {
+    minHeight: 180,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    backgroundColor: '#f8fafc',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    padding: 20,
+  },
+  emptyHistoryText: {
+    fontSize: 14,
+    color: '#64748b',
+    textAlign: 'center',
+    lineHeight: 20,
   },
   profileCard: {
     flexDirection: 'row',
@@ -353,4 +480,110 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '800',
   },
+  historyRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 14,
+  },
+  historyStatus: {
+    width: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  historyBody: {
+    flex: 1,
+    gap: 4,
+  },
+  historyDate: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#0f172a',
+  },
+  historyTimes: {
+    fontSize: 13,
+    color: '#64748b',
+  },
+  historyMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  historyChip: {
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+  },
+  historyChipText: {
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  historyDivider: {
+    height: 1,
+    backgroundColor: '#e2e8f0',
+    marginLeft: 54,
+  },
 });
+
+function HistoryRow({ item }: { item: AttendanceRecord }) {
+  return (
+    <View style={styles.historyRow}>
+      <View style={styles.historyStatus}>
+        <Ionicons name="checkmark-circle-outline" size={24} color="#16a34a" />
+      </View>
+      <View style={styles.historyBody}>
+        <Text style={styles.historyDate}>{item.dateLabel}</Text>
+        <Text style={styles.historyTimes}>
+          Entrada: {item.entryTime}  •  Salida: {item.exitTime}
+        </Text>
+      </View>
+      <View style={styles.historyMeta}>
+        <View style={[styles.historyChip, toneChipStyles[item.statusTone].chip]}>
+          <Text style={[styles.historyChipText, toneChipStyles[item.statusTone].text]}>
+            {item.statusLabel}
+          </Text>
+        </View>
+        <Ionicons name="chevron-forward" size={18} color="#94a3b8" />
+      </View>
+    </View>
+  );
+}
+
+const toneChipStyles: Record<
+  AttendanceRecord['statusTone'],
+  { chip: { backgroundColor: string }; text: { color: string } }
+> = {
+  success: {
+    chip: {
+      backgroundColor: '#dcfce7',
+    },
+    text: {
+      color: '#15803d',
+    },
+  },
+  neutral: {
+    chip: {
+      backgroundColor: '#e2e8f0',
+    },
+    text: {
+      color: '#475569',
+    },
+  },
+  warning: {
+    chip: {
+      backgroundColor: '#fef3c7',
+    },
+    text: {
+      color: '#a16207',
+    },
+  },
+  error: {
+    chip: {
+      backgroundColor: '#fee2e2',
+    },
+    text: {
+      color: '#dc2626',
+    },
+  },
+};
