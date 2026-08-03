@@ -557,6 +557,53 @@ export const createOrder = async (order: NewOrder): Promise<Order> => {
   }
 };
 
+export const appendOrderObservation = async (
+  orderId: string,
+  sellerId: string,
+  observation: string,
+): Promise<void> => {
+  const trimmedObservation = observation.trim();
+  if (!trimmedObservation) {
+    throw new Error("La observación no puede estar vacía");
+  }
+
+  try {
+    const { data: orderData, error: fetchError } = await supabase
+      .from("orders")
+      .select("id, seller_id, note")
+      .eq("id", orderId)
+      .eq("seller_id", sellerId)
+      .maybeSingle();
+
+    if (fetchError) throw fetchError;
+    if (!orderData) {
+      throw new Error("No autorizado para observar este pedido");
+    }
+
+    const now = new Date();
+    const timeStamp = new Intl.DateTimeFormat("es-PE", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    }).format(now);
+
+    const newEntry = `[${timeStamp}] ${trimmedObservation}`;
+    const previousNote = orderData.note?.trim();
+    const note = previousNote ? `${previousNote}\n${newEntry}` : newEntry;
+
+    const { error: updateError } = await supabase
+      .from("orders")
+      .update({ note })
+      .eq("id", orderId)
+      .eq("seller_id", sellerId);
+
+    if (updateError) throw updateError;
+  } catch (error) {
+    console.error("Error al agregar observación al pedido:", error);
+    throw error;
+  }
+};
+
 /**
  * Obtiene el total vendido en la semana actual (domingo a sábado)
  * para un vendedor específico, con desglose diario.

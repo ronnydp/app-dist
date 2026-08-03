@@ -146,21 +146,23 @@ export default function DetailCustomer() {
                     </View>
                 </View>
             </View>
-            {role === 'admin' && (
+            {(role === 'admin' || role === 'vendedor') && (
                 <View style={{
                     flexDirection: "row", justifyContent: 'flex-end', margin: 'auto', gap: 10, marginTop: 'auto'
                 }}>
-                    <TouchableOpacity style={{
-                        padding: 16, borderRadius: 8, alignItems: "center", backgroundColor: '#fff', borderColor: getStatusColorButton(is_active), borderWidth: 1
-                    }}
-                        onPress={() => handleActiveDialog()}
-                    >
-                        <Text style={{
-                            fontSize: 16, fontWeight: '600', color: getStatusColorButton(is_active),
-                        }}>
-                            {is_active ? 'Deshabilitar' : 'Habilitar'}
-                        </Text>
-                    </TouchableOpacity>
+                    {role === 'admin' && (
+                        <TouchableOpacity style={{
+                            padding: 16, borderRadius: 8, alignItems: "center", backgroundColor: '#fff', borderColor: getStatusColorButton(is_active), borderWidth: 1
+                        }}
+                            onPress={() => handleActiveDialog()}
+                        >
+                            <Text style={{
+                                fontSize: 16, fontWeight: '600', color: getStatusColorButton(is_active),
+                            }}>
+                                {is_active ? 'Deshabilitar' : 'Habilitar'}
+                            </Text>
+                        </TouchableOpacity>
+                    )}
                     <TouchableOpacity style={{
                         padding: 16, borderRadius: 8, alignItems: "center", backgroundColor: '#08859b',
                     }}

@@ -1,7 +1,7 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastsContext';
 import { Ionicons } from '@expo/vector-icons';
-import { useFocusEffect } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import * as Location from 'expo-location';
 import { useCallback, useState } from 'react';
 import {
@@ -82,7 +82,7 @@ function formatLocationLabel(
 }
 
 async function getCurrentDeviceLocation(): Promise<DeviceLocation> {
-  const { status } = await Location.requestForegroundPermissionsAsync();
+    const { status } = await Location.requestForegroundPermissionsAsync();
   if (status !== 'granted') {
     throw new Error('Activa los permisos de ubicación para registrar asistencia');
   }
@@ -191,6 +191,23 @@ function HistoryRow({ item }: { item: AttendanceRecord }) {
   );
 }
 
+function HistorySummaryCard({ count }: { count: number }) {
+  return (
+    <Pressable style={styles.historySummaryCard} onPress={() => router.push('/detailAttendance')}>
+      <View style={styles.historySummaryIcon}>
+        <Ionicons name="time-outline" size={22} color="#1d4ed8" />
+      </View>
+      <View style={styles.historySummaryBody}>
+        <Text style={styles.historySummaryLabel}>Historial de asistencia</Text>
+        <Text style={styles.historySummaryValue}>
+          {count > 0 ? `${count} registro${count === 1 ? '' : 's'} recientes` : 'Sin registros aún'}
+        </Text>
+      </View>
+      <Ionicons name="chevron-forward" size={18} color="#94a3b8" />
+    </Pressable>
+  );
+}
+
 export default function AttendanceScreen() {
   const { role } = useAuth();
   const { showToast } = useToast();
@@ -223,7 +240,8 @@ export default function AttendanceScreen() {
       const location = await getCurrentDeviceLocation();
       setCurrentLocation(location);
     } catch (error) {
-      console.error('Error al obtener ubicación actual:', error);
+      showToast("Debe activar la ubicación", 'error')
+      // console.error('Error al obtener ubicación actual:', error);
       setCurrentLocation(null);
     } finally {
       setLocationLoading(false);
@@ -368,7 +386,7 @@ export default function AttendanceScreen() {
                   color={hasExit ? '#16a34a' : '#64748b'}
                 />
                 <Text style={[styles.summaryStateText, hasExit ? styles.summaryStateTextSuccess : styles.summaryStateTextMuted]}>
-                  {hasExit ? 'Registrada' : 'No registrada'}
+                  {hasExit ? 'Registrada' : 'Pendiente'}
                 </Text>
               </View>
             </View>
@@ -422,22 +440,7 @@ export default function AttendanceScreen() {
           </View>
         </Pressable>
 
-        {history.length > 0 && (
-          <>
-            <View style={styles.historyHeader}>
-              <Text style={styles.sectionTitle}>Historial de asistencia</Text>
-            </View>
-
-            <View style={styles.historyCard}>
-              {history.map((item, index) => (
-                <View key={item.id}>
-                  <HistoryRow item={item} />
-                  {index < history.length - 1 ? <View style={styles.historyDivider} /> : null}
-                </View>
-              ))}
-            </View>
-          </>
-        )}
+        <HistorySummaryCard count={history.length} />
       </ScrollView>
     </View>
   );
@@ -692,6 +695,7 @@ const styles = StyleSheet.create({
   },
   locationBody: {
     flex: 1,
+    minWidth: 0,
     gap: 3,
   },
   locationLabel: {
@@ -703,11 +707,13 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#475569',
     lineHeight: 20,
+    flexShrink: 1,
   },
   locationAction: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 2,
+    flexShrink: 0,
   },
   locationActionText: {
     fontSize: 14,
@@ -719,6 +725,39 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: 8,
+  },
+  historySummaryCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: '#eff6ff',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#bfdbfe',
+    padding: 14,
+  },
+  historySummaryIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#dbeafe',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  historySummaryBody: {
+    flex: 1,
+    minWidth: 0,
+    gap: 2,
+  },
+  historySummaryLabel: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#1d4ed8',
+  },
+  historySummaryValue: {
+    fontSize: 14,
+    color: '#475569',
+    lineHeight: 20,
   },
   historyLink: {
     fontSize: 14,

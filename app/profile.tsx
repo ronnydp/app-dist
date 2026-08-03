@@ -31,11 +31,12 @@ const formatDate = (value?: string) => {
 };
 
 export default function ProfileScreen() {
-  const { session } = useAuth();
+  const { session, role } = useAuth();
   const { showToast } = useToast();
   const [user, setUser] = useState<User | null>(null);
   const [stats, setStats] = useState<SellerProfileStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const isAdmin = role === 'admin';
 
   const loadProfile = useCallback(async () => {
     if (!session?.user?.id) {
@@ -47,9 +48,14 @@ export default function ProfileScreen() {
 
     setIsLoading(true);
     try {
+      const userDataPromise = getUserById(session.user.id);
+      const statsDataPromise = isAdmin
+        ? Promise.resolve<SellerProfileStats | null>(null)
+        : getSellerProfileStats(session.user.id);
+
       const [userData, statsData] = await Promise.all([
-        getUserById(session.user.id),
-        getSellerProfileStats(session.user.id),
+        userDataPromise,
+        statsDataPromise,
       ]);
 
       setUser(userData);
@@ -60,7 +66,7 @@ export default function ProfileScreen() {
     } finally {
       setIsLoading(false);
     }
-  }, [session?.user?.id, showToast]);
+  }, [isAdmin, session?.user?.id, showToast]);
 
   useFocusEffect(
     useCallback(() => {
@@ -86,28 +92,30 @@ export default function ProfileScreen() {
           <Text style={styles.subtitle}>{user?.role || session?.user?.role || 'Sin rol'}</Text>
         </View>
       </View>
-      <View style={styles.statsGrid}>
-        <View style={styles.statsRow}>
-          <View style={styles.statCard}>
-            <Text style={styles.statLabel}>Pedidos hoy</Text>
-            <Text style={styles.statValue}>{stats?.todayOrderCount ?? 0}</Text>
+      {!isAdmin && (
+        <View style={styles.statsGrid}>
+          <View style={styles.statsRow}>
+            <View style={styles.statCard}>
+              <Text style={styles.statLabel}>Pedidos hoy</Text>
+              <Text style={styles.statValue}>{stats?.todayOrderCount ?? 0}</Text>
+            </View>
+            <View style={styles.statCard}>
+              <Text style={styles.statLabel}>Ventas semana pasada</Text>
+              <Text style={styles.statValue}>{formatCurrency(stats?.previousWeekTotal ?? 0)}</Text>
+            </View>
           </View>
-          <View style={styles.statCard}>
-            <Text style={styles.statLabel}>Ventas semana pasada</Text>
-            <Text style={styles.statValue}>{formatCurrency(stats?.previousWeekTotal ?? 0)}</Text>
+          <View style={styles.statsRow}>
+            <View style={styles.statCard}>
+              <Text style={styles.statLabel}>Pedidos esta semana</Text>
+              <Text style={styles.statValue}>{stats?.weekOrderCount ?? 0}</Text>
+            </View>
+            <View style={styles.statCard}>
+              <Text style={styles.statLabel}>Ventas esta semana</Text>
+              <Text style={styles.statValue}>{formatCurrency(stats?.currentWeekTotal ?? 0)}</Text>
+            </View>
           </View>
         </View>
-        <View style={styles.statsRow}>
-          <View style={styles.statCard}>
-            <Text style={styles.statLabel}>Pedidos esta semana</Text>
-            <Text style={styles.statValue}>{stats?.weekOrderCount ?? 0}</Text>
-          </View>
-          <View style={styles.statCard}>
-            <Text style={styles.statLabel}>Ventas esta semana</Text>
-            <Text style={styles.statValue}>{formatCurrency(stats?.currentWeekTotal ?? 0)}</Text>
-          </View>
-        </View>
-      </View>
+      )}
       <Text style={{marginTop: 20, marginBottom:10, padding: 3, fontWeight: 'bold', fontSize: 16}}>Información personal</Text>
       <View style={styles.infoCard}>
         <View style={styles.infoRow}>

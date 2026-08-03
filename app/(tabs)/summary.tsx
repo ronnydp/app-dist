@@ -106,7 +106,7 @@ function SellerCollapsibleCard({ seller }: { seller: SellerWeeklySales }) {
             </View>
 
             <View style={styles.sellerAmountBlock}>
-              <Text style={styles.sellerAmountLabel}>Semanal</Text>
+              <Text style={styles.sellerAmountLabel}>Semana</Text>
               <Text style={styles.sellerTotal}>S/ {seller.total.toFixed(2)}</Text>
             </View>
           </View>
@@ -276,7 +276,7 @@ export default function SummaryScreen() {
 
         <View style={styles.metricCardsRow}>
           <View style={[styles.metricCard, styles.metricCardPrimary]}>
-            <Text style={styles.metricCardLabel}>Total del día</Text>
+            <Text style={styles.metricCardLabel}>Monto del día</Text>
             <Text style={styles.metricCardAmount}>
               S/ {adminTodayTotal.toFixed(2)}
             </Text>
@@ -287,7 +287,7 @@ export default function SummaryScreen() {
           </View>
 
           <View style={styles.metricCard}>
-            <Text style={styles.metricCardLabel}>Monto de la semana</Text>
+            <Text style={styles.metricCardLabel}>Total de la semana</Text>
             <Text style={styles.metricCardAmount}>
               S/ {adminTotal.toFixed(2)}
             </Text>

@@ -142,4 +142,13 @@ export default StyleSheet.create({
     marginLeft: 4,
     flex: 1,
   },
+  actionsRow: {
+    marginTop: 10,
+    alignItems: 'flex-end',
+  },
+  actionButton: {
+    color: '#0f766e',
+    fontSize: 13,
+    fontWeight: '700',
+  },
 });

@@ -1,4 +1,5 @@
 // app/nuevo-cliente.tsx
+import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastsContext';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams, useNavigation } from 'expo-router';
@@ -29,6 +30,8 @@ export default function NuevoClienteScreen() {
         phone?: string;
     }>();
     const isEditing = !!params.id;
+    const { role } = useAuth();
+    const isSellerEditing = isEditing && role === 'vendedor';
     const navigation = useNavigation();
 
     const [nombre, setNombre] = useState(params.name || '');
@@ -86,7 +89,9 @@ export default function NuevoClienteScreen() {
         try {
             await saveCustomer({
                 ...(isEditing ? { id: params.id } : {}),
-                name: nombre.trim().toUpperCase(),
+                name: isSellerEditing
+                    ? (params.name || '').trim().toUpperCase()
+                    : nombre.trim().toUpperCase(),
                 ruc: ruc.trim() || undefined,
                 address: direccion.trim(),
                 district: distrito.trim(),
@@ -113,12 +118,16 @@ export default function NuevoClienteScreen() {
                     <View style={styles.field}>
                         <Text style={styles.label}>Nombre *</Text>
                         <TextInput
-                            style={styles.input}
+                            style={[styles.input, isSellerEditing && styles.inputDisabled]}
                             value={nombre}
                             onChangeText={setNombre}
                             placeholder="Ej: Juan Pérez"
                             placeholderTextColor="#9ca3af"
+                            editable={!isSellerEditing}
                         />
+                        {isSellerEditing ? (
+                            <Text style={styles.helperText}>El nombre no se puede editar para vendedores.</Text>
+                        ) : null}
                     </View>
 
                     <View style={styles.field}>
@@ -269,6 +278,15 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: '#111827',
         backgroundColor: '#fff',
+    },
+    inputDisabled: {
+        backgroundColor: '#f3f4f6',
+        color: '#6b7280',
+    },
+    helperText: {
+        marginTop: 6,
+        fontSize: 12,
+        color: '#6b7280',
     },
     textArea: {
         height: 70,
