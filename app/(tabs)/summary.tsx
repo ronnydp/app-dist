@@ -20,11 +20,12 @@ import { SellerWeeklySales, WeeklySales } from "../../types";
 function getWeekRange() {
   const now = new Date();
   const day = now.getDay();
+  const daysToMonday = day === 0 ? -6 : 1 - day;
   const year = now.getFullYear();
   const start = new Date(now);
-  start.setDate(now.getDate() - day);
+  start.setDate(now.getDate() + daysToMonday);
   const end = new Date(start);
-  end.setDate(start.getDate() + 6);
+  end.setDate(start.getDate() + 5);
   const fmt = (d: Date) =>
     d.toLocaleDateString("es-ES", { day: "2-digit", month: "short" });
   return `${fmt(start)} - ${fmt(end)}, ${year}`;
@@ -93,25 +94,21 @@ function SellerCollapsibleCard({ seller }: { seller: SellerWeeklySales }) {
       >
         <View style={styles.sellerHeaderBlock}>
           <View style={styles.sellerHeader}>
-            <View style={styles.sellerInfo}>
-              <View style={styles.sellerNameRow}>
-                <Ionicons name="person" size={18} color="#08859b" />
-                <Text style={styles.sellerName}>{seller.sellerName}</Text>
-              </View>
+          <View style={styles.sellerInfo}>
+            <View style={styles.sellerNameRow}>
+              <Ionicons name="person" size={18} color="#08859b" />
+              <Text style={styles.sellerName}>{seller.sellerName}</Text>
             </View>
+          </View>
 
             <View style={styles.sellerTodayBlock}>
               <Text style={styles.sellerTodayLabel}>Hoy</Text>
-              <Text style={styles.sellerTodayTotal}>
-                S/ {todayAmount.toFixed(2)}
-              </Text>
+              <Text style={styles.sellerTodayTotal}>S/ {todayAmount.toFixed(2)}</Text>
             </View>
 
             <View style={styles.sellerAmountBlock}>
-              <Text style={styles.sellerAmountLabel}>Semanal</Text>
-              <Text style={styles.sellerTotal}>
-                S/ {seller.total.toFixed(2)}
-              </Text>
+              <Text style={styles.sellerAmountLabel}>Semana</Text>
+              <Text style={styles.sellerTotal}>S/ {seller.total.toFixed(2)}</Text>
             </View>
           </View>
 
@@ -280,7 +277,7 @@ export default function SummaryScreen() {
 
         <View style={styles.metricCardsRow}>
           <View style={[styles.metricCard, styles.metricCardPrimary]}>
-            <Text style={styles.metricCardLabel}>Total del día</Text>
+            <Text style={styles.metricCardLabel}>Monto del día</Text>
             <Text style={styles.metricCardAmount}>
               S/ {adminTodayTotal.toFixed(2)}
             </Text>
@@ -291,7 +288,7 @@ export default function SummaryScreen() {
           </View>
 
           <View style={styles.metricCard}>
-            <Text style={styles.metricCardLabel}>Monto de la semana</Text>
+            <Text style={styles.metricCardLabel}>Total de la semana</Text>
             <Text style={styles.metricCardAmount}>
               S/ {adminTotal.toFixed(2)}
             </Text>

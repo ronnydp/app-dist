@@ -47,19 +47,14 @@ export default function MenuOptions() {
       role: 'admin',
       onPress: () => router.push('/users')
     },
-    {
-      icon: 'bar-chart-outline',
-      label: 'Reportes',
-      role: 'admin'
-    },
-    {
-      icon: 'settings-outline',
-      label: 'Configuración'
-    },
-    {
-      icon: 'information-circle-outline',
-      label: 'Acerca de'
-    },
+    // {
+    //   icon: 'settings-outline',
+    //   label: 'Configuración'
+    // },
+    // {
+    //   icon: 'information-circle-outline',
+    //   label: 'Acerca de'
+    // },
     {
       icon: 'log-out-outline',
       label: 'Cerrar sesión',
