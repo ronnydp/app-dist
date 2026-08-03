@@ -74,6 +74,7 @@ function RootNavigator() {
       value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
     >
       <Stack>
+        <Stack.Screen name="index" options={{headerShown: false}} />
         <Stack.Protected guard={!session}>
           <Stack.Screen name="login" options={{ headerShown: false }} />
         </Stack.Protected>
