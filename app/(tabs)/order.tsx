@@ -9,8 +9,9 @@ import AppSearchBar from '../../components/app-search-bar';
 import FloatingActionButton from '../../components/floating-action-button';
 import OrderCard from '../../components/OrderCard';
 import { useDebouncedValue } from '../../hooks/use-debounced-value';
+import { decodeOrderObservation } from '../../lib/utils/orderObservation';
 import { normalizeString } from '../../lib/utils/string';
-import { appendOrderObservation, getOrders } from '../../services/database';
+import { getOrders, saveOrderObservation } from '../../services/database';
 import { OrderWithDetails } from '../../types';
 
 type OrdersVisibility = 'mine' | 'all';
@@ -149,8 +150,9 @@ export default function OrderScreen() {
             return;
         }
 
+        const { text } = decodeOrderObservation(order.note);
         setSelectedOrderForObservation(order);
-        setObservationText('');
+        setObservationText(text);
     }, [role, session?.user?.id, showToast]);
 
     const handleCloseObservationModal = useCallback(() => {
@@ -174,8 +176,10 @@ export default function OrderScreen() {
 
         try {
             setSavingObservation(true);
-            await appendOrderObservation(selectedOrderForObservation.id, session.user.id, trimmed);
-            showToast('Observación agregada', 'success');
+            const { text: previousText } = decodeOrderObservation(selectedOrderForObservation.note);
+            const hadObservation = Boolean(previousText);
+            await saveOrderObservation(selectedOrderForObservation.id, session.user.id, trimmed);
+            showToast(hadObservation ? 'Observación editada' : 'Observación agregada', 'success');
             handleCloseObservationModal();
             await loadOrders();
         } catch (error) {
@@ -192,6 +196,9 @@ export default function OrderScreen() {
             <Text style={styles.sectionCount}>{section.data.length} pedido{section.data.length !== 1 ? 's' : ''}</Text>
         </View>
     );
+
+    const selectedObservation = decodeOrderObservation(selectedOrderForObservation?.note);
+    const modalHasObservation = Boolean(selectedObservation.text);
 
     return (
         <View style={styles.container}>
@@ -313,7 +320,9 @@ export default function OrderScreen() {
             >
                 <Pressable style={styles.modalOverlay} onPress={handleCloseObservationModal}>
                     <Pressable style={styles.modalCard} onPress={() => {}}>
-                        <Text style={styles.modalTitle}>Agregar observación</Text>
+                        <Text style={styles.modalTitle}>
+                            {modalHasObservation ? 'Editar observación' : 'Agregar observación'}
+                        </Text>
                         <Text style={styles.modalSubtitle}>
                             Pedido #{selectedOrderForObservation?.customer_cod}
                         </Text>

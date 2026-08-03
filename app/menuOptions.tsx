@@ -26,7 +26,6 @@ export default function MenuOptions() {
     try {
       setIsLoggingOut(true);
       await authService.logout();
-      router.dismissAll();
       router.replace("/login");
     } catch (error) {
       showToast("No se pudo cerrar sesión", "error");
