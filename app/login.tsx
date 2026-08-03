@@ -23,14 +23,8 @@ export default function LoginScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { showToast } = useToast();
-  const { session, login } = useAuth();
+  const { login } = useAuth();
   const current_year = new Date().getFullYear();
-
-  useEffect(() => {
-    if (session) {
-      router.replace("/(tabs)/order");
-    }
-  }, [session]);
 
   const handleContinue = async () => {
     if (!email.trim() || !password.trim()) {

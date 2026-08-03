@@ -20,11 +20,12 @@ import { SellerWeeklySales, WeeklySales } from "../../types";
 function getWeekRange() {
   const now = new Date();
   const day = now.getDay();
+  const daysToMonday = day === 0 ? -6 : 1 - day;
   const year = now.getFullYear();
   const start = new Date(now);
-  start.setDate(now.getDate() - day);
+  start.setDate(now.getDate() + daysToMonday);
   const end = new Date(start);
-  end.setDate(start.getDate() + 6);
+  end.setDate(start.getDate() + 5);
   const fmt = (d: Date) =>
     d.toLocaleDateString("es-ES", { day: "2-digit", month: "short" });
   return `${fmt(start)} - ${fmt(end)}, ${year}`;
