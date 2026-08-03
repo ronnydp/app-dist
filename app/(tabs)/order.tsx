@@ -11,7 +11,7 @@ import OrderCard from '../../components/OrderCard';
 import { useDebouncedValue } from '../../hooks/use-debounced-value';
 import { decodeOrderObservation } from '../../lib/utils/orderObservation';
 import { normalizeString } from '../../lib/utils/string';
-import { getOrders, saveOrderObservation } from '../../services/database';
+import { appendOrderObservation, getOrders } from '../../services/database';
 import { OrderWithDetails } from '../../types';
 
 type OrdersVisibility = 'mine' | 'all';

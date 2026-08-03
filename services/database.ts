@@ -12,6 +12,7 @@ import {
   User,
   WeeklySales,
 } from "../types";
+  import { encodeOrderObservation } from "../lib/utils/orderObservation";
 
 const formatLocalDate = (date: Date): string => {
   const y = date.getFullYear();
