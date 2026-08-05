@@ -89,11 +89,9 @@ export default function NuevoClienteScreen() {
         try {
             await saveCustomer({
                 ...(isEditing ? { id: params.id } : {}),
-                name: isSellerEditing
-                    ? (params.name || '').trim().toUpperCase()
-                    : nombre.trim().toUpperCase(),
+                name: nombre.trim().toUpperCase(),
                 ruc: ruc.trim() || undefined,
-                address: direccion.trim(),
+                address: direccion.trim().toUpperCase(),
                 district: distrito.trim(),
                 phone: telefono.trim() || undefined,
             });
@@ -123,11 +121,7 @@ export default function NuevoClienteScreen() {
                             onChangeText={setNombre}
                             placeholder="Ej: Juan Pérez"
                             placeholderTextColor="#9ca3af"
-                            editable={!isSellerEditing}
                         />
-                        {isSellerEditing ? (
-                            <Text style={styles.helperText}>El nombre no se puede editar para vendedores.</Text>
-                        ) : null}
                     </View>
 
                     <View style={styles.field}>
