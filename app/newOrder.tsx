@@ -73,6 +73,7 @@ export default function NewOrderScreen() {
     }>
   >([]);
   const { showToast } = useToast();
+  
   // Buscar clientes desde Supabase con debounce
   useEffect(() => {
     if (!searchCustomer.trim()) {

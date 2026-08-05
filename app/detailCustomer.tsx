@@ -78,6 +78,15 @@ export default function DetailCustomer() {
         }
     }
 
+    const handleAddOrder = useCallback(() => {
+        router.push({
+            pathname: '/newOrder',
+            params: {
+                id: params.id
+            }
+        })
+    }, [params])
+
     const getBadgeColor = (is_active: boolean) => {
         if (is_active) {
             return '#dcfce7'
@@ -174,6 +183,17 @@ export default function DetailCustomer() {
                             Editar
                         </Text>
                     </TouchableOpacity>
+                    {role === 'vendedor' && (<TouchableOpacity style={{
+                        padding: 16, borderRadius: 8, alignItems: "center", backgroundColor: '#08859b',
+                    }}
+                        onPress={() => handleAddOrder()}
+                    >
+                        <Text style={{
+                            fontSize: 16, fontWeight: '600', color: '#fff', marginHorizontal: 10
+                        }}>
+                            Nuevo Pedido
+                        </Text>
+                    </TouchableOpacity>)}
                 </View>
             )}
             <ConfirmDialog
