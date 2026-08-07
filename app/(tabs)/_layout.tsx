@@ -15,7 +15,7 @@ export default function TabLayout() {
   const colorScheme = useColorScheme();
   const getScreenOptions = (title: string, iconName: keyof typeof Ionicons.glyphMap): ScreenOptions => ({
     title,
-    tabBarIcon: ({ color }: { color: string }) => (<Ionicons size={22} name={iconName} color={color} />),
+    tabBarIcon: ({ color }: { color: string }) => (<Ionicons size={30} name={iconName} color={color} />),
     tabBarShowLabel: false,
     headerStyle: { backgroundColor: '#fff' },
     headerTitleStyle: { fontWeight: 'bold', fontSize: 20 },

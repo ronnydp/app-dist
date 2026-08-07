@@ -2,7 +2,6 @@
 // lib/supabase.ts
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createClient, processLock } from '@supabase/supabase-js';
-import { Platform } from 'react-native';
 
 // Reemplaza estos valores con tus credenciales de Supabase
 const SUPABASE_URL = 'https://qzbmandvbovgmwwjsrmm.supabase.co';

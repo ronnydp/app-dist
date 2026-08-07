@@ -21,31 +21,58 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     useEffect(() => {
         let isMounted = true; // Muestra el LoginScreen
 
+        const timer = setTimeout(() => {
+            if (isMounted) {
+                setIsAuthenticated(false)
+                setIsLoading(false)
+            }
+        }, 1000)
+
         const {
             data: { subscription },
         } = supabase.auth.onAuthStateChange(async (_event, authSession) => {
             try {
+
                 if (authSession) {
+                    const now = Math.floor(Date.now() / 10000);
+
+                    if (authSession.expires_at && authSession.expires_at < now) {
+                        if (isMounted) {
+                            setSession(null);
+                            setIsAuthenticated(false);
+                            setIsLoading(false)
+                        }
+                        return;
+                    }
                     const fullSession = await authService.getSession();
-                    setIsAuthenticated(true);
-                    setSession(fullSession);
-                    setIsLoading(false)
+                    if (isMounted) {
+                        setIsAuthenticated(true);
+                        setSession(fullSession);
+                    }
                 } else {
-                    setSession(null);
-                    setIsAuthenticated(false);
+                    if (isMounted) {
+                        setSession(null);
+                        setIsAuthenticated(false);
+                    }
                 }
             } catch (err) {
                 const message = err instanceof Error ? err.message : 'Error al iniciar sesión';
-                setError(message);
-                setIsAuthenticated(false)
-                setSession(null)
+                if (isMounted) {
+                    setError(message);
+                    setIsAuthenticated(false)
+                    setSession(null)
+                }
             } finally {
-                setIsLoading(false)
+                if (isMounted) {
+                    setIsLoading(false)
+                    clearTimeout(timer)
+                }
             }
         });
         return () => {
-            subscription.unsubscribe(); // Limpia el listener al desmontar el componente
             isMounted = false;
+            clearTimeout(timer)
+            subscription.unsubscribe(); // Limpia el listener al desmontar el componente
         };
     }, []);
 
