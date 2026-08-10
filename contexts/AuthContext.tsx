@@ -31,10 +31,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const {
             data: { subscription },
         } = supabase.auth.onAuthStateChange(async (_event, authSession) => {
+            console.log('Evento', _event)
+            if (_event === 'SIGNED_OUT') {
+                if (isMounted) {
+                    setSession(null);
+                    setIsAuthenticated(false);
+                    setIsLoading(false);
+                    clearTimeout(timer);
+                }
+                return;
+            }
             try {
 
                 if (authSession) {
-                    const now = Math.floor(Date.now() / 10000);
+                    const now = Math.floor(Date.now() / 1000);
 
                     if (authSession.expires_at && authSession.expires_at < now) {
                         if (isMounted) {
