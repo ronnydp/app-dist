@@ -1,7 +1,7 @@
 import {
-    DarkTheme,
-    DefaultTheme,
-    ThemeProvider,
+  DarkTheme,
+  DefaultTheme,
+  ThemeProvider,
 } from "@react-navigation/native";
 import { Stack, usePathname } from "expo-router";
 import { StatusBar } from "expo-status-bar";
@@ -56,6 +56,7 @@ function RootNavigator() {
     "/newOrder",
     "/attendanceAdmin",
     "/detailAttendance",
+    "/editProfile",
   ]);
   const colorScheme = useColorScheme();
   const showSessionMenu = !hiddenSessionMenuRoutes.has(pathname);
@@ -164,6 +165,16 @@ function RootNavigator() {
             name="asistencia"
             options={{
               title: "Asistencia",
+              headerStyle: { backgroundColor: "#fff" },
+              headerTitleStyle: { fontWeight: "bold", fontSize: 20 },
+              headerTitleAlign: "center",
+            }}
+          />
+          <Stack.Screen
+            name="editProfile"
+            options={{
+              presentation: "modal",
+              title: "Editar Perfil",
               headerStyle: { backgroundColor: "#fff" },
               headerTitleStyle: { fontWeight: "bold", fontSize: 20 },
               headerTitleAlign: "center",

@@ -235,7 +235,6 @@ export default function AttendanceScreen() {
     try {
       setLocationLoading(true);
       const { status } = await Location.requestForegroundPermissionsAsync();
-      console.log(status)
       if (status !== 'granted') {
         showToast('Debes aceptar los permisos de ubicación para continuar', 'error');
         router.back();

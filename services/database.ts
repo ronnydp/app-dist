@@ -2,15 +2,15 @@
 import { supabase } from "../lib/supabase";
 import { encodeOrderObservation } from "../lib/utils/orderObservation";
 import {
-  Customer,
-  NewOrder,
-  Order,
-  Presentation,
-  Product,
-  ProductWithPresentations,
-  SellerWeeklySales,
-  User,
-  WeeklySales,
+    Customer,
+    NewOrder,
+    Order,
+    Presentation,
+    Product,
+    ProductWithPresentations,
+    SellerWeeklySales,
+    User,
+    WeeklySales,
 } from "../types";
 
 const formatLocalDate = (date: Date): string => {
@@ -731,6 +731,29 @@ export const getUserById = async (userId: string): Promise<User | null> => {
     return data;
   } catch (error) {
     console.error("Error al obtener usuario por id:", error);
+    throw error;
+  }
+};
+
+export const updateUser = async (
+  userId: string,
+  updates: Partial<Pick<User, "name" | "phone">>,
+): Promise<User> => {
+  try {
+    const { data, error } = await supabase
+      .from("users")
+      .update({
+        ...updates,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", userId)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error("Error al actualizar usuario:", error);
     throw error;
   }
 };

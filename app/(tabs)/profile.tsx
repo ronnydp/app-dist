@@ -3,9 +3,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastsContext';
 import { authService } from '@/services/auth-service';
 import {
-    getSellerProfileStats,
-    getUserById,
-    SellerProfileStats,
+  getSellerProfileStats,
+  getUserById,
+  SellerProfileStats,
 } from '@/services/database';
 import { User } from '@/types';
 import { Ionicons } from '@expo/vector-icons';
@@ -97,6 +97,11 @@ export default function ProfileScreen() {
 
   const options = [
     {
+      icon: 'person-outline',
+      label: 'Editar perfil',
+      onPress: () => router.push('/editProfile'),
+    },
+    {
       icon: 'time-outline',
       label: 'Asistencia',
       onPress: () => router.push('/asistencia'),
@@ -149,10 +154,14 @@ export default function ProfileScreen() {
         {options.map((opt) => {
           const canShow = !opt.role || opt.role === role;
           if (!canShow) return null;
+          const isLogout = opt.label === 'Cerrar sesión';
           return (
             <TouchableOpacity key={opt.label} style={styles.option} onPress={opt.onPress}>
               <Ionicons name={opt.icon as any} size={20} color="#374151" />
-              <Text style={styles.optionText}>{opt.label}</Text>
+              <Text style={[styles.optionText, { flex: 1 }]}>{opt.label}</Text>
+              {!isLogout && (
+                <Ionicons name="chevron-forward" size={18} color="#9ca3af" />
+              )}
             </TouchableOpacity>
           );
         })}
