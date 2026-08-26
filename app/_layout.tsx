@@ -1,7 +1,7 @@
 import {
-  DarkTheme,
-  DefaultTheme,
-  ThemeProvider,
+    DarkTheme,
+    DefaultTheme,
+    ThemeProvider,
 } from "@react-navigation/native";
 import { Stack, usePathname } from "expo-router";
 import { StatusBar } from "expo-status-bar";
@@ -9,14 +9,14 @@ import "react-native-reanimated";
 
 import SessionActionsMenu from "@/components/session-actions-menu";
 import { useColorScheme } from "@/hooks/use-color-scheme";
+import { supabase } from "@/lib/supabase";
 import { useEffect } from "react";
 import { ActivityIndicator, AppState, StyleSheet, Text, View } from "react-native";
-import { supabase } from "@/lib/supabase";
 
-import { ToastProvider } from "../contexts/ToastsContext";
+import Toast from "@/components/Toast";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { ProductProvider } from "@/contexts/ProductContext";
-import Toast from "@/components/Toast";
+import { ToastProvider } from "../contexts/ToastsContext";
 
 export default function RootLayout() {
 
@@ -80,15 +80,6 @@ function RootNavigator() {
         </Stack.Protected>
         <Stack.Protected guard={!!session}>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen
-            name="profile"
-            options={{
-              title: "Mi perfil",
-              headerStyle: { backgroundColor: "#fff" },
-              headerTitleStyle: { fontWeight: "bold", fontSize: 20 },
-              headerTitleAlign: "center",
-            }}
-          />
           <Stack.Screen
             name="newCustomer"
             options={{
@@ -164,6 +155,15 @@ function RootNavigator() {
             options={{
               presentation: "modal",
               title: "Detalle de Asistencia",
+              headerStyle: { backgroundColor: "#fff" },
+              headerTitleStyle: { fontWeight: "bold", fontSize: 20 },
+              headerTitleAlign: "center",
+            }}
+          />
+          <Stack.Screen
+            name="asistencia"
+            options={{
+              title: "Asistencia",
               headerStyle: { backgroundColor: "#fff" },
               headerTitleStyle: { fontWeight: "bold", fontSize: 20 },
               headerTitleAlign: "center",

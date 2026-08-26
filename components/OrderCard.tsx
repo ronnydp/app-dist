@@ -49,7 +49,6 @@ export default memo(function OrderCard({ item, onOpen, onAddObservation, canAddO
               <Text style={cardStyles.nombre} numberOfLines={1} ellipsizeMode="tail">
                 {item.customer_name}
               </Text>
-              {orderTime ? <Text style={cardStyles.orderTime}>{orderTime}</Text> : null}
             </View>
             <View style={cardStyles.headerRight}>
               <Text style={cardStyles.codigo}>#{item.customer_cod}</Text>

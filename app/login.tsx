@@ -1,9 +1,8 @@
-import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/contexts/ToastsContext";
+import { authService } from "@/services/auth-service";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { router } from "expo-router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   Image,
   KeyboardAvoidingView,
@@ -23,7 +22,6 @@ export default function LoginScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { showToast } = useToast();
-  const { login } = useAuth();
   const current_year = new Date().getFullYear();
 
   const handleContinue = async () => {
@@ -31,12 +29,9 @@ export default function LoginScreen() {
       showToast("Completa correo y contraseña", "error");
       return;
     }
-
-    setIsLoading(true);
-
     try {
-      await login( email, password );
-      router.replace("/(tabs)/order");
+      setIsLoading(true);
+      await authService.login({email, password})
     } catch (error) {
       showToast(
         error instanceof Error ? error.message : "Error al iniciar sesión",
@@ -147,7 +142,7 @@ export default function LoginScreen() {
               disabled={isLoading}
             >
               <Text style={styles.primaryButtonText}>
-                {isLoading ? "Validando..." : "INICIAR SESION"}
+                {isLoading ? "......." : "INICIAR SESION"}
               </Text>
             </Pressable>
             <Text style={styles.helperText}>

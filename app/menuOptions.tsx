@@ -37,11 +37,6 @@ export default function MenuOptions() {
   };
   const options = [
     {
-      icon: 'person-outline',
-      label: 'Mi Perfil',
-      onPress: () => router.push('/profile'),
-    },
-    {
       icon: 'people-outline',
       label: 'Usuarios',
       role: 'admin',

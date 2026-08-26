@@ -4,14 +4,13 @@ import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Modal, Platform, Pressable, SectionList, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Platform, SectionList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import AppSearchBar from '../../components/app-search-bar';
 import FloatingActionButton from '../../components/floating-action-button';
 import OrderCard from '../../components/OrderCard';
 import { useDebouncedValue } from '../../hooks/use-debounced-value';
-import { decodeOrderObservation } from '../../lib/utils/orderObservation';
 import { normalizeString } from '../../lib/utils/string';
-import { appendOrderObservation, getOrders } from '../../services/database';
+import { getOrders } from '../../services/database';
 import { OrderWithDetails } from '../../types';
 
 type OrdersVisibility = 'mine' | 'all';
@@ -25,9 +24,6 @@ export default function OrderScreen() {
     const [selectedDate, setSelectedDate] = useState<Date | null>(null);
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [ordersVisibility, setOrdersVisibility] = useState<OrdersVisibility>('mine');
-    const [selectedOrderForObservation, setSelectedOrderForObservation] = useState<OrderWithDetails | null>(null);
-    const [observationText, setObservationText] = useState('');
-    const [savingObservation, setSavingObservation] = useState(false);
     const {showToast} = useToast();
 
     useEffect(() => {
@@ -140,55 +136,8 @@ export default function OrderScreen() {
         <OrderCard
             item={item}
             canAddObservation={role === 'vendedor' && item.seller_id === session?.user?.id}
-            onAddObservation={handleOpenObservationModal}
         />
     );
-
-    const handleOpenObservationModal = useCallback((order: OrderWithDetails) => {
-        if (role !== 'vendedor' || !session?.user?.id || order.seller_id !== session.user.id) {
-            showToast('Solo puedes agregar observaciones a tus propios pedidos', 'error');
-            return;
-        }
-
-        const { text } = decodeOrderObservation(order.note);
-        setSelectedOrderForObservation(order);
-        setObservationText(text);
-    }, [role, session?.user?.id, showToast]);
-
-    const handleCloseObservationModal = useCallback(() => {
-        if (savingObservation) {
-            return;
-        }
-        setSelectedOrderForObservation(null);
-        setObservationText('');
-    }, [savingObservation]);
-
-    const handleSaveObservation = useCallback(async () => {
-        if (!selectedOrderForObservation || !session?.user?.id) {
-            return;
-        }
-
-        const trimmed = observationText.trim();
-        if (!trimmed) {
-            showToast('Escribe una observación', 'error');
-            return;
-        }
-
-        try {
-            setSavingObservation(true);
-            const { text: previousText } = decodeOrderObservation(selectedOrderForObservation.note);
-            const hadObservation = Boolean(previousText);
-            await saveOrderObservation(selectedOrderForObservation.id, session.user.id, trimmed);
-            showToast(hadObservation ? 'Observación editada' : 'Observación agregada', 'success');
-            handleCloseObservationModal();
-            await loadOrders();
-        } catch (error) {
-            showToast('No se pudo guardar la observación', 'error');
-            console.error(error);
-        } finally {
-            setSavingObservation(false);
-        }
-    }, [handleCloseObservationModal, loadOrders, observationText, selectedOrderForObservation, session?.user?.id, showToast]);
 
     const renderSectionHeader = ({ section }: { section: { title: string; data: OrderWithDetails[] } }) => (
         <View style={styles.sectionHeader}>
@@ -196,10 +145,6 @@ export default function OrderScreen() {
             <Text style={styles.sectionCount}>{section.data.length} pedido{section.data.length !== 1 ? 's' : ''}</Text>
         </View>
     );
-
-    const selectedObservation = decodeOrderObservation(selectedOrderForObservation?.note);
-    const modalHasObservation = Boolean(selectedObservation.text);
-
     return (
         <View style={styles.container}>
             <View style={styles.topFiltersRow}>
@@ -311,53 +256,6 @@ export default function OrderScreen() {
                 }
                 contentContainerStyle={sections.length === 0 ? styles.emptyContainer : styles.listContent}
             />
-
-            <Modal
-                visible={!!selectedOrderForObservation}
-                transparent
-                animationType="fade"
-                onRequestClose={handleCloseObservationModal}
-            >
-                <Pressable style={styles.modalOverlay} onPress={handleCloseObservationModal}>
-                    <Pressable style={styles.modalCard} onPress={() => {}}>
-                        <Text style={styles.modalTitle}>
-                            {modalHasObservation ? 'Editar observación' : 'Agregar observación'}
-                        </Text>
-                        <Text style={styles.modalSubtitle}>
-                            Pedido #{selectedOrderForObservation?.customer_cod}
-                        </Text>
-                        <TextInput
-                            style={styles.modalInput}
-                            value={observationText}
-                            onChangeText={setObservationText}
-                            placeholder="Escribe una observación"
-                            placeholderTextColor="#9ca3af"
-                            multiline
-                            numberOfLines={4}
-                            editable={!savingObservation}
-                        />
-                        <View style={styles.modalActions}>
-                            <TouchableOpacity
-                                style={[styles.modalButton, styles.cancelModalButton]}
-                                onPress={handleCloseObservationModal}
-                                disabled={savingObservation}
-                            >
-                                <Text style={styles.cancelModalText}>Cancelar</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                style={[styles.modalButton, styles.saveModalButton, savingObservation && styles.disabledModalButton]}
-                                onPress={handleSaveObservation}
-                                disabled={savingObservation}
-                            >
-                                <Text style={styles.saveModalText}>
-                                    {savingObservation ? 'Guardando...' : 'Guardar'}
-                                </Text>
-                            </TouchableOpacity>
-                        </View>
-                    </Pressable>
-                </Pressable>
-            </Modal>
-
             <FloatingActionButton onPress={() => router.push('/newOrder')} />
         </View>
     );

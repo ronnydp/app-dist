@@ -2,6 +2,7 @@
 
 import { supabase } from "@/lib/supabase";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import type{ Session } from "@supabase/supabase-js";
 
 const AUTH_SESSION_KEY = "authSession";
 // Define la estructura de la sesión de autenticación
@@ -68,6 +69,24 @@ export const authService = {
         };
     }
     ,
+    async mapSession(session: Session): Promise<AuthSession> {
+        const { data: userData, error } = await supabase
+            .from('users')
+            .select('name, role')
+            .eq('id', session.user.id)
+            .single();
+        return {
+            token: session.access_token,
+            user: {
+                id: session.user.id,
+                email: session.user.email || "",
+                name: userData?.name || "",
+                role: userData?.role || "",
+            },
+            issuedAt: new Date().toISOString()
+        }
+    }
+    ,
     // Función para recuperar la sesión guardada desde AsyncStorage
     async getSession(): Promise<AuthSession | null> {
         try {
@@ -76,22 +95,7 @@ export const authService = {
             } = await supabase.auth.getSession();
 
             if (session?.user) {
-                const { data: userData, error } = await supabase
-                    .from('users')
-                    .select('name, role')
-                    .eq('id', session.user.id)
-                    .single();
-                const mappedSession: AuthSession = {
-                    token: session.access_token,
-                    user: {
-                        id: session.user.id,
-                        email: session.user.email || "",
-                        name: userData?.name || "",
-                        role: userData?.role || "",
-                    },
-                    issuedAt: new Date().toISOString(),
-                };
-
+                const mappedSession = await this.mapSession(session)
                 await AsyncStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(mappedSession));
                 return mappedSession;
             }

@@ -1,8 +1,10 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastsContext';
+import * as attendanceService from '@/services/attendance';
+import { Attendance, AttendanceRecord } from '@/types';
 import { Ionicons } from '@expo/vector-icons';
-import { router, useFocusEffect } from 'expo-router';
 import * as Location from 'expo-location';
+import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
@@ -13,9 +15,7 @@ import {
   Text,
   View,
 } from 'react-native';
-import AttendanceAdminScreen from '../attendanceAdmin';
-import * as attendanceService from '@/services/attendance';
-import { AttendanceRecord, Attendance } from '@/types';
+import AttendanceAdminScreen from './attendanceAdmin';
 
 type StatusTone = 'success' | 'neutral' | 'warning';
 type DeviceLocation = {
@@ -123,7 +123,6 @@ function StatusPill({
 
 function ActionCard({
   title,
-  subtitle,
   timeLabel,
   icon,
   tone,
@@ -131,7 +130,6 @@ function ActionCard({
   onPress,
 }: {
   title: string;
-  subtitle: string;
   timeLabel: string;
   icon: keyof typeof Ionicons.glyphMap;
   tone: 'success' | 'neutral';
@@ -159,7 +157,6 @@ function ActionCard({
       <Text style={[styles.actionTitle, tone === 'success' ? styles.actionTitleSuccess : styles.actionTitleNeutral]}>
         {title}
       </Text>
-      <Text style={styles.actionSubtitle}>{subtitle}</Text>
       <Text style={[styles.actionTime, disabled && styles.actionTimeDisabled]}>
         {timeLabel}
       </Text>
@@ -237,16 +234,24 @@ export default function AttendanceScreen() {
   const refreshCurrentLocation = useCallback(async () => {
     try {
       setLocationLoading(true);
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      console.log(status)
+      if (status !== 'granted') {
+        showToast('Debes aceptar los permisos de ubicación para continuar', 'error');
+        router.back();
+        return;
+      }
       const location = await getCurrentDeviceLocation();
       setCurrentLocation(location);
     } catch (error) {
       showToast("Debe activar la ubicación", 'error')
       // console.error('Error al obtener ubicación actual:', error);
       setCurrentLocation(null);
+      router.back();
     } finally {
       setLocationLoading(false);
     }
-  }, []);
+  }, [showToast]);
 
   // Cargar datos de asistencia y ubicación cuando la pantalla recibe el foco
   useFocusEffect(
@@ -259,7 +264,6 @@ export default function AttendanceScreen() {
   const today = new Date();
   const hasEntry = todayAttendance?.entry_time !== null && todayAttendance?.entry_time !== undefined;
   const hasExit = todayAttendance?.exit_time !== null && todayAttendance?.exit_time !== undefined;
-  const dayTone = getStatusTone(todayAttendance?.entry_time || null, todayAttendance?.exit_time || null);
   const dayLabel = formatDateLabel(today);
   const todayEntryLabel = hasEntry && todayAttendance?.entry_time
     ? formatTime(new Date(todayAttendance.entry_time))
@@ -267,19 +271,6 @@ export default function AttendanceScreen() {
   const todayExitLabel = hasExit && todayAttendance?.exit_time
     ? formatTime(new Date(todayAttendance.exit_time))
     : '--:--';
-
-  const statusLabel =
-    dayTone === 'success'
-      ? 'Asistencia registrada'
-      : dayTone === 'warning'
-        ? 'Jornada en curso'
-        : 'Asistencia pendiente';
-
-  const helperText = hasEntry
-    ? hasExit
-      ? 'Tu jornada de hoy ya quedó completa.'
-      : 'Recuerda registrar tu salida al finalizar tu jornada.'
-    : 'Toca una vez para marcar tu entrada y empezar el día.';
 
   const handleRegisterEntry = async () => {
     if (hasEntry) {
@@ -354,8 +345,7 @@ export default function AttendanceScreen() {
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.summaryCard}>
           <View style={styles.summaryTopRow}>
-            <Text style={styles.summaryDate}>Hoy, {dayLabel}</Text>
-            <StatusPill label={statusLabel} tone={dayTone} />
+            <Text style={styles.summaryDate}>{dayLabel}</Text>
           </View>
 
           <View style={styles.summaryTimesRow}>
@@ -391,13 +381,6 @@ export default function AttendanceScreen() {
               </View>
             </View>
           </View>
-
-          <View style={styles.helperRow}>
-            <View style={styles.helperIcon}>
-              <Ionicons name="information-circle" size={18} color="#1d4ed8" />
-            </View>
-            <Text style={styles.helperText}>{helperText}</Text>
-          </View>
         </View>
 
         <Text style={styles.sectionTitle}>¿Qué deseas registrar?</Text>
@@ -405,7 +388,6 @@ export default function AttendanceScreen() {
         <View style={styles.actionsGrid}>
           <ActionCard
             title="Marcar entrada"
-            subtitle={hasEntry ? 'Entrada registrada' : 'Un solo toque para iniciar tu jornada'}
             timeLabel={todayEntryLabel}
             icon="log-in-outline"
             tone="success"
@@ -415,7 +397,6 @@ export default function AttendanceScreen() {
 
           <ActionCard
             title="Marcar salida"
-            subtitle={!hasEntry ? 'Primero registra tu entrada' : hasExit ? 'Salida registrada' : 'Un solo toque para cerrar tu jornada'}
             timeLabel={todayExitLabel}
             icon="log-out-outline"
             tone="neutral"
