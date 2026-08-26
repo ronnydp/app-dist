@@ -1,38 +1,61 @@
 import { useToast } from "@/contexts/ToastsContext";
 import { authService } from "@/services/auth-service";
 import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { RefObject, useEffect, useRef, useState } from "react";
 import {
-    ActivityIndicator,
-    FlatList,
-    KeyboardAvoidingView,
-    Modal,
-    Platform,
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  FlatList,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
-    createOrder,
-    getPresentationsByProduct,
-    getProducts,
-    searchCustomers,
+  createOrder,
+  getPresentationsByProduct,
+  getProducts,
+  searchCustomers,
 } from "../services/database";
 import { Customer, Presentation, Product } from "../types";
 
 export default function NewOrderScreen() {
   const insets = useSafeAreaInsets();
+  const params = useLocalSearchParams<{
+    customerId?: string;
+    customerName?: string;
+    customerRuc?: string;
+    customerAddress?: string;
+    customerDistrict?: string;
+    customerPhone?: string;
+    customerCodCustomer?: string;
+    customerIsActive?: string;
+  }>();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [searchingCustomers, setSearchingCustomers] = useState(false);
   const [products, setProducts] = useState<Product[]>([]);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(
-    null,
+    params.customerId
+      ? {
+          id: params.customerId,
+          name: params.customerName || "",
+          ruc: params.customerRuc || undefined,
+          address: params.customerAddress || "",
+          district: params.customerDistrict || "",
+          phone: params.customerPhone || undefined,
+          cod_customer: Number(params.customerCodCustomer) || 0,
+          is_active: params.customerIsActive === "true",
+          created_at: "",
+          updated_at: "",
+        }
+      : null,
   );
   const [orderItems, setOrderItems] = useState<
     Array<{

@@ -82,7 +82,14 @@ export default function DetailCustomer() {
         router.push({
             pathname: '/newOrder',
             params: {
-                id: params.id
+                customerId: params.id,
+                customerName: params.name,
+                customerRuc: params.ruc || '',
+                customerAddress: params.address,
+                customerDistrict: params.district,
+                customerPhone: params.phone || '',
+                customerCodCustomer: params.cod_customer,
+                customerIsActive: params.is_active
             }
         })
     }, [params])
