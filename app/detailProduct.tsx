@@ -134,7 +134,7 @@ export default function DetailProduct() {
                                 <View style={{ flexDirection: 'row' }} key={presentation.id}>
                                     <Ionicons name="file-tray-outline" size={20} color="#08859b" />
                                     <Text style={{ marginLeft: 10, fontWeight: '800' }}>{presentation.name}</Text>
-                                    <Text style={{ color: 'silver', fontWeight: 'bold' }}>  ({presentation.unit_quantity} unid)</Text>
+                                    <Text style={{ color: 'teal', fontWeight: 'normal' }}>  ({presentation.unit_quantity} unid)</Text>
                                     <Text style={{ marginLeft: 'auto', fontWeight: '800' }}>S/ {(presentation.sale_price).toFixed(2)}</Text>
                                 </View>
                             ))}

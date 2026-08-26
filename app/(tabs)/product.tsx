@@ -18,7 +18,6 @@ export default function ProductScreen() {
     const [products, setProducts] = useState<ProductWithPresentations[]>([]);
     const [refreshing, setRefreshing] = useState(false);
     const [loadingMore, setLoadingMore] = useState(false);
-    const [selectedProduct, setSelectedProduct] = useState<Product | null>()
     const [hasMore, setHasMore] = useState(true);
     const pageRef = useRef(0);
     const [searchQuery, setSearchQuery] = useState('');
@@ -105,7 +104,6 @@ export default function ProductScreen() {
     }, []);
 
     const openProduct = useCallback((p: ProductWithPresentations) => {
-        setSelectedProduct(p);
         const presentations = JSON.stringify(p.presentations)
         const is_active = String(p.is_active)
         router.push({

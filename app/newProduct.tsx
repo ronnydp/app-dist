@@ -198,19 +198,6 @@ export default function NewProductScreen() {
                             onBlur={() => setFocusedField(null)}
                         />
                     </View>
-
-                    <View style={styles.field}>
-                        <Text style={styles.label}>URL de imagen (opcional)</Text>
-                        <TextInput
-                            style={[styles.input, focusedField === 'imageUrl' && styles.inputFocused]}
-                            value={imageUrl}
-                            onChangeText={setImageUrl}
-                            placeholder="Ej: https://ejemplo.com/imagen.jpg"
-                            placeholderTextColor="#9ca3af"
-                            onFocus={() => setFocusedField('imageUrl')}
-                            onBlur={() => setFocusedField(null)}
-                        />
-                    </View>
                 </View>
 
                 {/* Sección de presentaciones */}
