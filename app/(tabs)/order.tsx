@@ -135,7 +135,6 @@ export default function OrderScreen() {
     const renderOrder = ({ item }: { item: OrderWithDetails }) => (
         <OrderCard
             item={item}
-            canAddObservation={role === 'vendedor' && item.seller_id === session?.user?.id}
         />
     );
 

@@ -490,6 +490,7 @@ export const getOrders = async (params: GetOrdersParams = {}) => {
 
     // Crear mapa de productos para búsqueda rápida
     const productMap = new Map(
+      
       productsData?.map((p: any) => [p.id, p.name]) || [],
     );
 
@@ -504,6 +505,7 @@ export const getOrders = async (params: GetOrdersParams = {}) => {
       seller_name: order.users?.name || "",
       products: (order.product_orders || []).map((po: any) => ({
         ...po,
+        
         product_name: productMap.get(po.product_id) || "Producto desconocido",
       })),
     }));
