@@ -21,6 +21,8 @@ export default function LoginScreen() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isEmailFocused, setIsEmailFocused] = useState(false);
+  const [isPasswordFocused, setIsPasswordFocused] = useState(false);
   const { showToast } = useToast();
   const current_year = new Date().getFullYear();
 
@@ -44,7 +46,7 @@ export default function LoginScreen() {
 
   return (
     <LinearGradient
-      colors={["#08859b", "#dfe6f4", "#08599b"]}
+      colors={["#", "#dfe6f4", "#08599b"]}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
       style={styles.container}
@@ -89,7 +91,7 @@ export default function LoginScreen() {
           </View>
 
           <View style={styles.form}>
-            <View style={styles.inputContainer}>
+            <View style={[styles.inputContainer, isEmailFocused && styles.inputContainerFocused]}>
               <Ionicons
                 name="mail-outline"
                 size={20}
@@ -105,10 +107,12 @@ export default function LoginScreen() {
                 autoCapitalize="none"
                 keyboardType="email-address"
                 textContentType="emailAddress"
+                onFocus={() => setIsEmailFocused(true)}
+                onBlur={() => setIsEmailFocused(false)}
               />
             </View>
 
-            <View style={styles.inputContainer}>
+            <View style={[styles.inputContainer, isPasswordFocused && styles.inputContainerFocused]}>
               <Ionicons
                 name="lock-closed-outline"
                 size={20}
@@ -123,6 +127,8 @@ export default function LoginScreen() {
                 placeholderTextColor="#9ca3af"
                 textContentType="password"
                 secureTextEntry={!showPassword}
+                onFocus={() => setIsPasswordFocused(true)}
+                onBlur={() => setIsPasswordFocused(false)}
               />
               <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
                 <Ionicons
@@ -220,6 +226,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     height: 54,
     marginBottom: 12,
+  },
+  inputContainerFocused: {
+    borderColor: "#08859b",
   },
   inputIcon: {
     marginRight: 10,

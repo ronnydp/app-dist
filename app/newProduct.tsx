@@ -30,6 +30,7 @@ export default function NewProductScreen() {
     const [imageUrl, setImageUrl] = useState(params.image_url || '');
     const [loading, setLoading] = useState(false);
     const {showToast} = useToast();
+    const [focusedField, setFocusedField] = useState<string | null>(null);
 
     // Presentaciones
     type PresentationForm = {
@@ -174,34 +175,40 @@ export default function NewProductScreen() {
                     <View style={styles.field}>
                         <Text style={styles.label}>Nombre *</Text>
                         <TextInput
-                            style={styles.input}
+                            style={[styles.input, focusedField === 'name' && styles.inputFocused]}
                             value={name}
                             onChangeText={setName}
                             placeholder="Ej: Producto A"
                             placeholderTextColor="#9ca3af"
+                            onFocus={() => setFocusedField('name')}
+                            onBlur={() => setFocusedField(null)}
                         />
                     </View>
 
                     <View style={styles.field}>
                         <Text style={styles.label}>Precio *</Text>
                         <TextInput
-                            style={styles.input}
+                            style={[styles.input, focusedField === 'price' && styles.inputFocused]}
                             value={price}
                             onChangeText={setPrice}
                             placeholder="Ej: 99.99"
                             keyboardType="decimal-pad"
                             placeholderTextColor="#9ca3af"
+                            onFocus={() => setFocusedField('price')}
+                            onBlur={() => setFocusedField(null)}
                         />
                     </View>
 
                     <View style={styles.field}>
                         <Text style={styles.label}>URL de imagen (opcional)</Text>
                         <TextInput
-                            style={styles.input}
+                            style={[styles.input, focusedField === 'imageUrl' && styles.inputFocused]}
                             value={imageUrl}
                             onChangeText={setImageUrl}
                             placeholder="Ej: https://ejemplo.com/imagen.jpg"
                             placeholderTextColor="#9ca3af"
+                            onFocus={() => setFocusedField('imageUrl')}
+                            onBlur={() => setFocusedField(null)}
                         />
                     </View>
                 </View>
@@ -231,11 +238,13 @@ export default function NewProductScreen() {
                             <View style={styles.field}>
                                 <Text style={styles.label}>Nombre *</Text>
                                 <TextInput
-                                    style={styles.input}
+                                    style={[styles.input, focusedField === `presentation-${index}-name` && styles.inputFocused]}
                                     value={p.name}
                                     onChangeText={(v) => updatePresentation(index, 'name', v)}
                                     placeholder="Ej: Caja x12"
                                     placeholderTextColor="#9ca3af"
+                                    onFocus={() => setFocusedField(`presentation-${index}-name`)}
+                                    onBlur={() => setFocusedField(null)}
                                 />
                             </View>
 
@@ -243,23 +252,27 @@ export default function NewProductScreen() {
                                 <View style={[styles.field, { flex: 1 }]}>
                                     <Text style={styles.label}>Unidades *</Text>
                                     <TextInput
-                                        style={styles.input}
+                                        style={[styles.input, focusedField === `presentation-${index}-unit` && styles.inputFocused]}
                                         value={p.unit_quantity}
                                         onChangeText={(v) => updatePresentation(index, 'unit_quantity', v)}
                                         placeholder="Ej: 12"
                                         keyboardType="number-pad"
                                         placeholderTextColor="#9ca3af"
+                                        onFocus={() => setFocusedField(`presentation-${index}-unit`)}
+                                        onBlur={() => setFocusedField(null)}
                                     />
                                 </View>
                                 <View style={[styles.field, { flex: 1 }]}>
                                     <Text style={styles.label}>Precio *</Text>
                                     <TextInput
-                                        style={styles.input}
+                                        style={[styles.input, focusedField === `presentation-${index}-price` && styles.inputFocused]}
                                         value={p.sale_price}
                                         onChangeText={(v) => updatePresentation(index, 'sale_price', v)}
                                         placeholder="Ej: 120.00"
                                         keyboardType="decimal-pad"
                                         placeholderTextColor="#9ca3af"
+                                        onFocus={() => setFocusedField(`presentation-${index}-price`)}
+                                        onBlur={() => setFocusedField(null)}
                                     />
                                 </View>
                             </View>
@@ -333,6 +346,10 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: '#111827',
         backgroundColor: '#fff',
+    },
+    inputFocused: {
+        borderColor: '#08859b',
+        borderWidth: 1.5,
     },
     textArea: {
         height: 90,

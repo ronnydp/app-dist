@@ -4,25 +4,25 @@ import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { RefObject, useEffect, useRef, useState } from "react";
 import {
-  ActivityIndicator,
-  FlatList,
-  KeyboardAvoidingView,
-  Modal,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    FlatList,
+    KeyboardAvoidingView,
+    Modal,
+    Platform,
+    Pressable,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
-  createOrder,
-  getPresentationsByProduct,
-  getProducts,
-  searchCustomers,
+    createOrder,
+    getPresentationsByProduct,
+    getProducts,
+    searchCustomers,
 } from "../services/database";
 import { Customer, Presentation, Product } from "../types";
 
@@ -73,6 +73,7 @@ export default function NewOrderScreen() {
     }>
   >([]);
   const { showToast } = useToast();
+  const [focusedField, setFocusedField] = useState<string | null>(null);
   
   // Buscar clientes desde Supabase con debounce
   useEffect(() => {
@@ -499,7 +500,7 @@ export default function NewOrderScreen() {
                         <Ionicons name="remove" size={18} color="#ef4444" />
                       </TouchableOpacity>
                       <TextInput
-                        style={styles.amountInput}
+                        style={[styles.amountInput, focusedField === `amount-${item.product.id}` && styles.amountInputFocused]}
                         value={
                           quantityInputs[item.product.id] ??
                           item.amount.toString()
@@ -512,6 +513,8 @@ export default function NewOrderScreen() {
                         }
                         keyboardType="numeric"
                         selectTextOnFocus
+                        onFocus={() => setFocusedField(`amount-${item.product.id}`)}
+                        onBlur={() => setFocusedField(null)}
                       />
                       <TouchableOpacity
                         style={styles.stepperButton}
@@ -561,13 +564,15 @@ export default function NewOrderScreen() {
             </Text>
           </View>
           <TextInput
-            style={[styles.input, styles.textArea]}
+            style={[styles.input, styles.textArea, focusedField === 'note' && styles.inputFocused]}
             value={note}
             onChangeText={setNote}
             placeholder="Agregar observación al pedido"
             multiline
             numberOfLines={3}
             placeholderTextColor="#9ca3af"
+            onFocus={() => setFocusedField('note')}
+            onBlur={() => setFocusedField(null)}
           />
         </View>
 
@@ -620,11 +625,13 @@ export default function NewOrderScreen() {
             </View>
             <TextInput
               ref={customerSearchInputRef}
-              style={styles.searchInput}
+              style={[styles.searchInput, focusedField === 'customerSearch' && styles.searchInputFocused]}
               placeholder="Buscar cliente..."
               placeholderTextColor="#9ca3af"
               value={searchCustomer}
               onChangeText={setSearchCustomer}
+              onFocus={() => setFocusedField('customerSearch')}
+              onBlur={() => setFocusedField(null)}
             />
             <FlatList
               style={styles.modalList}
@@ -721,11 +728,13 @@ export default function NewOrderScreen() {
             </View>
             <TextInput
               ref={productSearchInputRef}
-              style={styles.searchInput}
+              style={[styles.searchInput, focusedField === 'productSearch' && styles.searchInputFocused]}
               placeholder="Buscar producto..."
               placeholderTextColor="#9ca3af"
               value={searchProduct}
               onChangeText={setSearchProduct}
+              onFocus={() => setFocusedField('productSearch')}
+              onBlur={() => setFocusedField(null)}
             />
             <FlatList
               style={styles.modalList}
@@ -890,11 +899,14 @@ export default function NewOrderScreen() {
                           <Ionicons name="remove" size={20} color="#08859b" />
                         </TouchableOpacity>
                         <TextInput
-                          style={{
-                            fontWeight: "bold",
-                            fontSize: 20,
-                            textAlign: "center",
-                          }}
+                          style={[
+                            {
+                              fontWeight: "bold",
+                              fontSize: 20,
+                              textAlign: "center",
+                            },
+                            focusedField === `draftAmount-${item.product.id}` && styles.inputFocused,
+                          ]}
                           value={
                             quantityInputs[item.product.id] ??
                             item.amount.toString()
@@ -907,6 +919,8 @@ export default function NewOrderScreen() {
                           }
                           keyboardType="numeric"
                           selectTextOnFocus
+                          onFocus={() => setFocusedField(`draftAmount-${item.product.id}`)}
+                          onBlur={() => setFocusedField(null)}
                         />
                         <TouchableOpacity
                           style={styles.quantityButton}
@@ -1254,6 +1268,11 @@ const styles = StyleSheet.create({
     color: "#111827",
     padding: 0,
   },
+  amountInputFocused: {
+    borderColor: "#08859b",
+    borderLeftWidth: 1.5,
+    borderRightWidth: 1.5,
+  },
   subtotalAmount: {
     fontSize: 14,
     fontWeight: "700",
@@ -1294,6 +1313,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#111827",
     backgroundColor: "#fff",
+  },
+  inputFocused: {
+    borderWidth: 1.5,
+    borderColor: "#08859b",
   },
   textArea: {
     height: 80,
@@ -1500,6 +1523,10 @@ const styles = StyleSheet.create({
     color: "#111827",
     backgroundColor: "#f9fafb",
     marginBottom: 8,
+  },
+  searchInputFocused: {
+    borderWidth: 1.5,
+    borderColor: "#08859b",
   },
   modalOptionInCart: {
     backgroundColor: "#f0f7ff",

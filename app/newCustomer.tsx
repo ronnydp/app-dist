@@ -41,6 +41,7 @@ export default function NuevoClienteScreen() {
     const [telefono, setTelefono] = useState(params.phone || '');
     const [loading, setLoading] = useState(false);
     const [showDistritoModal, setShowDistritoModal] = useState(false);
+    const [focusedField, setFocusedField] = useState<string | null>(null);
     const { showToast } = useToast();
 
     useLayoutEffect(() => {
@@ -116,37 +117,43 @@ export default function NuevoClienteScreen() {
                     <View style={styles.field}>
                         <Text style={styles.label}>Nombre *</Text>
                         <TextInput
-                            style={[styles.input, isSellerEditing && styles.inputDisabled]}
+                            style={[styles.input, isSellerEditing && styles.inputDisabled, focusedField === 'nombre' && styles.inputFocused]}
                             value={nombre}
                             onChangeText={setNombre}
                             placeholder="Ej: Juan Pérez"
                             placeholderTextColor="#9ca3af"
+                            onFocus={() => setFocusedField('nombre')}
+                            onBlur={() => setFocusedField(null)}
                         />
                     </View>
 
                     <View style={styles.field}>
                         <Text style={styles.label}>RUC (opcional)</Text>
                         <TextInput
-                            style={styles.input}
+                            style={[styles.input, focusedField === 'ruc' && styles.inputFocused]}
                             value={ruc}
                             onChangeText={setRuc}
                             placeholder="Ej: 20123456789"
                             keyboardType="numeric"
                             maxLength={11}
                             placeholderTextColor="#9ca3af"
+                            onFocus={() => setFocusedField('ruc')}
+                            onBlur={() => setFocusedField(null)}
                         />
                     </View>
 
                     <View style={styles.field}>
                         <Text style={styles.label}>Dirección *</Text>
                         <TextInput
-                            style={[styles.input, styles.textArea]}
+                            style={[styles.input, styles.textArea, focusedField === 'direccion' && styles.inputFocused]}
                             value={direccion}
                             onChangeText={setDireccion}
                             placeholder="Ej: Av. Principal 123"
                             multiline
                             numberOfLines={2}
                             placeholderTextColor="#9ca3af"
+                            onFocus={() => setFocusedField('direccion')}
+                            onBlur={() => setFocusedField(null)}
                         />
                     </View>
 
@@ -164,12 +171,14 @@ export default function NuevoClienteScreen() {
                     <View style={styles.field}>
                         <Text style={styles.label}>Teléfono</Text>
                         <TextInput
-                            style={styles.input}
+                            style={[styles.input, focusedField === 'telefono' && styles.inputFocused]}
                             value={telefono}
                             onChangeText={setTelefono}
                             placeholder="Ej: 987654321"
                             keyboardType="phone-pad"
                             placeholderTextColor="#9ca3af"
+                            onFocus={() => setFocusedField('telefono')}
+                            onBlur={() => setFocusedField(null)}
                         />
                     </View>
                 </View>
@@ -272,6 +281,10 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: '#111827',
         backgroundColor: '#fff',
+    },
+    inputFocused: {
+        borderColor: '#08859b',
+        borderWidth: 1.5,
     },
     inputDisabled: {
         backgroundColor: '#f3f4f6',

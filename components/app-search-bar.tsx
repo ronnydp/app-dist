@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useState } from 'react';
 import { StyleProp, StyleSheet, TextInput, TextStyle, View, ViewStyle } from 'react-native';
 
 type AppSearchBarProps = {
@@ -18,8 +19,10 @@ export default function AppSearchBar({
   containerStyle,
   inputStyle,
 }: AppSearchBarProps) {
+  const [isFocused, setIsFocused] = useState(false);
+
   return (
-    <View style={[styles.searchContainer, containerStyle]}>
+    <View style={[styles.searchContainer, isFocused && styles.searchContainerFocused, containerStyle]}>
       <Ionicons name="search" size={iconSize} color="#6b7280" style={styles.icon} />
       <TextInput
         placeholder={placeholder}
@@ -28,6 +31,8 @@ export default function AppSearchBar({
         value={value}
         onChangeText={onChangeText}
         clearButtonMode="while-editing"
+        onFocus={() => setIsFocused(true)}
+        onBlur={() => setIsFocused(false)}
       />
     </View>
   );
@@ -45,6 +50,10 @@ const styles = StyleSheet.create({
     borderColor: '#ececec',
     marginHorizontal: 15,
     height: 44
+  },
+  searchContainerFocused: {
+    borderWidth: 1.5,
+    borderColor: '#08859b',
   },
   icon: {
     marginRight: 8,

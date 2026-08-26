@@ -23,6 +23,7 @@ export default function EditProfileScreen() {
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isNameFocused, setIsNameFocused] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -94,11 +95,13 @@ export default function EditProfileScreen() {
         <View style={styles.fieldGroup}>
           <Text style={styles.label}>Nombre</Text>
           <TextInput
-            style={styles.input}
+            style={[styles.input, isNameFocused && styles.inputFocused]}
             value={name}
             onChangeText={setName}
             placeholder="Nombre completo"
             placeholderTextColor="#9ca3af"
+            onFocus={() => setIsNameFocused(true)}
+            onBlur={() => setIsNameFocused(false)}
           />
         </View>
 
@@ -175,6 +178,10 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: '#111827',
     justifyContent: 'center',
+  },
+  inputFocused: {
+    borderColor: '#08859b',
+    borderWidth: 1.5,
   },
   disabledInput: {
     backgroundColor: '#f3f4f6',
