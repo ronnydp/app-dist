@@ -52,7 +52,7 @@ export default memo(function OrderCard({ item }: Props) {
             {item.products && item.products.length > 0 ? (
               item.products.map((product, idx) => (
                 <View key={idx} style={cardStyles.productItem}>
-                  <Text style={cardStyles.productQty}>{product.amount} x {product.presentation_name ? `${product.presentation_name}` : ''}</Text>
+                  <Text style={cardStyles.productQty}>{product.amount}{product.presentation_name ? ` x ${product.presentation_name}` : ''}</Text>
                   <Text style={cardStyles.productName} numberOfLines={1}>
                     {product.product_name}
                   </Text>

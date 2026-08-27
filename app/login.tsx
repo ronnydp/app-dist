@@ -2,8 +2,9 @@ import { useToast } from "@/contexts/ToastsContext";
 import { authService } from "@/services/auth-service";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
+  ActivityIndicator,
   Image,
   KeyboardAvoidingView,
   Platform,
@@ -25,6 +26,8 @@ export default function LoginScreen() {
   const [isPasswordFocused, setIsPasswordFocused] = useState(false);
   const { showToast } = useToast();
   const current_year = new Date().getFullYear();
+  const emailInputRef = useRef<TextInput>(null);
+  const passwordInputRef = useRef<TextInput>(null);
 
   const handleContinue = async () => {
     if (!email.trim() || !password.trim()) {
@@ -91,7 +94,8 @@ export default function LoginScreen() {
           </View>
 
           <View style={styles.form}>
-            <View style={[styles.inputContainer, isEmailFocused && styles.inputContainerFocused]}>
+            <Pressable style={[styles.inputContainer, isEmailFocused && styles.inputContainerFocused]}
+              onPress={() => emailInputRef.current?.focus()}>
               <Ionicons
                 name="mail-outline"
                 size={20}
@@ -99,6 +103,7 @@ export default function LoginScreen() {
                 style={styles.inputIcon}
               />
               <TextInput
+                ref={emailInputRef}
                 style={styles.input}
                 value={email}
                 onChangeText={setEmail}
@@ -110,9 +115,10 @@ export default function LoginScreen() {
                 onFocus={() => setIsEmailFocused(true)}
                 onBlur={() => setIsEmailFocused(false)}
               />
-            </View>
+            </Pressable>
 
-            <View style={[styles.inputContainer, isPasswordFocused && styles.inputContainerFocused]}>
+            <Pressable style={[styles.inputContainer, isPasswordFocused && styles.inputContainerFocused]}
+            onPress={() => {passwordInputRef.current?.focus()}}>
               <Ionicons
                 name="lock-closed-outline"
                 size={20}
@@ -120,6 +126,7 @@ export default function LoginScreen() {
                 style={styles.inputIcon}
               />
               <TextInput
+                ref={passwordInputRef}
                 style={styles.input}
                 value={password}
                 onChangeText={setPassword}
@@ -137,7 +144,7 @@ export default function LoginScreen() {
                   color="#6B7280"
                 />
               </TouchableOpacity>
-            </View>
+            </Pressable>
 
             <Pressable
               style={[
@@ -148,7 +155,9 @@ export default function LoginScreen() {
               disabled={isLoading}
             >
               <Text style={styles.primaryButtonText}>
-                {isLoading ? "......." : "INICIAR SESION"}
+                {isLoading ? (
+                  <ActivityIndicator color="#fff" size="small" />
+                ) : "INICIAR SESION"}
               </Text>
             </Pressable>
             <Text style={styles.helperText}>

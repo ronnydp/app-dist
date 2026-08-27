@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams, useNavigation } from 'expo-router';
 import { useLayoutEffect, useState } from 'react';
 import {
+    ActivityIndicator,
     KeyboardAvoidingView,
     Modal,
     Platform,
@@ -198,7 +199,9 @@ export default function NuevoClienteScreen() {
                         disabled={loading}
                     >
                         <Text style={styles.submitButtonText}>
-                            {loading ? 'Guardando...' : isEditing ? 'Actualizar' : 'Guardar'}
+                            {loading ? (
+                                <ActivityIndicator color="#fff" size="small" />
+                                ) : isEditing ? 'Actualizar' : 'Guardar'}
                         </Text>
                     </TouchableOpacity>
                 </View>

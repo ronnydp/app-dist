@@ -2,6 +2,7 @@ import { useToast } from '@/contexts/ToastsContext';
 import { router, useLocalSearchParams, useNavigation } from 'expo-router';
 import { useEffect, useLayoutEffect, useState } from 'react';
 import {
+    ActivityIndicator,
     KeyboardAvoidingView,
     Platform,
     ScrollView,
@@ -292,7 +293,9 @@ export default function NewProductScreen() {
                         disabled={loading}
                     >
                         <Text style={styles.submitButtonText}>
-                            {loading ? 'Guardando...' : isEditing ? 'Actualizar' : 'Guardar'}
+                            {loading ? (
+                                <ActivityIndicator color="#fff" size="small" />
+                            ) : isEditing ? 'Actualizar' : 'Guardar'}
                         </Text>
                     </TouchableOpacity>
                 </View>

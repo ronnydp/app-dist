@@ -614,7 +614,9 @@ export default function NewOrderScreen() {
             disabled={loading}
           >
             <Text style={styles.submitButtonText}>
-              {loading ? "Guardando..." : "Guardar Pedido"}
+              {loading ? (
+                <ActivityIndicator color="#fff" size="small" />
+              ) : "Guardar Pedido"}
             </Text>
           </TouchableOpacity>
         </View>
