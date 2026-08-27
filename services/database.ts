@@ -509,7 +509,6 @@ export const getOrders = async (params: GetOrdersParams = {}) => {
         product_name: productMap.get(po.product_id) || "Producto desconocido",
       })),
     }));
-
     return transformedData;
   } catch (error) {
     console.error("Error al obtener pedidos:", error);
@@ -529,7 +528,6 @@ export const createOrder = async (order: NewOrder): Promise<Order> => {
         customer_id: order.customer_id,
         seller_id: order.seller_id,
         total: order.total,
-        date: order.date || new Date().toISOString(),
         note: order.note,
       })
       .select()
@@ -545,6 +543,8 @@ export const createOrder = async (order: NewOrder): Promise<Order> => {
       amount: p.amount,
       unit_price: p.unit_price,
       sub_total: p.sub_total,
+      /** aqui va presentation_name */
+      presentation_name: p.presentation_name
     }));
 
     const { error: productsError } = await supabase

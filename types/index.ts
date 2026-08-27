@@ -79,13 +79,13 @@ export interface NewOrder {
   customer_id: string;
   seller_id: string; // uuid referencia a users (vendedor)
   total: number;
-  date: string;
   note?: string;
   products: {
     product_id: string;
     amount: number;
     unit_price: number;
     sub_total: number;
+    presentation_name?: string;
   }[];
 }
 

@@ -195,7 +195,6 @@ export default function NewOrderScreen() {
   const handleProductSelection = async (product: Product) => {
     setSelectedProduct(product);
     const presentations = await getPresentationsByProduct(product.id);
-
     if (presentations.length === 0) {
       addProductWithoutPresentation(product);
       setShowProductModal(false);
@@ -349,7 +348,6 @@ export default function NewOrderScreen() {
       showToast("Debe agregar al menos un producto", "error");
       return;
     }
-
     const total = calculateTotal();
 
     setLoading(true);
@@ -360,13 +358,10 @@ export default function NewOrderScreen() {
         setLoading(false);
         return;
       }
-      const now = new Date();
-      const localDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
       await createOrder({
         customer_id: selectedCustomer.id,
         seller_id: session.user.id, // Asumiendo que el ID del vendedor está en sessionStorage
         total,
-        date: localDate,
         note: note.trim() || undefined,
         products: orderItems.map((item) => ({
           product_id: item.product.id,
