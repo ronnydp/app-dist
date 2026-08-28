@@ -84,7 +84,7 @@ export default function LoginScreen() {
         >
           <View style={styles.header}>
             <Image
-              source={require("../assets/images/mikary.jpg")}
+              source={require("../assets/images/icon-mikari.png")}
               style={styles.image}
             />
             <Text style={styles.title}>Bienvenido</Text>

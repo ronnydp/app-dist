@@ -1,10 +1,10 @@
 {
   "expo": {
-    "name": "Mikari",
+    "name": "Mikari App",
     "slug": "app-dist",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/mikary.png",
+    "icon": "./assets/images/icon-mikari.png",
     "scheme": "appdist",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -17,11 +17,11 @@
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#ffffff",
-        "foregroundImage": "./assets/images/mikary.png"
+        "backgroundColor": "#08859b",
+        "foregroundImage": "./assets/images/icon-mikari.png"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false,
+      "predictiveBackGestureEnabled": true,
       "package": "com.santairene.mikari",
       "permissions": [
         "android.permission.ACCESS_COARSE_LOCATION",
@@ -30,17 +30,18 @@
     },
     "web": {
       "output": "static",
-      "favicon": "./assets/images/mikary.png"
+      "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
       "expo-router",
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/splash-icon.png",
+          "image": "./assets/images/icon-mikari.png",
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#ffffff",
+          "appName": "",
           "dark": {
             "backgroundColor": "#000000"
           }

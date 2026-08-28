@@ -20,7 +20,7 @@ import { ToastProvider } from "../contexts/ToastsContext";
 
 export default function RootLayout() {
 
-  // Codigo para evitar la pérdida de carga si la app pierde el foco
+
   useEffect(() => {
     const subcription = AppState.addEventListener("change", (state) => {
       if (state === "active") {
