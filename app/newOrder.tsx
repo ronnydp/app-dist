@@ -18,15 +18,17 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useDebouncedValue } from "../hooks/use-debounced-value";
 import {
   createOrder,
   getPresentationsByProduct,
-  getProducts,
+  getProductsPaginated,
   searchCustomers,
 } from "../services/database";
 import { Customer, Presentation, Product } from "../types";
 
 const CUSTOMER_SEARCH_PAGE_SIZE = 50;
+const PRODUCT_SEARCH_PAGE_SIZE = 30;
 
 export default function NewOrderScreen() {
   const insets = useSafeAreaInsets();
@@ -45,6 +47,10 @@ export default function NewOrderScreen() {
   const [loadingMoreCustomers, setLoadingMoreCustomers] = useState(false);
   const [hasMoreCustomers, setHasMoreCustomers] = useState(false);
   const [products, setProducts] = useState<Product[]>([]);
+  const [searchingProducts, setSearchingProducts] = useState(false);
+  const [loadingMoreProducts, setLoadingMoreProducts] = useState(false);
+  const [hasMoreProducts, setHasMoreProducts] = useState(false);
+  const productPageRef = useRef(0);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(
     params.customerId
       ? {
@@ -78,6 +84,7 @@ export default function NewOrderScreen() {
   );
   const [searchCustomer, setSearchCustomer] = useState("");
   const [searchProduct, setSearchProduct] = useState("");
+  const debouncedProductSearch = useDebouncedValue(searchProduct.trim(), 300);
   const customerSearchTimer = useRef<ReturnType<typeof setTimeout> | null>(
     null,
   ); // Ref para manejar el debounce de búsqueda de clientes
@@ -167,28 +174,75 @@ export default function NewOrderScreen() {
     }, 150);
   };
 
-  const loadData = async () => {
-    try {
-      const productsData = await getProducts();
-      setProducts(productsData);
-    } catch (error) {
-      showToast("No se pudieron cargar los datos", "error");
-      console.error(error);
-    }
-  };
-
-  const normalizeText = (text: string) => {
-    return text
-      .toLowerCase()
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "");
-  };
-
   const filteredCustomers = customers;
 
-  const filteredProducts = products.filter((product) =>
-    normalizeText(product.name).includes(normalizeText(searchProduct)),
-  );
+  useEffect(() => {
+    if (!debouncedProductSearch) {
+      setProducts([]);
+      setHasMoreProducts(false);
+      return;
+    }
+
+    let isCurrent = true;
+    productPageRef.current = 0;
+    setSearchingProducts(true);
+    getProductsPaginated(0, PRODUCT_SEARCH_PAGE_SIZE, debouncedProductSearch)
+      .then((results) => {
+        if (!isCurrent) return;
+        setProducts(results.data);
+        setHasMoreProducts(results.hasMore);
+      })
+      .catch((error) => {
+        if (isCurrent) {
+          showToast("No se pudieron buscar los productos", "error");
+          console.error(error);
+        }
+      })
+      .finally(() => {
+        if (isCurrent) setSearchingProducts(false);
+      });
+
+    return () => {
+      isCurrent = false;
+    };
+  }, [debouncedProductSearch, showToast]);
+
+  const loadMoreProducts = async () => {
+    if (
+      !debouncedProductSearch ||
+      searchingProducts ||
+      loadingMoreProducts ||
+      !hasMoreProducts
+    ) {
+      return;
+    }
+
+    setLoadingMoreProducts(true);
+    const nextPage = productPageRef.current + 1;
+    try {
+      const results = await getProductsPaginated(
+        nextPage,
+        PRODUCT_SEARCH_PAGE_SIZE,
+        debouncedProductSearch,
+      );
+      if (searchProduct.trim() !== debouncedProductSearch) return;
+
+      productPageRef.current = nextPage;
+      setProducts((previousProducts) => {
+        const existingIds = new Set(previousProducts.map((product) => product.id));
+        return [
+          ...previousProducts,
+          ...results.data.filter((product) => !existingIds.has(product.id)),
+        ];
+      });
+      setHasMoreProducts(results.hasMore);
+    } catch (error) {
+      showToast("No se pudieron cargar más productos", "error");
+      console.error(error);
+    } finally {
+      setLoadingMoreProducts(false);
+    }
+  };
 
   const addOrUpdateDraftItem = (
     product: Product,
@@ -424,7 +478,6 @@ export default function NewOrderScreen() {
     <KeyboardAvoidingView
       style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
-      onLayout={loadData}
     >
       <ScrollView
         style={styles.scrollView}
@@ -806,9 +859,15 @@ export default function NewOrderScreen() {
             />
             <FlatList
               style={styles.modalList}
-              data={searchProduct.trim().length === 0 ? [] : filteredProducts}
+              data={
+                searchProduct.trim().length === 0 || searchingProducts
+                  ? []
+                  : products
+              }
               keyExtractor={(product) => product.id}
               keyboardShouldPersistTaps="handled"
+              onEndReached={loadMoreProducts}
+              onEndReachedThreshold={0.3}
               renderItem={({ item: product }) => {
                 const inCart = orderItems.find(
                   (i) => i.product.id === product.id,
@@ -844,11 +903,23 @@ export default function NewOrderScreen() {
                   <Text style={styles.noResults}>
                     Escriba para buscar productos...
                   </Text>
+                ) : searchingProducts ? (
+                  <View style={styles.searchingContainer}>
+                    <ActivityIndicator size="small" color="#08859b" />
+                    <Text style={styles.noResults}>Buscando...</Text>
+                  </View>
                 ) : (
                   <Text style={styles.noResults}>
                     No se encontraron productos
                   </Text>
                 )
+              }
+              ListFooterComponent={
+                loadingMoreProducts ? (
+                  <View style={styles.searchingContainer}>
+                    <ActivityIndicator size="small" color="#08859b" />
+                  </View>
+                ) : null
               }
             />
           </View>
