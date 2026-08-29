@@ -26,6 +26,8 @@ import {
 } from "../services/database";
 import { Customer, Presentation, Product } from "../types";
 
+const CUSTOMER_SEARCH_PAGE_SIZE = 50;
+
 export default function NewOrderScreen() {
   const insets = useSafeAreaInsets();
   const params = useLocalSearchParams<{
@@ -40,6 +42,8 @@ export default function NewOrderScreen() {
   }>();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [searchingCustomers, setSearchingCustomers] = useState(false);
+  const [loadingMoreCustomers, setLoadingMoreCustomers] = useState(false);
+  const [hasMoreCustomers, setHasMoreCustomers] = useState(false);
   const [products, setProducts] = useState<Product[]>([]);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(
     params.customerId
@@ -100,27 +104,62 @@ export default function NewOrderScreen() {
   
   // Buscar clientes desde Supabase con debounce
   useEffect(() => {
-    if (!searchCustomer.trim()) {
+    const term = searchCustomer.trim();
+    if (!term) {
       setCustomers([]);
+      setHasMoreCustomers(false);
       return;
     }
+
+    let isCurrent = true;
     setSearchingCustomers(true);
     if (customerSearchTimer.current) clearTimeout(customerSearchTimer.current);
     customerSearchTimer.current = setTimeout(async () => {
       try {
-        const results = await searchCustomers(searchCustomer);
-        setCustomers(results);
+        const results = await searchCustomers(term, 0, CUSTOMER_SEARCH_PAGE_SIZE);
+        if (isCurrent) {
+          setCustomers(results.data);
+          setHasMoreCustomers(results.hasMore);
+        }
       } catch (error) {
         console.error(error);
       } finally {
-        setSearchingCustomers(false);
+        if (isCurrent) setSearchingCustomers(false);
       }
     }, 350);
     return () => {
+      isCurrent = false;
       if (customerSearchTimer.current)
         clearTimeout(customerSearchTimer.current);
     };
   }, [searchCustomer]);
+
+  const loadMoreCustomers = async () => {
+    const term = searchCustomer.trim();
+    if (!term || searchingCustomers || loadingMoreCustomers || !hasMoreCustomers) {
+      return;
+    }
+
+    setLoadingMoreCustomers(true);
+    try {
+      const page = Math.floor(customers.length / CUSTOMER_SEARCH_PAGE_SIZE);
+      const results = await searchCustomers(term, page, CUSTOMER_SEARCH_PAGE_SIZE);
+      if (searchCustomer.trim() !== term) return;
+
+      setCustomers((previousCustomers) => {
+        const existingIds = new Set(previousCustomers.map((customer) => customer.id));
+        return [
+          ...previousCustomers,
+          ...results.data.filter((customer) => !existingIds.has(customer.id)),
+        ];
+      });
+      setHasMoreCustomers(results.hasMore);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoadingMoreCustomers(false);
+    }
+  };
 
   const focusInputWhenModalShown = (inputRef: RefObject<TextInput | null>) => {
     setTimeout(() => {
@@ -662,6 +701,8 @@ export default function NewOrderScreen() {
               }
               keyExtractor={(customer) => customer.id}
               keyboardShouldPersistTaps="handled"
+              onEndReached={loadMoreCustomers}
+              onEndReachedThreshold={0.3}
               renderItem={({ item: customer }) => (
                 <TouchableOpacity
                   key={customer.id}
@@ -716,6 +757,13 @@ export default function NewOrderScreen() {
                     No se encontraron clientes
                   </Text>
                 )
+              }
+              ListFooterComponent={
+                loadingMoreCustomers ? (
+                  <View style={styles.searchingContainer}>
+                    <ActivityIndicator size="small" color="#08859b" />
+                  </View>
+                ) : null
               }
             />
           </View>

@@ -107,13 +107,17 @@ export const getCustomersPaginated = async (
  */
 export const searchCustomers = async (
   term: string,
-  limit: number = 50,
-): Promise<Customer[]> => {
+  page: number = 0,
+  pageSize: number = 50,
+): Promise<{ data: Customer[]; hasMore: boolean }> => {
   try {
     const trimmed = term.trim();
-    if (!trimmed) return [];
+    if (!trimmed) return { data: [], hasMore: false };
 
-    let query = supabase.from("customers").select("*").eq("is_active", true);
+    let query = supabase
+      .from("customers")
+      .select("*", { count: "exact" })
+      .eq("is_active", true);
 
     const isNumeric = /^\d+$/.test(trimmed);
     const normalizedTerm = normalizeText(trimmed);
@@ -123,9 +127,11 @@ export const searchCustomers = async (
       query = query.ilike("name", `%${normalizedTerm}%`);
     }
 
-    const { data, error } = await query
+    const from = page * pageSize;
+    const to = from + pageSize - 1;
+    const { data, error, count } = await query
       .order("name", { ascending: true })
-      .limit(limit);
+      .range(from, to);
 
     if (error) throw error;
 
@@ -137,7 +143,10 @@ export const searchCustomers = async (
       );
     }
 
-    return filteredData;
+    return {
+      data: filteredData,
+      hasMore: (count ?? 0) > to + 1,
+    };
   } catch (error) {
     console.error("Error al buscar clientes:", error);
     throw error;
