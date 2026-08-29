@@ -2,15 +2,15 @@
 import { supabase } from "../lib/supabase";
 import { encodeOrderObservation } from "../lib/utils/orderObservation";
 import {
-    Customer,
-    NewOrder,
-    Order,
-    Presentation,
-    Product,
-    ProductWithPresentations,
-    SellerWeeklySales,
-    User,
-    WeeklySales,
+  Customer,
+  NewOrder,
+  Order,
+  Presentation,
+  Product,
+  ProductWithPresentations,
+  SellerWeeklySales,
+  User,
+  WeeklySales,
 } from "../types";
 
 const formatLocalDate = (date: Date): string => {

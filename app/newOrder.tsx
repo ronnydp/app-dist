@@ -820,6 +820,7 @@ export default function NewOrderScreen() {
                       styles.modalOption,
                       inCart && styles.modalOptionInCart,
                     ]}
+                    disabled={Boolean(inCart)}
                     onPress={() => handleProductSelection(product)}
                   >
                     <View style={{ flex: 1 }}>
