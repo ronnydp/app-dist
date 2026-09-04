@@ -1,11 +1,12 @@
 import ConfirmDialog from '@/components/ConfirmDialogProps';
+import { BrandColors } from '@/constants/theme';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastsContext';
 import { authService } from '@/services/auth-service';
 import {
-  getSellerProfileStats,
-  getUserById,
-  SellerProfileStats,
+    getSellerProfileStats,
+    getUserById,
+    SellerProfileStats,
 } from '@/services/database';
 import { User } from '@/types';
 import { Ionicons } from '@expo/vector-icons';
@@ -122,7 +123,7 @@ export default function ProfileScreen() {
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#08859b" />
+        <ActivityIndicator size="large" color={BrandColors.primary} />
         <Text style={styles.loadingText}>Cargando perfil...</Text>
       </View>
     );
@@ -131,7 +132,7 @@ export default function ProfileScreen() {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <View style={styles.header}>
-        <Ionicons name="person-circle-outline" size={100} color="#08859b" />
+        <Ionicons name="person-circle-outline" size={100} color={BrandColors.primary} />
         <View style={{ flex: 1 }}>
           <Text style={styles.title}>{user?.name || session?.user?.name || 'Vendedor'}</Text>
           <Text style={styles.subtitle}>{user?.role || session?.user?.role || 'Sin rol'}</Text>

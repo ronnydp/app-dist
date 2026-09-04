@@ -2,7 +2,6 @@ import { Ionicons } from '@expo/vector-icons';
 import React, { memo, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { ProductWithPresentations } from '../types';
-import ConfirmDialog from './ConfirmDialogProps';
 import cardStyles from './ui/cardStyles';
 
 type Props = {
@@ -55,7 +54,7 @@ export default memo(function ProductCard({ item, onOpen, onEdit, onToggleActive 
           <View style={{ alignItems: 'center', gap: 8 }}>
             {onEdit && (
               <TouchableOpacity style={cardStyles.deleteBtn} onPress={() => onEdit(item)}>
-                <Ionicons name="create-outline" size={20} color="#08859b" />
+                <Ionicons name="create-outline" size={20} color={BrandColors.primary} />
               </TouchableOpacity>
             )}
             {onToggleActive && (

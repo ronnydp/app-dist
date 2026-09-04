@@ -1,7 +1,8 @@
+import { BrandColors } from "@/constants/theme";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/contexts/ToastsContext";
 import { activateProduct, deleteProduct, getProductsPaginated } from "@/services/database";
-import { Product, ProductWithPresentations } from "@/types";
+import { ProductWithPresentations } from "@/types";
 import { Ionicons } from "@expo/vector-icons";
 import { router, useFocusEffect } from "expo-router";
 import React, { useCallback, useRef, useState } from "react";
@@ -146,7 +147,7 @@ export default function ProductScreen() {
                 ListFooterComponent={
                     loadingMore ? (
                         <View style={styles.loadingMore}>
-                            <ActivityIndicator size="small" color="#08859b" />
+                            <ActivityIndicator size="small" color={BrandColors.primary} />
                         </View>
                     ) : null
                 }

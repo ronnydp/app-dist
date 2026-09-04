@@ -1,5 +1,6 @@
 // components/ConfirmDialog.tsx
-import { Modal, View, Text, Pressable, StyleSheet, ActivityIndicator } from 'react-native';
+import { BrandColors } from '@/constants/theme';
+import { ActivityIndicator, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 
 interface ConfirmDialogProps {
   visible: boolean; // no tienen ? porque son obligatorios
@@ -102,7 +103,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f1f1f1',
   },
   confirmButton: {
-    backgroundColor: 'teal',
+    backgroundColor: BrandColors.primary,
   },
   cancelText: {
     color: '#333',

@@ -1,4 +1,5 @@
 // app/(tabs)/customers.tsx
+import { BrandColors } from '@/constants/theme';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastsContext';
 import { Ionicons } from '@expo/vector-icons';
@@ -114,7 +115,7 @@ export default function CustomerScreen() {
         ListFooterComponent={
           loadingMore ? (
             <View style={styles.loadingMore}>
-              <ActivityIndicator size="small" color="#08859b" />
+              <ActivityIndicator size="small" color={BrandColors.primary} />
             </View>
           ) : null
         }

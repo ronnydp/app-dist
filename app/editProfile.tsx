@@ -1,3 +1,4 @@
+import { BrandColors } from '@/constants/theme';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastsContext';
 import { getUserById, updateUser } from '@/services/database';
@@ -80,7 +81,7 @@ export default function EditProfileScreen() {
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#08859b" />
+        <ActivityIndicator size="large" color={BrandColors.primary} />
         <Text style={styles.loadingText}>Cargando perfil...</Text>
       </View>
     );
@@ -180,7 +181,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   inputFocused: {
-    borderColor: '#08859b',
+    borderColor: BrandColors.primary,
     borderWidth: 1.5,
   },
   disabledInput: {
@@ -211,7 +212,7 @@ const styles = StyleSheet.create({
   },
   saveButton: {
     flex: 1,
-    backgroundColor: '#08859b',
+    backgroundColor: BrandColors.primary,
     borderRadius: 10,
     paddingVertical: 14,
     flexDirection: 'row',

@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { memo } from 'react';
 import { Text, View } from 'react-native';
+import { BrandColors } from '../constants/theme';
 import { decodeOrderObservation } from '../lib/utils/orderObservation';
 import { OrderWithDetails } from '../types';
 import cardStyles from './ui/cardStyles';
@@ -36,12 +37,12 @@ export default memo(function OrderCard({ item }: Props) {
           </View>
 
           <View style={cardStyles.infoRow}>
-            <Ionicons name="location-outline" size={14} color="#08859b" style={cardStyles.infoIcon} />
+            <Ionicons name="location-outline" size={14} color={BrandColors.primary} style={cardStyles.infoIcon} />
             <Text style={cardStyles.info}>{item.customer_address}</Text>
           </View>
           {item.customer_phone && (
             <View style={cardStyles.infoRow}>
-              <Ionicons name="call-outline" size={14} color="#08859b" style={cardStyles.infoIcon} />  
+              <Ionicons name="call-outline" size={14} color={BrandColors.primary} style={cardStyles.infoIcon} />
               <Text style={cardStyles.info}>{item.customer_phone}</Text>
             </View>
           )}

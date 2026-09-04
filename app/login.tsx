@@ -1,19 +1,20 @@
+import { BrandColors } from "@/constants/theme";
 import { useToast } from "@/contexts/ToastsContext";
 import { authService } from "@/services/auth-service";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRef, useState } from "react";
 import {
-  ActivityIndicator,
-  Image,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    Image,
+    KeyboardAvoidingView,
+    Platform,
+    Pressable,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -49,7 +50,7 @@ export default function LoginScreen() {
 
   return (
     <LinearGradient
-      colors={["#08859b", "#dfe6f4", "#08599b"]}
+      colors={[BrandColors.primary, BrandColors.light, BrandColors.dark]}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
       style={styles.container}
@@ -237,7 +238,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   inputContainerFocused: {
-    borderColor: "#08859b",
+    borderColor: BrandColors.primary,
   },
   inputIcon: {
     marginRight: 10,
@@ -250,12 +251,12 @@ const styles = StyleSheet.create({
   },
   primaryButton: {
     marginTop: 10,
-    backgroundColor: "#08859b",
+    backgroundColor: BrandColors.primary,
     height: 54,
     borderRadius: 14,
     justifyContent: "center",
     alignItems: "center",
-    shadowColor: "#08599b",
+    shadowColor: BrandColors.dark,
     shadowOffset: {
       width: 0,
       height: 8,

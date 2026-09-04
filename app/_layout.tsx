@@ -1,13 +1,14 @@
 import {
-  DarkTheme,
-  DefaultTheme,
-  ThemeProvider,
+    DarkTheme,
+    DefaultTheme,
+    ThemeProvider,
 } from "@react-navigation/native";
 import { Stack, usePathname } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import "react-native-reanimated";
 
 import SessionActionsMenu from "@/components/session-actions-menu";
+import { BrandColors } from "@/constants/theme";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { supabase } from "@/lib/supabase";
 import { useEffect } from "react";
@@ -65,7 +66,7 @@ function RootNavigator() {
   if (isLoading) {
       return (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#08859b" />
+          <ActivityIndicator size="large" color={BrandColors.primary} />
           <Text style={styles.loadingText}>Cargando sesión...</Text>
         </View>
       );

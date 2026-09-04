@@ -1,29 +1,30 @@
+import { BrandColors } from "@/constants/theme";
 import { useToast } from "@/contexts/ToastsContext";
 import { authService } from "@/services/auth-service";
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import { RefObject, useEffect, useRef, useState } from "react";
 import {
-  ActivityIndicator,
-  FlatList,
-  KeyboardAvoidingView,
-  Modal,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    FlatList,
+    KeyboardAvoidingView,
+    Modal,
+    Platform,
+    Pressable,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useDebouncedValue } from "../hooks/use-debounced-value";
 import {
-  createOrder,
-  getPresentationsByProduct,
-  getProductsPaginated,
-  searchCustomers,
+    createOrder,
+    getPresentationsByProduct,
+    getProductsPaginated,
+    searchCustomers,
 } from "../services/database";
 import { Customer, Presentation, Product } from "../types";
 
@@ -504,7 +505,7 @@ export default function NewOrderScreen() {
                 <Ionicons name="person-outline" size={18} color="#9ca3af" />
               )}
               {selectedCustomer && (
-                <Ionicons name="person" size={18} color="#08859b" />
+                <Ionicons name="person" size={18} color={BrandColors.primary} />
               )}
               <Text
                 style={[
@@ -534,7 +535,7 @@ export default function NewOrderScreen() {
                 <Ionicons
                   name="location-outline"
                   size={16}
-                  color="#08859b"
+                  color={BrandColors.primary}
                   style={{ marginRight: 6 }}
                 />{" "}
                 {selectedCustomer.address}
@@ -791,7 +792,7 @@ export default function NewOrderScreen() {
                     {customer.address}
                   </Text>
                   {selectedCustomer?.id === customer.id && (
-                    <Ionicons name="checkmark" size={20} color="#08859b" />
+                    <Ionicons name="checkmark" size={20} color={BrandColors.primary} />
                   )}
                 </TouchableOpacity>
               )}
@@ -802,7 +803,7 @@ export default function NewOrderScreen() {
                   </Text>
                 ) : searchingCustomers ? (
                   <View style={styles.searchingContainer}>
-                    <ActivityIndicator size="small" color="#08859b" />
+                    <ActivityIndicator size="small" color={BrandColors.primary} />
                     <Text style={styles.noResults}>Buscando...</Text>
                   </View>
                 ) : (
@@ -814,7 +815,7 @@ export default function NewOrderScreen() {
               ListFooterComponent={
                 loadingMoreCustomers ? (
                   <View style={styles.searchingContainer}>
-                    <ActivityIndicator size="small" color="#08859b" />
+                    <ActivityIndicator size="small" color={BrandColors.primary} />
                   </View>
                 ) : null
               }
@@ -905,7 +906,7 @@ export default function NewOrderScreen() {
                   </Text>
                 ) : searchingProducts ? (
                   <View style={styles.searchingContainer}>
-                    <ActivityIndicator size="small" color="#08859b" />
+                    <ActivityIndicator size="small" color={BrandColors.primary} />
                     <Text style={styles.noResults}>Buscando...</Text>
                   </View>
                 ) : (
@@ -917,7 +918,7 @@ export default function NewOrderScreen() {
               ListFooterComponent={
                 loadingMoreProducts ? (
                   <View style={styles.searchingContainer}>
-                    <ActivityIndicator size="small" color="#08859b" />
+                    <ActivityIndicator size="small" color={BrandColors.primary} />
                   </View>
                 ) : null
               }
@@ -990,7 +991,7 @@ export default function NewOrderScreen() {
                   size={20}
                   color={
                     selectedPresentation?.id === presentation.id
-                      ? "#08859b"
+                      ? BrandColors.primary
                       : "#9ca3af"
                   }
                 />
@@ -1036,7 +1037,7 @@ export default function NewOrderScreen() {
                             )
                           }
                         >
-                          <Ionicons name="remove" size={20} color="#08859b" />
+                          <Ionicons name="remove" size={20} color={BrandColors.primary} />
                         </TouchableOpacity>
                         <TextInput
                           style={[
@@ -1071,7 +1072,7 @@ export default function NewOrderScreen() {
                             )
                           }
                         >
-                          <Ionicons name="add" size={20} color="#08859b" />
+                          <Ionicons name="add" size={20} color={BrandColors.primary} />
                         </TouchableOpacity>
                       </View>
                     ))}
@@ -1218,7 +1219,7 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: "#08859b",
+    backgroundColor: BrandColors.primary,
     justifyContent: "center",
     alignItems: "center",
   },
@@ -1241,7 +1242,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
   itemCountBadge: {
-    backgroundColor: "#dbeafe",
+    backgroundColor: BrandColors.surface,
     borderRadius: 10,
     paddingHorizontal: 8,
     paddingVertical: 2,
@@ -1255,7 +1256,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
-    backgroundColor: "#08859b",
+    backgroundColor: BrandColors.primary,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 20,
@@ -1355,7 +1356,7 @@ const styles = StyleSheet.create({
     height: 36,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#08859b",
+    borderColor: BrandColors.primary,
     justifyContent: "center",
     alignItems: "center",
   },
@@ -1409,19 +1410,19 @@ const styles = StyleSheet.create({
     padding: 0,
   },
   amountInputFocused: {
-    borderColor: "#08859b",
+    borderColor: BrandColors.primary,
     borderLeftWidth: 1.5,
     borderRightWidth: 1.5,
   },
   subtotalAmount: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#08859b",
+    color: BrandColors.primary,
     flex: 1,
     textAlign: "right",
   },
   dropdownSelected: {
-    borderColor: "#08859b",
+    borderColor: BrandColors.primary,
     backgroundColor: "#eefafc",
   },
   totalSection: {
@@ -1433,7 +1434,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     borderLeftWidth: 4,
-    borderLeftColor: "#08859b",
+    borderLeftColor: BrandColors.primary,
   },
   totalLabel: {
     fontSize: 16,
@@ -1443,7 +1444,7 @@ const styles = StyleSheet.create({
   totalAmount: {
     fontSize: 20,
     fontWeight: "700",
-    color: "#08859b",
+    color: BrandColors.primary,
   },
   input: {
     borderWidth: 1,
@@ -1456,7 +1457,7 @@ const styles = StyleSheet.create({
   },
   inputFocused: {
     borderWidth: 1.5,
-    borderColor: "#08859b",
+    borderColor: BrandColors.primary,
   },
   textArea: {
     height: 80,
@@ -1482,7 +1483,7 @@ const styles = StyleSheet.create({
     color: "#6b7280",
   },
   submitButton: {
-    backgroundColor: "#08859b",
+    backgroundColor: BrandColors.primary,
   },
   submitButtonText: {
     fontSize: 16,
@@ -1568,7 +1569,7 @@ const styles = StyleSheet.create({
     color: "#111827",
   },
   codeBadge: {
-    backgroundColor: "#08859b",
+    backgroundColor: BrandColors.primary,
     borderRadius: 10,
     color: "#fff",
     fontSize: 13,
@@ -1644,7 +1645,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   addProductButton: {
-    backgroundColor: "#08859b",
+    backgroundColor: BrandColors.primary,
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 6,
@@ -1666,13 +1667,13 @@ const styles = StyleSheet.create({
   },
   searchInputFocused: {
     borderWidth: 1.5,
-    borderColor: "#08859b",
+    borderColor: BrandColors.primary,
   },
   modalOptionInCart: {
     backgroundColor: "#f0f7ff",
   },
   cartBadge: {
-    backgroundColor: "#08859b",
+    backgroundColor: BrandColors.primary,
     borderRadius: 10,
     width: 22,
     height: 22,

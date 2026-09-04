@@ -1,4 +1,5 @@
 import ConfirmDialog from "@/components/ConfirmDialogProps";
+import { BrandColors } from "@/constants/theme";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/contexts/ToastsContext";
 import { activateCustomer, deleteCustomer } from "@/services/database";
@@ -120,7 +121,7 @@ export default function DetailCustomer() {
         <View style={{ flex: 1, backgroundColor: '#ffffff', padding: 15 }}>
             <View style={{ flexDirection: 'row' }}>
                 <View style={{ paddingHorizontal: 20, paddingVertical: 10 }}>
-                    <Ionicons name="storefront-outline" size={100} color="#08859b" />
+                    <Ionicons name="storefront-outline" size={100} color={BrandColors.primary} />
                 </View>
                 <View style={{ justifyContent: 'center', gap: 10, flex: 1 }}>
                     <Text style={{ fontSize: 19, fontWeight: 'bold' }}>
@@ -140,7 +141,7 @@ export default function DetailCustomer() {
             </View>
             <View style={{ borderWidth: 1, borderColor: '#e5e5e5', borderRadius: 10, padding: 15, marginTop: 10 }}>
                 <View style={{ flexDirection: 'row', marginBottom: 12, gap: 10 }}>
-                    <Ionicons name="information-circle-outline" size={20} color="#08859b" />
+                    <Ionicons name="information-circle-outline" size={20} color={BrandColors.primary} />
                     <Text style={{ fontWeight: '800', fontSize: 15, color: '#111827' }}>Información</Text>
                 </View>
                 <View style={{ gap: 12 }}>
@@ -180,7 +181,7 @@ export default function DetailCustomer() {
                         </TouchableOpacity>
                     )}
                     <TouchableOpacity style={{
-                        padding: 16, borderRadius: 8, alignItems: "center", backgroundColor: '#08859b',
+                        padding: 16, borderRadius: 8, alignItems: "center", backgroundColor: BrandColors.primary,
                     }}
                         onPress={() => handleEdit()}
                     >
@@ -191,7 +192,7 @@ export default function DetailCustomer() {
                         </Text>
                     </TouchableOpacity>
                     {role === 'vendedor' && (<TouchableOpacity style={{
-                        padding: 16, borderRadius: 8, alignItems: "center", backgroundColor: '#08859b',
+                        padding: 16, borderRadius: 8, alignItems: "center", backgroundColor: BrandColors.primary,
                     }}
                         onPress={() => handleAddOrder()}
                     >

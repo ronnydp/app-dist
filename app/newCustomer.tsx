@@ -1,4 +1,5 @@
 // app/nuevo-cliente.tsx
+import { BrandColors } from '@/constants/theme';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastsContext';
 import { Ionicons } from '@expo/vector-icons';
@@ -241,7 +242,7 @@ export default function NuevoClienteScreen() {
                                     {dist}
                                 </Text>
                                 {distrito === dist && (
-                                    <Ionicons name="checkmark" size={20} color="#08859b" />
+                                    <Ionicons name="checkmark" size={20} color={BrandColors.primary} />
                                 )}
                             </TouchableOpacity>
                         ))}
@@ -286,7 +287,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#fff',
     },
     inputFocused: {
-        borderColor: '#08859b',
+        borderColor: BrandColors.primary,
         borderWidth: 1.5,
     },
     inputDisabled: {
@@ -335,7 +336,7 @@ const styles = StyleSheet.create({
         color: '#6b7280',
     },
     submitButton: {
-        backgroundColor: '#08859b',
+        backgroundColor: BrandColors.primary,
     },
     submitButtonText: {
         fontSize: 16,

@@ -1,3 +1,4 @@
+import { BrandColors } from '@/constants/theme';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastsContext';
 import { Ionicons } from '@expo/vector-icons';
@@ -176,7 +177,7 @@ export default function OrderScreen() {
                         <Ionicons
                             name="person-outline"
                             size={16}
-                            color={ordersVisibility === 'mine' ? '#fff' : '#08859b'}
+                            color={ordersVisibility === 'mine' ? '#fff' : BrandColors.primary}
                         />
                         <Text
                             style={[
@@ -198,7 +199,7 @@ export default function OrderScreen() {
                             <Ionicons
                                 name="people-outline"
                                 size={16}
-                                color={ordersVisibility === 'all' ? '#fff' : '#08859b'}
+                                color={ordersVisibility === 'all' ? '#fff' : BrandColors.primary}
                             />
                             <Text
                                 style={[
@@ -461,12 +462,12 @@ const styles = StyleSheet.create({
         gap: 6,
     },
     scopeButtonActive: {
-        backgroundColor: '#08859b',
-        borderColor: '#08859b',
+        backgroundColor: BrandColors.primary,
+        borderColor: BrandColors.primary,
     },
     scopeButtonInactive: {
         backgroundColor: '#fff',
-        borderColor: '#08859b',
+        borderColor: BrandColors.primary,
     },
     scopeButtonText: {
         fontSize: 13,
@@ -476,7 +477,7 @@ const styles = StyleSheet.create({
         color: '#fff',
     },
     scopeButtonTextInactive: {
-        color: '#08859b',
+        color: BrandColors.primary,
     },
     rightFiltersGroup: {
         flexDirection: 'row',
@@ -558,7 +559,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#f3f4f6',
     },
     saveModalButton: {
-        backgroundColor: '#08859b',
+        backgroundColor: BrandColors.primary,
     },
     cancelModalText: {
         color: '#374151',

@@ -1,19 +1,20 @@
+import { BrandColors } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
 import {
-  ActivityIndicator,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import { useAuth } from "../../contexts/AuthContext";
 import { authService } from "../../services/auth-service";
 import {
-  getAllSellersWeeklySales,
-  getWeeklySalesTotal,
+    getAllSellersWeeklySales,
+    getWeeklySalesTotal,
 } from "../../services/database";
 import { SellerWeeklySales, WeeklySales } from "../../types";
 
@@ -96,7 +97,7 @@ function SellerCollapsibleCard({ seller }: { seller: SellerWeeklySales }) {
           <View style={styles.sellerHeader}>
           <View style={styles.sellerInfo}>
             <View style={styles.sellerNameRow}>
-              <Ionicons name="person" size={18} color="#08859b" />
+              <Ionicons name="person" size={18} color={BrandColors.primary} />
               <Text style={styles.sellerName}>{seller.sellerName}</Text>
             </View>
           </View>
@@ -235,7 +236,7 @@ export default function SummaryScreen() {
     return (
       <View style={styles.container}>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#08859b" />
+          <ActivityIndicator size="large" color={BrandColors.primary} />
         </View>
       </View>
     );
@@ -391,7 +392,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   totalIconAdmin: {
-    backgroundColor: "#dbeafe",
+    backgroundColor: BrandColors.surface,
   },
   totalLabel: {
     fontSize: 13,

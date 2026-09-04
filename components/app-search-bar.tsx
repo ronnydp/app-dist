@@ -1,6 +1,7 @@
+import { BrandColors } from '@/constants/theme';
 import { Ionicons } from '@expo/vector-icons';
 import { useRef, useState } from 'react';
-import { Pressable, StyleProp, StyleSheet, TextInput, TextStyle, View, ViewStyle } from 'react-native';
+import { Pressable, StyleProp, StyleSheet, TextInput, TextStyle, ViewStyle } from 'react-native';
 
 type AppSearchBarProps = {
   placeholder: string;
@@ -56,7 +57,7 @@ const styles = StyleSheet.create({
   },
   searchContainerFocused: {
     borderWidth: 1.5,
-    borderColor: '#08859b',
+    borderColor: BrandColors.primary,
   },
   icon: {
     marginRight: 8,

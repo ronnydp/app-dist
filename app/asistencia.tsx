@@ -1,3 +1,4 @@
+import { BrandColors } from '@/constants/theme';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastsContext';
 import * as attendanceService from '@/services/attendance';
@@ -7,13 +8,13 @@ import * as Location from 'expo-location';
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import {
-  ActivityIndicator,
-  Linking,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
+    ActivityIndicator,
+    Linking,
+    Pressable,
+    ScrollView,
+    StyleSheet,
+    Text,
+    View,
 } from 'react-native';
 import AttendanceAdminScreen from './attendanceAdmin';
 
@@ -669,7 +670,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#dbeafe',
+    backgroundColor: BrandColors.surface,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -720,7 +721,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#dbeafe',
+    backgroundColor: BrandColors.surface,
     alignItems: 'center',
     justifyContent: 'center',
   },

@@ -1,3 +1,4 @@
+import { BrandColors } from '@/constants/theme';
 import { StyleSheet } from 'react-native';
 
 export default StyleSheet.create({
@@ -45,7 +46,7 @@ export default StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
     color: '#2563eb',
-    backgroundColor: '#dbeafe',
+    backgroundColor: BrandColors.surface,
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 8,

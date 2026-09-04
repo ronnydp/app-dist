@@ -1,3 +1,4 @@
+import { BrandColors } from '@/constants/theme';
 import { useToast } from '@/contexts/ToastsContext';
 import { router, useLocalSearchParams, useNavigation } from 'expo-router';
 import { useEffect, useLayoutEffect, useState } from 'react';
@@ -338,7 +339,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#fff',
     },
     inputFocused: {
-        borderColor: '#08859b',
+        borderColor: BrandColors.primary,
         borderWidth: 1.5,
     },
     textArea: {
@@ -364,7 +365,7 @@ const styles = StyleSheet.create({
         color: '#6b7280',
     },
     submitButton: {
-        backgroundColor: '#08859b',
+        backgroundColor: BrandColors.primary,
     },
     submitButtonText: {
         fontSize: 16,
@@ -449,8 +450,8 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     checkboxActive: {
-        backgroundColor: '#08859b',
-        borderColor: '#08859b',
+        backgroundColor: BrandColors.primary,
+        borderColor: BrandColors.primary,
     },
     checkmark: {
         color: '#fff',

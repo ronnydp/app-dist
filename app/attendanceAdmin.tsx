@@ -1,17 +1,17 @@
-import { Ionicons } from '@expo/vector-icons';
-import { router } from 'expo-router';
-import { useFocusEffect } from 'expo-router';
-import { useCallback, useMemo, useState } from 'react';
-import {
-  ActivityIndicator,
-  FlatList,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { BrandColors } from '@/constants/theme';
 import * as attendanceService from '@/services/attendance';
 import { AttendanceWithUser } from '@/types';
+import { Ionicons } from '@expo/vector-icons';
+import { router, useFocusEffect } from 'expo-router';
+import { useCallback, useMemo, useState } from 'react';
+import {
+    ActivityIndicator,
+    FlatList,
+    Pressable,
+    StyleSheet,
+    Text,
+    View,
+} from 'react-native';
 
 type AttendanceTone = 'success' | 'warning' | 'error';
 
@@ -308,7 +308,7 @@ const styles = StyleSheet.create({
     width: 42,
     height: 42,
     borderRadius: 21,
-    backgroundColor: '#dbeafe',
+    backgroundColor: BrandColors.surface,
     alignItems: 'center',
     justifyContent: 'center',
   },

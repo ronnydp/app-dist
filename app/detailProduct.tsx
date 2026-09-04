@@ -1,4 +1,5 @@
 import ConfirmDialog from "@/components/ConfirmDialogProps";
+import { BrandColors } from "@/constants/theme";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/contexts/ToastsContext";
 import { activateProduct, deleteProduct } from "@/services/database";
@@ -100,7 +101,7 @@ export default function DetailProduct() {
         <View style={{ flex: 1, backgroundColor: '#ffffff', padding: 15 }}>
             <View style={{ flexDirection: 'row' }}>
                 <View style={{ paddingHorizontal: 20, paddingVertical: 10 }}>
-                    <Ionicons name="cube-outline" size={100} color="#08859b" />
+                    <Ionicons name="cube-outline" size={100} color={BrandColors.primary} />
                 </View>
                 <View style={{ justifyContent: 'center', gap: 10, flex: 1 }}>
                     <Text style={{ fontSize: 19, fontWeight: 'bold' }}>
@@ -132,7 +133,7 @@ export default function DetailProduct() {
                         <>
                             {presentations.map((presentation) => (
                                 <View style={{ flexDirection: 'row' }} key={presentation.id}>
-                                    <Ionicons name="file-tray-outline" size={20} color="#08859b" />
+                                    <Ionicons name="file-tray-outline" size={20} color={BrandColors.primary} />
                                     <Text style={{ marginLeft: 10, fontWeight: '800' }}>{presentation.name}</Text>
                                     <Text style={{ color: 'teal', fontWeight: 'normal' }}>  ({presentation.unit_quantity} unid)</Text>
                                     <Text style={{ marginLeft: 'auto', fontWeight: '800' }}>S/ {(presentation.sale_price).toFixed(2)}</Text>
@@ -158,7 +159,7 @@ export default function DetailProduct() {
                         </Text>
                     </TouchableOpacity>
                     <TouchableOpacity style={{
-                        padding: 16, borderRadius: 8, alignItems: "center", backgroundColor: '#08859b',
+                        padding: 16, borderRadius: 8, alignItems: "center", backgroundColor: BrandColors.primary,
                     }}
                         onPress={() => handleEdit()}
                     >

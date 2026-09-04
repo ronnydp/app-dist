@@ -1,9 +1,10 @@
+import { BrandColors } from '@/constants/theme';
+import * as attendanceService from '@/services/attendance';
+import { AttendanceRecord } from '@/types';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import * as attendanceService from '@/services/attendance';
-import { AttendanceRecord } from '@/types';
 
 type AttendanceParams = {
   id?: string;
@@ -336,7 +337,7 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: '#dbeafe',
+    backgroundColor: BrandColors.surface,
     alignItems: 'center',
     justifyContent: 'center',
   },
