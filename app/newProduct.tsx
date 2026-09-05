@@ -1,5 +1,6 @@
 import { BrandColors } from '@/constants/theme';
 import { useToast } from '@/contexts/ToastsContext';
+import { isValidPrice } from '@/lib/utils/money';
 import { router, useLocalSearchParams, useNavigation } from 'expo-router';
 import { useEffect, useLayoutEffect, useState } from 'react';
 import {
@@ -99,8 +100,13 @@ export default function NewProductScreen() {
             showToast('El precio es obligatorio', 'error');
             return;
         }
-        if (isNaN(parseFloat(price))) {
+        const parsedPrice = parseFloat(price);
+        if (isNaN(parsedPrice)) {
             showToast('El precio debe ser un número válido', 'error');
+            return;
+        }
+        if (!isValidPrice(parsedPrice)) {
+            showToast('El precio debe ser mayor a 0', 'error');
             return;
         }
 
@@ -111,12 +117,18 @@ export default function NewProductScreen() {
                 showToast(`La presentación ${i + 1} necesita un nombre`, 'error');
                 return;
             }
-            if (!p.unit_quantity.trim() || isNaN(parseInt(p.unit_quantity))) {
-                showToast(`La presentación "${p.name}" necesita una cantidad válida`, 'error');
+            const parsedQuantity = parseInt(p.unit_quantity);
+            if (!p.unit_quantity.trim() || isNaN(parsedQuantity) || parsedQuantity <= 0) {
+                showToast(`La presentación "${p.name}" necesita una cantidad válida (mayor a 0)`, 'error');
                 return;
             }
-            if (!p.sale_price.trim() || isNaN(parseFloat(p.sale_price))) {
+            const parsedSalePrice = parseFloat(p.sale_price);
+            if (!p.sale_price.trim() || isNaN(parsedSalePrice)) {
                 showToast(`La presentación "${p.name}" necesita un precio válido`, 'error');
+                return;
+            }
+            if (!isValidPrice(parsedSalePrice)) {
+                showToast(`La presentación "${p.name}" necesita un precio mayor a 0`, 'error');
                 return;
             }
         }

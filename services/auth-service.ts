@@ -100,8 +100,9 @@ export const authService = {
                 return mappedSession;
             }
 
-            const sessionData = await AsyncStorage.getItem(AUTH_SESSION_KEY);
-            return sessionData ? JSON.parse(sessionData) : null;
+            // const sessionData = await AsyncStorage.getItem(AUTH_SESSION_KEY);
+            // return sessionData ? JSON.parse(sessionData) : null;
+            return null
         } catch (error) {
             console.error("Error al recuperar la sesión:", error);
             return null;
