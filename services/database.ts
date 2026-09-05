@@ -531,12 +531,16 @@ export const getOrders = async (params: GetOrdersParams = {}) => {
 export const createOrder = async (order: NewOrder): Promise<Order> => {
   try {
     // 1. Crear el pedido
+    const today = new Date();
+    const dateStr = formatLocalDate(today);
+    
     const { data: newOrder, error: orderError } = await supabase
       .from("orders")
       .insert({
         customer_id: order.customer_id,
         seller_id: order.seller_id,
         total: order.total,
+        date: dateStr,
         note: order.note,
       })
       .select()
@@ -665,19 +669,29 @@ export const getAllSellersWeeklySales = async (): Promise<
 
   const { data, error } = await supabase
     .from("orders")
-    .select("total, date, seller_id, users!seller_id (name)")
+    .select("id, total, date, seller_id, seller:users!seller_id(id, name)")
     .gte("date", startStr)
     .lte("date", endStr);
 
-  if (error) throw error;
+  if (error) {
+    console.error("Error fetching orders for sellers weekly sales:", error);
+    throw error;
+  }
 
   const orders = data || [];
+  
+  if (orders.length === 0) {
+    console.log("No orders found for the week", { startStr, endStr });
+    return [];
+  }
 
   // Agrupar por vendedor
   const sellerMap = new Map<string, { name: string; orders: typeof orders }>();
   for (const order of orders) {
     const id = order.seller_id;
-    const name = (order as any).users?.name || "Sin nombre";
+    const sellerData = (order as any).seller;
+    const name = sellerData?.name || `Vendedor ${id.substring(0, 8)}`;
+    
     if (!sellerMap.has(id)) {
       sellerMap.set(id, { name, orders: [] });
     }
@@ -716,6 +730,9 @@ export const getAllSellersWeeklySales = async (): Promise<
 
   // Ordenar por total descendente
   result.sort((a, b) => b.total - a.total);
+  
+  console.log("Sellers weekly sales loaded:", result.length, result);
+  
   return result;
 };
 

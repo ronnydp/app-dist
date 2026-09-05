@@ -166,6 +166,7 @@ function AdminCollapsibleSection({
 export default function SummaryScreen() {
   const { role } = useAuth();
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [mySales, setMySales] = useState<WeeklySales | null>(null);
   const [allSellers, setAllSellers] = useState<SellerWeeklySales[]>([]);
 
@@ -174,6 +175,7 @@ export default function SummaryScreen() {
 
   const loadData = useCallback(async () => {
     setLoading(true);
+    setError(null);
     try {
       if (role === "admin") {
         const data = await getAllSellersWeeklySales();
@@ -183,10 +185,14 @@ export default function SummaryScreen() {
         if (session?.user?.id) {
           const data = await getWeeklySalesTotal(session.user.id);
           setMySales(data);
+        } else {
+          setError("No hay sesión activa");
         }
       }
     } catch (e) {
+      const errorMsg = e instanceof Error ? e.message : "Error desconocido";
       console.error("Error cargando resumen semanal:", e);
+      setError(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -237,6 +243,18 @@ export default function SummaryScreen() {
       <View style={styles.container}>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={BrandColors.primary} />
+        </View>
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.errorContainer}>
+          <Ionicons name="alert-circle-outline" size={48} color="#dc2626" />
+          <Text style={styles.errorText}>Error al cargar los datos</Text>
+          <Text style={styles.errorSubtext}>{error}</Text>
         </View>
       </View>
     );
@@ -661,6 +679,25 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 15,
     color: "#9ca3af",
+    fontWeight: "500",
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    gap: 12,
+  },
+  errorText: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#dc2626",
+    textAlign: "center",
+  },
+  errorSubtext: {
+    fontSize: 13,
+    color: "#6b7280",
+    textAlign: "center",
     fontWeight: "500",
   },
 }); 

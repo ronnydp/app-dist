@@ -1,6 +1,7 @@
 import { BrandColors } from "@/constants/theme";
 import { useToast } from "@/contexts/ToastsContext";
 import { authService } from "@/services/auth-service";
+import { roundMoney, isValidAmount } from "@/lib/utils/money";
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import { RefObject, useEffect, useRef, useState } from "react";
@@ -426,10 +427,11 @@ export default function NewOrderScreen() {
   };
 
   const calculateTotal = () => {
-    return orderItems.reduce(
+    const total = orderItems.reduce(
       (sum, item) => sum + item.amount * item.unitPrice,
       0,
     );
+    return roundMoney(total);
   };
 
   const handleSubmit = async () => {
@@ -443,6 +445,11 @@ export default function NewOrderScreen() {
       return;
     }
     const total = calculateTotal();
+    
+    if (!isValidAmount(total)) {
+      showToast("El total del pedido debe ser mayor a 0", "error");
+      return;
+    }
 
     setLoading(true);
     try {
@@ -455,13 +462,13 @@ export default function NewOrderScreen() {
       await createOrder({
         customer_id: selectedCustomer.id,
         seller_id: session.user.id, // Asumiendo que el ID del vendedor está en sessionStorage
-        total,
+        total: roundMoney(total),
         note: note.trim() || undefined,
         products: orderItems.map((item) => ({
           product_id: item.product.id,
           amount: item.amount,
           unit_price: item.unitPrice,
-          sub_total: item.amount * item.unitPrice,
+          sub_total: roundMoney(item.amount * item.unitPrice),
           presentation_name: item.presentationName,
         })),
       });
