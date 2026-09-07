@@ -177,7 +177,7 @@ export default function SummaryScreen() {
     setLoading(true);
     setError(null);
     try {
-      if (role === "admin") {
+      if (role === "admin" || role === "supervisor") {
         const data = await getAllSellersWeeklySales();
         setAllSellers(data);
       } else {
@@ -261,7 +261,7 @@ export default function SummaryScreen() {
   }
 
   // Vista vendedor
-  if (role !== "admin") {
+  if (role === 'vendedor') {
     return (
       <View style={styles.container}>
         <ScrollView contentContainerStyle={styles.content}>

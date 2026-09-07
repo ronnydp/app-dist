@@ -64,7 +64,7 @@ export const getCustomersPaginated = async (
 
   let query = supabase.from("customers").select("*", { count: "exact" });
 
-  if (role !== "admin") {
+  if (role !== "admin" && role !== "supervisor") {
     query = query.eq("is_active", true);
   }
 
@@ -272,7 +272,7 @@ export const getProductsPaginated = async (
     .from("products")
     .select("*, presentations(*)", { count: "exact" });
 
-  if (role !== "admin") {
+  if (role !== "admin" && role !== 'supervisor') {
     query = query.eq("is_active", true);
   }
 
@@ -681,7 +681,6 @@ export const getAllSellersWeeklySales = async (): Promise<
   const orders = data || [];
   
   if (orders.length === 0) {
-    console.log("No orders found for the week", { startStr, endStr });
     return [];
   }
 

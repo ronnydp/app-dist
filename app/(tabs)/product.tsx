@@ -123,8 +123,8 @@ export default function ProductScreen() {
         <ProductCard
             item={item}
             onOpen={openProduct}
-            onEdit={role === 'admin' ? handleEdit : undefined}
-            onToggleActive={role === 'admin' ? handleToggleActive : undefined}
+            onEdit={role === 'admin' || role === 'supervisor' ? handleEdit : undefined}
+            onToggleActive={role === 'admin' || role === 'supervisor' ? handleToggleActive : undefined}
         />
     ), [role, handleEdit, handleToggleActive]);
 

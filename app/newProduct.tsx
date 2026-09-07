@@ -192,7 +192,7 @@ export default function NewProductScreen() {
                             style={[styles.input, focusedField === 'name' && styles.inputFocused]}
                             value={name}
                             onChangeText={setName}
-                            placeholder="Ej: Producto A"
+                            placeholder="Ej: Producto ABCD 430gr"
                             placeholderTextColor="#9ca3af"
                             onFocus={() => setFocusedField('name')}
                             onBlur={() => setFocusedField(null)}
@@ -205,7 +205,7 @@ export default function NewProductScreen() {
                             style={[styles.input, focusedField === 'price' && styles.inputFocused]}
                             value={price}
                             onChangeText={setPrice}
-                            placeholder="Ej: 99.99"
+                            placeholder="Ej: 99.9"
                             keyboardType="decimal-pad"
                             placeholderTextColor="#9ca3af"
                             onFocus={() => setFocusedField('price')}
@@ -242,7 +242,7 @@ export default function NewProductScreen() {
                                     style={[styles.input, focusedField === `presentation-${index}-name` && styles.inputFocused]}
                                     value={p.name}
                                     onChangeText={(v) => updatePresentation(index, 'name', v)}
-                                    placeholder="Ej: Caja x12"
+                                    placeholder="Ej: Caja, Bolsa, Paquete, Saco"
                                     placeholderTextColor="#9ca3af"
                                     onFocus={() => setFocusedField(`presentation-${index}-name`)}
                                     onBlur={() => setFocusedField(null)}

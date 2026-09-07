@@ -28,7 +28,7 @@ export default function OrderScreen() {
     const {showToast} = useToast();
 
     useEffect(() => {
-        if (role === 'admin') {
+        if (role === 'admin'  || role === 'supervisor' ) {
             setOrdersVisibility('all');
             return;
         }
@@ -188,7 +188,7 @@ export default function OrderScreen() {
                             Mis pedidos
                         </Text>
                     </TouchableOpacity>
-                    {role === 'admin' && (
+                    {(role === 'admin' || role === 'supervisor' ) && (
                         <TouchableOpacity
                             style={[
                                 styles.scopeButton,

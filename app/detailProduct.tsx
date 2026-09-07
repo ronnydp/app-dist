@@ -143,7 +143,7 @@ export default function DetailProduct() {
                     )}
                 </View>
             </View>
-            {role === 'admin' && (
+            {(role === 'admin' || role === 'supervisor' ) && (
                 <View style={{
                     flexDirection: "row", justifyContent: 'flex-end', margin: 'auto', gap: 10
                 }}>

@@ -163,11 +163,11 @@ export default function DetailCustomer() {
                     </View>
                 </View>
             </View>
-            {(role === 'admin' || role === 'vendedor') && (
+            {(role === 'admin' || role === 'vendedor' || role === 'supervisor') && (
                 <View style={{
                     flexDirection: "row", justifyContent: 'flex-end', margin: 'auto', gap: 10, marginTop: 'auto'
                 }}>
-                    {role === 'admin' && (
+                    {(role === 'admin' || 'supervisor') &&(
                         <TouchableOpacity style={{
                             padding: 16, borderRadius: 8, alignItems: "center", backgroundColor: '#fff', borderColor: getStatusColorButton(is_active), borderWidth: 1
                         }}

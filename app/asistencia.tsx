@@ -328,7 +328,7 @@ export default function AttendanceScreen() {
     await Linking.openURL(targetMapUrl);
   };
 
-  if (role === 'admin') {
+  if (role === 'admin' || role === 'supervisor' ) {
     return <AttendanceAdminScreen />;
   }
 
