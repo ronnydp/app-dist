@@ -3,10 +3,11 @@ import { useToast } from "@/contexts/ToastsContext";
 import { isValidAmount, roundMoney } from "@/lib/utils/money";
 import { authService } from "@/services/auth-service";
 import { Ionicons } from "@expo/vector-icons";
-import { router, useLocalSearchParams } from "expo-router";
+import { router, useLocalSearchParams, useNavigation } from "expo-router";
 import { RefObject, useEffect, useRef, useState } from "react";
 import {
     ActivityIndicator,
+  Alert,
     FlatList,
     KeyboardAvoidingView,
     Modal,
@@ -34,6 +35,7 @@ const PRODUCT_SEARCH_PAGE_SIZE = 30;
 
 export default function NewOrderScreen() {
   const insets = useSafeAreaInsets();
+  const navigation = useNavigation();
   const params = useLocalSearchParams<{
     customerId?: string;
     customerName?: string;
@@ -110,6 +112,61 @@ export default function NewOrderScreen() {
   >([]);
   const { showToast } = useToast();
   const [focusedField, setFocusedField] = useState<string | null>(null);
+  const isConfirmingExitRef = useRef(false);
+
+  const hasOrderSelection =
+    Boolean(selectedCustomer) ||
+    orderItems.length > 0 ||
+    currentDraftItem.length > 0 ||
+    Boolean(selectedProduct);
+
+  const handleExit = () => {
+    if (!hasOrderSelection) {
+      router.back();
+      return;
+    }
+
+    Alert.alert(
+      "Salir del pedido",
+      "Si sales ahora, el pedido se perderá.",
+      [
+        { text: "Continuar editando", style: "cancel" },
+        {
+          text: "Salir",
+          style: "destructive",
+          onPress: () => {
+            isConfirmingExitRef.current = true;
+            router.back();
+          },
+        },
+      ],
+    );
+  };
+
+  useEffect(() => {
+    const unsubscribe = navigation.addListener("beforeRemove", (event) => {
+      if (!hasOrderSelection || loading || isConfirmingExitRef.current) return;
+
+      event.preventDefault();
+      Alert.alert(
+        "Salir del pedido",
+        "Si sales ahora, el pedido se perderá.",
+        [
+          { text: "Continuar editando", style: "cancel" },
+          {
+            text: "Salir",
+            style: "destructive",
+            onPress: () => {
+              isConfirmingExitRef.current = true;
+              navigation.dispatch(event.data.action);
+            },
+          },
+        ],
+      );
+    });
+
+    return unsubscribe;
+  }, [hasOrderSelection, loading, navigation]);
   
   // Buscar clientes desde Supabase con debounce
   useEffect(() => {
@@ -569,7 +626,7 @@ export default function NewOrderScreen() {
               style={styles.emptyState}
               onPress={() => setShowProductModal(true)}
             >
-              <Ionicons name="cube-outline" size={40} color="#d1d5db" />
+              <Ionicons name="cube-outline" size={40} color= {BrandColors.primary} />
               <Text style={styles.emptyStateTitle}>Sin productos</Text>
               <Text style={styles.emptyStateSubtitle}>
                 Toca aquí para agregar productos al pedido
@@ -698,7 +755,7 @@ export default function NewOrderScreen() {
         <View style={styles.actions}>
           <TouchableOpacity
             style={[styles.button, styles.cancelButton]}
-            onPress={() => router.back()}
+            onPress={handleExit}
             disabled={loading}
           >
             <Text style={styles.cancelButtonText}>Cancelar</Text>
@@ -1174,7 +1231,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#374151",
+    color: "#000000",
   },
   errorText: {
     textAlign: "center",
@@ -1290,11 +1347,11 @@ const styles = StyleSheet.create({
   emptyStateTitle: {
     fontSize: 15,
     fontWeight: "600",
-    color: "#9ca3af",
+    color: "#000000",
   },
   emptyStateSubtitle: {
     fontSize: 13,
-    color: "#d1d5db",
+    color: "#8a8c8d",
   },
   productList: {
     gap: 10,

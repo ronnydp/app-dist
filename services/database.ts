@@ -728,10 +728,7 @@ export const getAllSellersWeeklySales = async (): Promise<
   }
 
   // Ordenar por total descendente
-  result.sort((a, b) => b.total - a.total);
-  
-  console.log("Sellers weekly sales loaded:", result.length, result);
-  
+  result.sort((a, b) => b.total - a.total);  
   return result;
 };
 
