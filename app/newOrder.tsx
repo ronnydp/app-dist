@@ -4,10 +4,10 @@ import { isValidAmount, roundMoney } from "@/lib/utils/money";
 import { authService } from "@/services/auth-service";
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams, useNavigation } from "expo-router";
-import { RefObject, useEffect, useRef, useState } from "react";
+import { RefObject, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
     ActivityIndicator,
-  Alert,
+    Alert,
     FlatList,
     KeyboardAvoidingView,
     Modal,
@@ -27,8 +27,9 @@ import {
     getPresentationsByProduct,
     getProductsPaginated,
     searchCustomers,
+    updateOrder,
 } from "../services/database";
-import { Customer, Presentation, Product } from "../types";
+import { Customer, OrderWithDetails, Presentation, Product } from "../types";
 
 const CUSTOMER_SEARCH_PAGE_SIZE = 50;
 const PRODUCT_SEARCH_PAGE_SIZE = 30;
@@ -45,7 +46,21 @@ export default function NewOrderScreen() {
     customerPhone?: string;
     customerCodCustomer?: string;
     customerIsActive?: string;
+    orderId?: string;
+    orderData?: string;
   }>();
+
+  const isEditing = Boolean(params.orderId);
+
+  const initialOrder = useMemo<OrderWithDetails | null>(() => {
+    if (!params.orderData) return null;
+    try {
+      return JSON.parse(params.orderData) as OrderWithDetails;
+    } catch {
+      return null;
+    }
+  }, [params.orderData]);
+
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [searchingCustomers, setSearchingCustomers] = useState(false);
   const [loadingMoreCustomers, setLoadingMoreCustomers] = useState(false);
@@ -55,22 +70,37 @@ export default function NewOrderScreen() {
   const [loadingMoreProducts, setLoadingMoreProducts] = useState(false);
   const [hasMoreProducts, setHasMoreProducts] = useState(false);
   const productPageRef = useRef(0);
-  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(
-    params.customerId
-      ? {
-          id: params.customerId,
-          name: params.customerName || "",
-          ruc: params.customerRuc || undefined,
-          address: params.customerAddress || "",
-          district: params.customerDistrict || "",
-          phone: params.customerPhone || undefined,
-          cod_customer: Number(params.customerCodCustomer) || 0,
-          is_active: params.customerIsActive === "true",
-          created_at: "",
-          updated_at: "",
-        }
-      : null,
-  );
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(() => {
+    if (initialOrder) {
+      return {
+        id: initialOrder.customer_id,
+        name: initialOrder.customer_name,
+        address: initialOrder.customer_address,
+        district: initialOrder.customer_district,
+        phone: initialOrder.customer_phone,
+        cod_customer: initialOrder.customer_cod,
+        is_active: true,
+        created_at: initialOrder.created_at || "",
+        updated_at: "",
+      };
+    }
+    if (params.customerId) {
+      return {
+        id: params.customerId,
+        name: params.customerName || "",
+        ruc: params.customerRuc || undefined,
+        address: params.customerAddress || "",
+        district: params.customerDistrict || "",
+        phone: params.customerPhone || undefined,
+        cod_customer: Number(params.customerCodCustomer) || 0,
+        is_active: params.customerIsActive === "true",
+        created_at: "",
+        updated_at: "",
+      };
+    }
+    return null;
+  });
+
   const [orderItems, setOrderItems] = useState<
     Array<{
       product: Product;
@@ -78,14 +108,38 @@ export default function NewOrderScreen() {
       unitPrice: number;
       presentationName?: string;
     }>
-  >([]);
-  const [note, setNote] = useState("");
+  >(() => {
+    if (initialOrder?.products) {
+      return initialOrder.products.map((p) => ({
+        product: {
+          id: p.product_id,
+          name: p.product_name,
+          price: p.unit_price,
+          is_active: true,
+          created_at: "",
+        },
+        amount: p.amount,
+        unitPrice: p.unit_price,
+        presentationName: p.presentation_name || undefined,
+      }));
+    }
+    return [];
+  });
+
+  const [quantityInputs, setQuantityInputs] = useState<Record<string, string>>(() => {
+    if (initialOrder?.products) {
+      return initialOrder.products.reduce<Record<string, string>>((acc, p) => {
+        acc[p.product_id] = String(p.amount);
+        return acc;
+      }, {});
+    }
+    return {};
+  });
+
+  const [note, setNote] = useState(() => initialOrder?.note || "");
   const [loading, setLoading] = useState(false);
   const [showCustomerModal, setShowCustomerModal] = useState(false); // Estado para controlar la visibilidad del modal de clientes
   const [showProductModal, setShowProductModal] = useState(false); // Estado para controlar la visibilidad del modal de productos
-  const [quantityInputs, setQuantityInputs] = useState<Record<string, string>>(
-    {},
-  );
   const [searchCustomer, setSearchCustomer] = useState("");
   const [searchProduct, setSearchProduct] = useState("");
   const debouncedProductSearch = useDebouncedValue(searchProduct.trim(), 300);
@@ -114,6 +168,12 @@ export default function NewOrderScreen() {
   const [focusedField, setFocusedField] = useState<string | null>(null);
   const isConfirmingExitRef = useRef(false);
 
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      title: isEditing ? "Editar Pedido" : "Nuevo Pedido",
+    });
+  }, [isEditing, navigation]);
+
   const hasOrderSelection =
     Boolean(selectedCustomer) ||
     orderItems.length > 0 ||
@@ -127,8 +187,10 @@ export default function NewOrderScreen() {
     }
 
     Alert.alert(
-      "Salir del pedido",
-      "Si sales ahora, el pedido se perderá.",
+      isEditing ? "Descartar cambios" : "Salir del pedido",
+      isEditing
+        ? "Si sales ahora, los cambios no guardados se perderán."
+        : "Si sales ahora, el pedido se perderá.",
       [
         { text: "Continuar editando", style: "cancel" },
         {
@@ -149,8 +211,10 @@ export default function NewOrderScreen() {
 
       event.preventDefault();
       Alert.alert(
-        "Salir del pedido",
-        "Si sales ahora, el pedido se perderá.",
+        isEditing ? "Descartar cambios" : "Salir del pedido",
+        isEditing
+          ? "Si sales ahora, los cambios no guardados se perderán."
+          : "Si sales ahora, el pedido se perderá.",
         [
           { text: "Continuar editando", style: "cancel" },
           {
@@ -166,7 +230,7 @@ export default function NewOrderScreen() {
     });
 
     return unsubscribe;
-  }, [hasOrderSelection, loading, navigation]);
+  }, [hasOrderSelection, isEditing, loading, navigation]);
   
   // Buscar clientes desde Supabase con debounce
   useEffect(() => {
@@ -484,14 +548,18 @@ export default function NewOrderScreen() {
   };
 
   const calculateTotal = () => {
-    const total = orderItems.reduce(
-      (sum, item) => sum + item.amount * item.unitPrice,
-      0,
-    );
+    const total = orderItems.reduce((sum, item) => {
+      const inputVal = quantityInputs[item.product.id];
+      const parsed = parseInt(inputVal ?? "", 10);
+      const amount = !isNaN(parsed) && parsed > 0 ? parsed : item.amount;
+      return sum + amount * item.unitPrice;
+    }, 0);
     return roundMoney(total);
   };
 
   const handleSubmit = async () => {
+    if (loading) return;
+
     if (!selectedCustomer) {
       showToast("Debe seleccionar un cliente", "error");
       return;
@@ -501,9 +569,24 @@ export default function NewOrderScreen() {
       showToast("Debe agregar al menos un producto", "error");
       return;
     }
-    const total = calculateTotal();
-    
-    if (!isValidAmount(total)) {
+
+    // Asegurar cantidades actualizadas
+    const itemsToSave = orderItems.map((item) => {
+      const inputVal = quantityInputs[item.product.id];
+      const parsed = parseInt(inputVal ?? "", 10);
+      const finalAmount = !isNaN(parsed) && parsed > 0 ? parsed : item.amount;
+      return {
+        ...item,
+        amount: finalAmount > 0 ? finalAmount : 1,
+      };
+    });
+
+    const total = itemsToSave.reduce(
+      (sum, item) => sum + item.amount * item.unitPrice,
+      0,
+    );
+
+    if (!isValidAmount(total) || total <= 0) {
       showToast("El total del pedido debe ser mayor a 0", "error");
       return;
     }
@@ -516,23 +599,59 @@ export default function NewOrderScreen() {
         setLoading(false);
         return;
       }
-      await createOrder({
-        customer_id: selectedCustomer.id,
-        seller_id: session.user.id, // Asumiendo que el ID del vendedor está en sessionStorage
-        total: roundMoney(total),
-        note: note.trim() || undefined,
-        products: orderItems.map((item) => ({
-          product_id: item.product.id,
-          amount: item.amount,
-          unit_price: item.unitPrice,
-          sub_total: roundMoney(item.amount * item.unitPrice),
-          presentation_name: item.presentationName,
-        })),
-      });
-      showToast("Pedido agregado", "success");
-      router.replace("/order");
-    } catch (error) {
-      showToast("No se pudo guardar el pedido", "error");
+
+      const currentUserId = session.user.id;
+
+      if (isEditing && params.orderId) {
+        if (initialOrder && initialOrder.seller_id !== currentUserId) {
+          showToast("Solo el vendedor que creó el pedido puede editarlo", "error");
+          setLoading(false);
+          return;
+        }
+        if (initialOrder?.status === "in_system") {
+          showToast("El pedido ya fue enviado y no se puede editar", "error");
+          setLoading(false);
+          return;
+        }
+
+        await updateOrder({
+          id: params.orderId,
+          customer_id: selectedCustomer.id,
+          seller_id: currentUserId,
+          total: roundMoney(total),
+          note: note.trim() || undefined,
+          products: itemsToSave.map((item) => ({
+            product_id: item.product.id,
+            amount: item.amount,
+            unit_price: item.unitPrice,
+            sub_total: roundMoney(item.amount * item.unitPrice),
+            presentation_name: item.presentationName,
+          })),
+        });
+
+        showToast("Pedido actualizado correctamente", "success");
+      } else {
+        await createOrder({
+          customer_id: selectedCustomer.id,
+          seller_id: currentUserId,
+          total: roundMoney(total),
+          note: note.trim() || undefined,
+          products: itemsToSave.map((item) => ({
+            product_id: item.product.id,
+            amount: item.amount,
+            unit_price: item.unitPrice,
+            sub_total: roundMoney(item.amount * item.unitPrice),
+            presentation_name: item.presentationName,
+          })),
+        });
+
+        showToast("Pedido agregado", "success");
+      }
+
+      isConfirmingExitRef.current = true;
+      router.replace("/(tabs)/order");
+    } catch (error: any) {
+      showToast(error?.message || (isEditing ? "No se pudo actualizar el pedido" : "No se pudo guardar el pedido"), "error");
       console.error(error);
     } finally {
       setLoading(false);
@@ -773,7 +892,11 @@ export default function NewOrderScreen() {
             <Text style={styles.submitButtonText}>
               {loading ? (
                 <ActivityIndicator color="#fff" size="small" />
-              ) : "Guardar Pedido"}
+              ) : isEditing ? (
+                "Guardar Cambios"
+              ) : (
+                "Guardar Pedido"
+              )}
             </Text>
           </TouchableOpacity>
         </View>

@@ -55,6 +55,7 @@ function RootNavigator() {
     "/newProduct",
     "/newCustomer",
     "/newOrder",
+    "/detailOrder",
     "/attendanceAdmin",
     "/detailAttendance",
     "/editProfile",
@@ -139,6 +140,17 @@ function RootNavigator() {
               title: "Nuevo Pedido",
               headerStyle: { backgroundColor: "#fff" },
               headerTitleStyle: { fontWeight: "bold", fontSize: 20 },
+              headerTitleAlign: "center",
+            }}
+          />
+          <Stack.Screen
+            name="detailOrder"
+            options={{
+              presentation: "modal",
+              title: "Detalle del pedido",
+              headerStyle: { backgroundColor: BrandColors.primary },
+              headerTintColor: "#fff",
+              headerTitleStyle: { fontWeight: "bold", fontSize: 18 },
               headerTitleAlign: "center",
             }}
           />

@@ -54,7 +54,7 @@ export default StyleSheet.create({
   },
   headerRight: {
     flexDirection: 'row',
-    alignItems: 'center',
+    justifyContent: 'flex-end',
     flexShrink: 0,
     marginLeft: 8,
   },

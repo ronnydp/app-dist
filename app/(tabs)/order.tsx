@@ -11,7 +11,7 @@ import FloatingActionButton from '../../components/floating-action-button';
 import OrderCard from '../../components/OrderCard';
 import { useDebouncedValue } from '../../hooks/use-debounced-value';
 import { normalizeString } from '../../lib/utils/string';
-import { getOrders } from '../../services/database';
+import { getOrders, sendOrderToSystem } from '../../services/database';
 import { OrderWithDetails } from '../../types';
 
 type OrdersVisibility = 'mine' | 'all';
@@ -136,6 +136,22 @@ export default function OrderScreen() {
     const renderOrder = ({ item }: { item: OrderWithDetails }) => (
         <OrderCard
             item={item}
+            onStatusChange={role === 'admin' && item.status !== 'in_system' ? async () => {
+                try {
+                    if (!session?.user?.id) return;
+                    await sendOrderToSystem(item.id, session.user.id);
+                    setOrders((current) => current.map((order) =>
+                        order.id === item.id ? { ...order, status: 'in_system' } : order
+                    ));
+                    showToast('Pedido enviado al sistema', 'success');
+                } catch (error: any) {
+                    showToast(error?.message || 'No se pudo enviar el pedido al sistema', 'error');
+                }
+            } : undefined}
+            onPress={() => router.push({
+                pathname: '/detailOrder',
+                params: { order: JSON.stringify(item) },
+            })}
         />
     );
 
