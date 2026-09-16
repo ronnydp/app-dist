@@ -1,4 +1,5 @@
 import { BrandColors } from '@/constants/theme';
+import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastsContext';
 import { isValidPrice } from '@/lib/utils/money';
 import { router, useLocalSearchParams, useNavigation } from 'expo-router';
@@ -18,6 +19,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getPresentationsByProduct, getProducts, savePresentations, saveProduct } from '../services/database';
 
 export default function NewProductScreen() {
+    const { role } = useAuth();
     const insets = useSafeAreaInsets();
     const params = useLocalSearchParams<{
         id?: string;
@@ -34,6 +36,12 @@ export default function NewProductScreen() {
     const [loading, setLoading] = useState(false);
     const {showToast} = useToast();
     const [focusedField, setFocusedField] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (role && role !== 'admin' && role !== 'supervisor') {
+            router.back();
+        }
+    }, [role]);
 
     // Presentaciones
     type PresentationForm = {
@@ -91,6 +99,11 @@ export default function NewProductScreen() {
     };
 
     const handleSubmit = async () => {
+        if (role !== 'admin' && role !== 'supervisor') {
+            showToast('Solo admin y supervisor pueden gestionar productos', 'error');
+            return;
+        }
+
         // Validaciones del producto
         if (!name.trim()) {
             showToast('El nombre es obligatorio', 'error');

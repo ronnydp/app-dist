@@ -7,7 +7,6 @@ import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import { Platform, SectionList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import AppSearchBar from '../../components/app-search-bar';
-import FloatingActionButton from '../../components/floating-action-button';
 import OrderCard from '../../components/OrderCard';
 import { useDebouncedValue } from '../../hooks/use-debounced-value';
 import { normalizeString } from '../../lib/utils/string';
@@ -192,7 +191,6 @@ export default function OrderScreen() {
                 }
                 contentContainerStyle={sections.length === 0 ? styles.emptyContainer : styles.listContent}
             />
-            <FloatingActionButton onPress={() => router.push('/newOrder')} />
         </View>
     );
 }

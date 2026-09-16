@@ -8,7 +8,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useLocalSearchParams } from "expo-router/build/hooks";
 import { useCallback, useState } from "react";
-import { Text, TouchableOpacity, View } from "react-native";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 export default function DetailProduct() {
     const { role } = useAuth();
@@ -143,31 +143,24 @@ export default function DetailProduct() {
                     )}
                 </View>
             </View>
-            {(role === 'admin' || role === 'supervisor' ) && (
-                <View style={{
-                    flexDirection: "row", justifyContent: 'flex-end', margin: 'auto', gap: 10
-                }}>
-                    <TouchableOpacity style={{
-                        padding: 16, borderRadius: 8, alignItems: "center", backgroundColor: '#fff', borderColor: getStatusColorButton(is_active), borderWidth: 1
-                    }}
-                        onPress={() => handleActiveDialog()}
+            {(role === 'admin' || role === 'supervisor') && (
+                <View style={styles.actionsBar}>
+                    <TouchableOpacity
+                        style={[styles.secondaryButton, { borderColor: getStatusColorButton(is_active) }]}
+                        onPress={handleActiveDialog}
                     >
-                        <Text style={{
-                            fontSize: 16, fontWeight: '600', color: getStatusColorButton(is_active),
-                        }}>
+                        <Ionicons
+                            name={is_active ? 'ban-outline' : 'checkmark-circle-outline'}
+                            size={17}
+                            color={getStatusColorButton(is_active)}
+                        />
+                        <Text style={[styles.secondaryButtonText, { color: getStatusColorButton(is_active) }]}>
                             {is_active ? 'Deshabilitar' : 'Habilitar'}
                         </Text>
                     </TouchableOpacity>
-                    <TouchableOpacity style={{
-                        padding: 16, borderRadius: 8, alignItems: "center", backgroundColor: BrandColors.primary,
-                    }}
-                        onPress={() => handleEdit()}
-                    >
-                        <Text style={{
-                            fontSize: 16, fontWeight: '600', color: '#fff', marginHorizontal: 10
-                        }}>
-                            Editar
-                        </Text>
+                    <TouchableOpacity style={styles.editButton} onPress={handleEdit}>
+                        <Ionicons name="create-outline" size={17} color="#fff" />
+                        <Text style={styles.editButtonText}>Editar</Text>
                     </TouchableOpacity>
                 </View>
             )}
@@ -185,3 +178,37 @@ export default function DetailProduct() {
 
     )
 }
+
+const styles = StyleSheet.create({
+    actionsBar: {
+        flexDirection: 'row',
+        gap: 10,
+        padding: 16,
+        marginTop: 'auto',
+        backgroundColor: '#fff',
+        borderTopWidth: 1,
+        borderTopColor: '#e5eaf0',
+    },
+    secondaryButton: {
+        flex: 1,
+        minHeight: 48,
+        borderRadius: 8,
+        borderWidth: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+        flexDirection: 'row',
+        gap: 7,
+    },
+    secondaryButtonText: { fontSize: 12, fontWeight: '800' },
+    editButton: {
+        flex: 1,
+        minHeight: 48,
+        borderRadius: 8,
+        backgroundColor: BrandColors.primary,
+        alignItems: 'center',
+        justifyContent: 'center',
+        flexDirection: 'row',
+        gap: 7,
+    },
+    editButtonText: { color: '#fff', fontSize: 12, fontWeight: '800' },
+});

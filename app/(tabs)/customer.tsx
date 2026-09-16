@@ -8,7 +8,6 @@ import { useCallback, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, FlatList, StyleSheet, Text, View } from 'react-native';
 import AppSearchBar from '../../components/app-search-bar';
 import CustomerCard from '../../components/CustomerCard';
-import FloatingActionButton from '../../components/floating-action-button';
 import { useDebouncedValue } from '../../hooks/use-debounced-value';
 import { getCustomersPaginated } from '../../services/database';
 import { Customer } from '../../types';
@@ -129,7 +128,6 @@ export default function CustomerScreen() {
         }
         contentContainerStyle={customers.length === 0 ? styles.emptyContainer : styles.listContent}
       />
-      <FloatingActionButton onPress={() => router.push('/newCustomer')} />
     </View>
   );
 }

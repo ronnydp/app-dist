@@ -6,7 +6,7 @@
 import { Platform } from 'react-native';
 
 export const BrandColors = {
-  primary: '#0b4e88',
+  primary: '#2570d1',
   surface: '#DBEAFF',
   light: '#EAF4FF',
   dark: '#001E46',
