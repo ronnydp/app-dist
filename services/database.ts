@@ -8,7 +8,9 @@ import {
     Presentation,
     Product,
     ProductWithPresentations,
+    OrderStatus,
     SellerWeeklySales,
+    UpdateOrder,
     User,
     WeeklySales,
 } from "../types";
@@ -480,7 +482,7 @@ export const getOrders = async (params: GetOrdersParams = {}) => {
         product_orders (*)
       `,
       )
-      .order("date", { ascending: false });
+      .order("created_at", { ascending: false });
 
     if (sellerId) {
       query = query.eq("seller_id", sellerId);
@@ -542,6 +544,7 @@ export const createOrder = async (order: NewOrder): Promise<Order> => {
         total: order.total,
         date: dateStr,
         note: order.note,
+        status: "pending",
       })
       .select()
       .single();
@@ -569,6 +572,144 @@ export const createOrder = async (order: NewOrder): Promise<Order> => {
     return newOrder;
   } catch (error) {
     console.error("Error al crear pedido:", error);
+    throw error;
+  }
+};
+
+/**
+ * Actualiza un pedido existente y sus productos (solo permitido para el vendedor que lo creó)
+ */
+export const updateOrder = async (order: UpdateOrder): Promise<void> => {
+  try {
+    // 1. Validar que el pedido existe y pertenece al vendedor
+    const { data: existingOrder, error: fetchError } = await supabase
+      .from("orders")
+      .select("id, seller_id, status")
+      .eq("id", order.id)
+      .maybeSingle();
+
+    if (fetchError) throw fetchError;
+    if (!existingOrder || existingOrder.seller_id !== order.seller_id) {
+      throw new Error("Solo el vendedor que creó el pedido puede editarlo");
+    }
+    if (existingOrder.status !== "pending") {
+      throw new Error("El pedido ya fue enviado y no se puede editar");
+    }
+
+    // 2. Actualizar el pedido principal
+    const { error: orderError } = await supabase
+      .from("orders")
+      .update({
+        customer_id: order.customer_id,
+        total: order.total,
+        note: order.note,
+      })
+      .eq("id", order.id)
+      .eq("seller_id", order.seller_id);
+
+    if (orderError) throw orderError;
+
+    // 3. Reemplazar los productos del pedido
+    const { error: deleteProductsError } = await supabase
+      .from("product_orders")
+      .delete()
+      .eq("order_id", order.id);
+
+    if (deleteProductsError) throw deleteProductsError;
+
+    const productsList = order.products || [];
+    if (productsList.length > 0) {
+      const productOrders = productsList.map((p) => ({
+        order_id: order.id,
+        product_id: p.product_id,
+        amount: p.amount,
+        unit_price: p.unit_price,
+        sub_total: p.sub_total,
+        presentation_name: p.presentation_name,
+      }));
+
+      const { error: insertProductsError } = await supabase
+        .from("product_orders")
+        .insert(productOrders);
+
+      if (insertProductsError) throw insertProductsError;
+    }
+  } catch (error) {
+    console.error("Error al actualizar pedido:", error);
+    throw error;
+  }
+};
+
+/** Marca un pedido como enviado al sistema (solo para administradores). */
+export const sendOrderToSystem = async (
+  orderId: string,
+  adminId: string,
+): Promise<void> => {
+  const { data: admin, error: adminError } = await supabase
+    .from("users")
+    .select("role")
+    .eq("id", adminId)
+    .maybeSingle();
+
+  if (adminError) throw adminError;
+  if (admin?.role !== "admin") {
+    throw new Error("Solo un administrador puede enviar el pedido al sistema");
+  }
+
+  const { data, error } = await supabase
+    .from("orders")
+    .update({ status: "in_system" satisfies OrderStatus })
+    .eq("id", orderId)
+    .eq("status", "pending")
+    .select("id")
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data) {
+    throw new Error("El pedido ya fue enviado al sistema o no existe");
+  }
+};
+
+/**
+ * Cancela (elimina) un pedido y sus productos
+ */
+export const cancelOrder = async (
+  orderId: string,
+  sellerId?: string,
+): Promise<void> => {
+  try {
+    // 1. Si se provee sellerId, validar propiedad
+    if (sellerId) {
+      const { data: existingOrder, error: fetchError } = await supabase
+        .from("orders")
+        .select("id, seller_id")
+        .eq("id", orderId)
+        .maybeSingle();
+
+      if (fetchError) throw fetchError;
+      if (!existingOrder || existingOrder.seller_id !== sellerId) {
+        throw new Error("Solo el vendedor que creó el pedido puede cancelarlo");
+      }
+    }
+
+    // 2. Eliminar productos asociados
+    const { error: deleteProductsError } = await supabase
+      .from("product_orders")
+      .delete()
+      .eq("order_id", orderId);
+
+    if (deleteProductsError) throw deleteProductsError;
+
+    // 3. Eliminar el pedido
+    let query = supabase.from("orders").delete().eq("id", orderId);
+    if (sellerId) {
+      query = query.eq("seller_id", sellerId);
+    }
+    const { error: deleteOrderError } = await query;
+
+    if (deleteOrderError) throw deleteOrderError;
+  } catch (error) {
+    console.error("Error al cancelar pedido:", error);
     throw error;
   }
 };

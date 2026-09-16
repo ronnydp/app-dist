@@ -39,6 +39,8 @@ export interface ProductWithPresentations extends Product {
 }
 
 // Tabla: orders
+export type OrderStatus = "pending" | "in_system";
+
 export interface Order {
   id: string; // uuid
   customer_id: string; // uuid referencia a customers
@@ -46,6 +48,7 @@ export interface Order {
   total: number; // numeric
   date: string; // timestamp
   note?: string;
+  status: OrderStatus;
   created_at: string; // timestamp
 }
 
@@ -78,6 +81,22 @@ export interface ProductOrderWithDetails extends ProductOrder {
 export interface NewOrder {
   customer_id: string;
   seller_id: string; // uuid referencia a users (vendedor)
+  total: number;
+  note?: string;
+  products: {
+    product_id: string;
+    amount: number;
+    unit_price: number;
+    sub_total: number;
+    presentation_name?: string;
+  }[];
+}
+
+// Tipo para actualizar un pedido existente
+export interface UpdateOrder {
+  id: string;
+  customer_id: string;
+  seller_id: string;
   total: number;
   note?: string;
   products: {
