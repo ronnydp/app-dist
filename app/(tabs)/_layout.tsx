@@ -1,10 +1,9 @@
 import { HapticTab } from '@/components/haptic-tab';
-import { Colors } from '@/constants/theme';
+import { BrandColors, Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { Ionicons } from '@expo/vector-icons';
-import { router, Tabs } from 'expo-router';
+import { Tabs } from 'expo-router';
 import React from 'react';
-import { TouchableOpacity } from 'react-native';
 
 export const unstable_settings = {
   initialRouteName: 'order',
@@ -13,28 +12,15 @@ export const unstable_settings = {
 export default function TabLayout() {
   type ScreenOptions = React.ComponentProps<typeof Tabs.Screen>['options'];
   const colorScheme = useColorScheme();
-  const getScreenOptions = (title: string, iconName: keyof typeof Ionicons.glyphMap, showMenuButton = true): ScreenOptions => ({
+  const getScreenOptions = (title: string, iconName: keyof typeof Ionicons.glyphMap): ScreenOptions => ({
     title,
     tabBarIcon: ({ color }: { color: string }) => (<Ionicons size={30} name={iconName} color={color} />),
-    // tabBarShowLabel: false,
-    headerStyle: { backgroundColor: '#fff' },
-    headerTitleStyle: { fontWeight: 'bold', fontSize: 20 },
-    headerTitleAlign: 'center',
+    headerLeft: () => <Ionicons name={iconName} size={22} color="#fff" style={{ marginLeft: 16, marginRight: 8 }} />,
+    headerStyle: { backgroundColor: BrandColors.primary },
+    headerTintColor: "#fff",
+    headerTitleStyle: { fontWeight: 'bold', fontSize: 20},
     headerShadowVisible: false,
-    headerRight: showMenuButton
-      ? () => (
-        <TouchableOpacity
-          style={{
-            width: 36,
-            height: 36,
-            borderRadius: 18,
-            justifyContent: 'center',
-            alignItems: 'center',
-            marginRight: 16,
-          }}
-          onPress={() => router.push('/menuOptions')}>
-        </TouchableOpacity>)
-      : undefined,
+    
   })
 
   return (
@@ -64,7 +50,7 @@ export default function TabLayout() {
       />
       <Tabs.Screen
         name="profile"
-        options={getScreenOptions('Perfil', 'person', false)}
+        options={getScreenOptions('Perfil', 'person')}
       />
     </Tabs>
   );

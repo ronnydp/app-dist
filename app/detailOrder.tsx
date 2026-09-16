@@ -122,7 +122,6 @@ export default function DetailOrderScreen() {
                 <View style={styles.dateRow}>
                     <Ionicons name="calendar-outline" size={18} color={BrandColors.primary} />
                     <Text style={styles.dateText}>{formatOrderDate(order.created_at || order.date)}</Text>
-                    <Text style={styles.orderTotal}>{formatMoney(order.total)}</Text>
                 </View>
 
                 <View style={styles.section}>
@@ -145,6 +144,11 @@ export default function DetailOrderScreen() {
                             </View>
                         </View>
                     ))}
+                </View>
+
+                <View style={styles.totalRow}>
+                    <Text style={styles.totalLabel}>Total del pedido</Text>
+                    <Text style={styles.orderTotal}>{formatMoney(order.total)}</Text>
                 </View>
 
                 {order.note ? (
@@ -218,8 +222,8 @@ function SummaryRow({ label, value, emphasized = false }: { label: string; value
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: 'white' },
-    content: { padding: 16, paddingBottom: 24 },
+    container: { flex: 1, backgroundColor: '#fff' },
+    content: { padding: 16, paddingBottom: 24, backgroundColor: '#fff' },
     orderHeader: {
         backgroundColor: BrandColors.primary,
         borderRadius: 14,
@@ -233,14 +237,16 @@ const styles = StyleSheet.create({
     orderLabel: { color: '#dbeafe', fontSize: 12, fontWeight: '600' },
     orderCode: { color: '#fff', fontSize: 18, fontWeight: '800', marginTop: 2 },
     orderTotal: { color: '#3d6491', fontSize: 18, fontWeight: '800', marginLeft: 'auto' },
-    customerSection: { backgroundColor: '#fff', borderRadius: 12, padding: 16},
+    customerSection: { backgroundColor: '#fff', borderRadius: 12, padding: 16 },
     sectionHeading: { flexDirection: 'row', alignItems: 'baseline', gap: 8, marginBottom: 12 },
     sectionTitle: { color: '#172b4d', fontSize: 15, fontWeight: '800' },
     customerName: { color: '#172b4d', fontSize: 16, fontWeight: '700', marginBottom: 10 },
     infoRow: { flexDirection: 'row', alignItems: 'center', gap: 9, marginTop: 8 },
     infoText: { flex: 1, color: '#55718e', fontSize: 13 },
-    dateRow: { flexDirection: 'row', justifyContent: 'space-between', margin: "auto", alignItems: 'center', gap: 9, paddingVertical: 15, marginHorizontal: 2, borderBottomWidth: 1, borderBottomColor: '#e2e8f0' },
+    dateRow: { flexDirection: 'row', margin: "auto", alignItems: 'center', gap: 9, paddingVertical: 15, marginHorizontal: 2, borderBottomWidth: 1, borderBottomColor: '#e2e8f0' },
     dateText: { color: '#55718e', fontSize: 13, fontWeight: '600' },
+    totalRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 16, marginTop: 12, backgroundColor: '#fff', borderWidth: 1, borderColor: '#e5eaf0', borderRadius: 12 },
+    totalLabel: { color: '#55718e', fontSize: 14, fontWeight: '700' },
     section: { backgroundColor: '#fff', borderRadius: 12, padding: 16, marginTop: 12, borderWidth: 1, borderColor: '#e5eaf0' },
     productRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10, borderTopWidth: 1, borderTopColor: '#eef2f6' },
     productImagePlaceholder: { width: 48, height: 48, borderRadius: 8, backgroundColor: '#f1f5f9', alignItems: 'center', justifyContent: 'center' },

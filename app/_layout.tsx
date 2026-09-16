@@ -88,9 +88,10 @@ function RootNavigator() {
             options={{
               presentation: "modal",
               title: "Nuevo Cliente",
-              headerStyle: { backgroundColor: "#fff" },
-              headerTitleStyle: { fontWeight: "bold", fontSize: 20 },
-              headerTitleAlign: "center",
+              headerStyle: { backgroundColor: BrandColors.primary },
+              headerTitleStyle: { fontWeight: "bold", fontSize: 18 },
+              // headerTitleAlign: "center",
+              headerTintColor: "#fff",
             }}
           />
           <Stack.Screen
@@ -98,9 +99,10 @@ function RootNavigator() {
             options={{
               presentation: "modal",
               title: "Detalle de cliente",
-              headerStyle: { backgroundColor: "#fff" },
-              headerTitleStyle: { fontWeight: "bold", fontSize: 20 },
-              headerTitleAlign: "center",
+              headerStyle: { backgroundColor: BrandColors.primary },
+              headerTitleStyle: { fontWeight: "bold", fontSize: 18 },
+              // headerTitleAlign: "center",
+              headerTintColor: "#fff",
             }}
           />
           <Stack.Screen
@@ -108,9 +110,10 @@ function RootNavigator() {
             options={{
               presentation: "modal",
               title: "Opciones",
-              headerStyle: { backgroundColor: "#fff" },
-              headerTitleStyle: { fontWeight: "bold", fontSize: 20 },
-              headerTitleAlign: "center",
+              headerStyle: { backgroundColor: BrandColors.primary },
+              headerTitleStyle: { fontWeight: "bold", fontSize: 18 },
+              // headerTitleAlign: "center",
+              headerTintColor: "#fff",
             }}
           />
           <Stack.Screen
@@ -118,9 +121,10 @@ function RootNavigator() {
             options={{
               presentation: "modal",
               title: "Usuarios",
-              headerStyle: { backgroundColor: "#fff" },
-              headerTitleStyle: { fontWeight: "bold", fontSize: 20 },
-              headerTitleAlign: "center",
+              headerStyle: { backgroundColor: BrandColors.primary },
+              headerTitleStyle: { fontWeight: "bold", fontSize: 18 },
+              // headerTitleAlign: "center",
+              headerTintColor: "#fff",
             }}
           />
           <Stack.Screen
@@ -128,9 +132,10 @@ function RootNavigator() {
             options={{
               presentation: "modal",
               title: "Nuevo Producto",
-              headerStyle: { backgroundColor: "#fff" },
-              headerTitleStyle: { fontWeight: "bold", fontSize: 20 },
-              headerTitleAlign: "center",
+              headerStyle: { backgroundColor: BrandColors.primary },
+              headerTitleStyle: { fontWeight: "bold", fontSize: 18 },
+              // headerTitleAlign: "center",
+              headerTintColor: "#fff",
             }}
           />
           <Stack.Screen
@@ -138,20 +143,21 @@ function RootNavigator() {
             options={{
               presentation: "modal",
               title: "Nuevo Pedido",
-              headerStyle: { backgroundColor: "#fff" },
-              headerTitleStyle: { fontWeight: "bold", fontSize: 20 },
-              headerTitleAlign: "center",
+              headerStyle: { backgroundColor: BrandColors.primary },
+              headerTitleStyle: { fontWeight: "bold", fontSize: 18 },
+              // headerTitleAlign: "center",
+              headerTintColor: "#fff",
             }}
           />
           <Stack.Screen
             name="detailOrder"
             options={{
               presentation: "modal",
-              title: "Detalle del pedido",
+              title: "Detalle de pedido",
               headerStyle: { backgroundColor: BrandColors.primary },
+              // headerTintColor: "#fff",
               headerTintColor: "#fff",
-              headerTitleStyle: { fontWeight: "bold", fontSize: 18 },
-              headerTitleAlign: "center",
+              headerTitleStyle: { fontWeight: "bold", fontSize: 18 }
             }}
           />
           <Stack.Screen
@@ -159,9 +165,10 @@ function RootNavigator() {
             options={{
               presentation: "modal",
               title: "Detalle de Producto",
-              headerStyle: { backgroundColor: "#fff" },
-              headerTitleStyle: { fontWeight: "bold", fontSize: 20 },
-              headerTitleAlign: "center",
+              headerStyle: { backgroundColor: BrandColors.primary },
+              headerTitleStyle: { fontWeight: "bold", fontSize: 18 },
+              // headerTitleAlign: "center",
+              headerTintColor: "#fff",
             }}
           />
           <Stack.Screen
@@ -169,18 +176,20 @@ function RootNavigator() {
             options={{
               presentation: "modal",
               title: "Detalle de Asistencia",
-              headerStyle: { backgroundColor: "#fff" },
-              headerTitleStyle: { fontWeight: "bold", fontSize: 20 },
-              headerTitleAlign: "center",
+              headerStyle: { backgroundColor: BrandColors.primary },
+              headerTitleStyle: { fontWeight: "bold", fontSize: 18 },
+              // headerTitleAlign: "center",
+              headerTintColor: "#fff",
             }}
           />
           <Stack.Screen
             name="asistencia"
             options={{
               title: "Asistencia",
-              headerStyle: { backgroundColor: "#fff" },
-              headerTitleStyle: { fontWeight: "bold", fontSize: 20 },
-              headerTitleAlign: "center",
+              headerStyle: { backgroundColor: BrandColors.primary},
+              headerTitleStyle: { fontWeight: "bold", fontSize: 18 },
+              // headerTitleAlign: "center",
+              headerTintColor: "#fff",
             }}
           />
           <Stack.Screen
@@ -188,16 +197,17 @@ function RootNavigator() {
             options={{
               presentation: "modal",
               title: "Editar Perfil",
-              headerStyle: { backgroundColor: "#fff" },
-              headerTitleStyle: { fontWeight: "bold", fontSize: 20 },
-              headerTitleAlign: "center",
+              headerStyle: { backgroundColor: BrandColors.primary },
+              headerTitleStyle: { fontWeight: "bold", fontSize: 18 },
+              // headerTitleAlign: "center",
+              headerTintColor: "#fff",
             }}
           />
         </Stack.Protected>
       </Stack>
       <Toast />
       {showSessionMenu && <SessionActionsMenu />}
-      <StatusBar style="auto" />
+      <StatusBar style="light" />
     </ThemeProvider>
   )
 }

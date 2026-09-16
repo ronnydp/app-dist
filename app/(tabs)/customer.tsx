@@ -101,6 +101,7 @@ export default function CustomerScreen() {
           placeholder="Buscar clientes..."
           value={searchQuery}
           onChangeText={setSearchQuery}
+          containerStyle={styles.searchBar}
         />
       </View>
 
@@ -138,6 +139,17 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
     paddingBottom: 10,
+  },
+  searchBar: {
+    marginTop: 14,
+    backgroundColor: '#fff',
+    borderColor: '#e2e8f0',
+    borderRadius: 12,
+    shadowColor: '#0f172a',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 3,
+    elevation: 1,
   },
   listContent: {
     padding: 16,

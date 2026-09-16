@@ -4,7 +4,7 @@ import { useToast } from '@/contexts/ToastsContext';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { router, useFocusEffect } from 'expo-router';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { Platform, SectionList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import AppSearchBar from '../../components/app-search-bar';
 import FloatingActionButton from '../../components/floating-action-button';
@@ -14,8 +14,6 @@ import { normalizeString } from '../../lib/utils/string';
 import { getOrders, sendOrderToSystem } from '../../services/database';
 import { OrderWithDetails } from '../../types';
 
-type OrdersVisibility = 'mine' | 'all';
-
 export default function OrderScreen() {
     const { role, session } = useAuth();
     const [orders, setOrders] = useState<OrderWithDetails[]>([]);
@@ -24,29 +22,13 @@ export default function OrderScreen() {
     const debouncedQuery = useDebouncedValue(searchQuery.trim(), 250);
     const [selectedDate, setSelectedDate] = useState<Date | null>(null);
     const [showDatePicker, setShowDatePicker] = useState(false);
-    const [ordersVisibility, setOrdersVisibility] = useState<OrdersVisibility>('mine');
     const {showToast} = useToast();
-
-    useEffect(() => {
-        if (role === 'admin'  || role === 'supervisor' ) {
-            setOrdersVisibility('all');
-            return;
-        }
-
-        if (role) {
-            setOrdersVisibility('mine');
-        }
-    }, [role]);
-
-    const sellerIdFilter = useMemo(() => {
-        if (ordersVisibility === 'all') {
-            return undefined;
-        }
-        return session?.user?.id;
-    }, [ordersVisibility, session?.user?.id]);
+    const sellerIdFilter = role === 'admin' || role === 'supervisor'
+        ? undefined
+        : session?.user?.id;
 
     const loadOrders = useCallback(async () => {
-        if (ordersVisibility === 'mine' && !session?.user?.id) {
+        if (!sellerIdFilter && role !== 'admin' && role !== 'supervisor') {
             setOrders([]);
             return;
         }
@@ -61,7 +43,7 @@ export default function OrderScreen() {
         } finally {
             setRefreshing(false);
         }
-    }, [ordersVisibility, sellerIdFilter, session?.user?.id, showToast]);
+    }, [role, sellerIdFilter, showToast]);
 
     // Recargar cuando la pantalla recibe foco
     useFocusEffect(
@@ -110,17 +92,9 @@ export default function OrderScreen() {
         }
     };
 
-    const clearDateFilter = () => {
-        setSelectedDate(null);
+    const selectToday = () => {
+        setSelectedDate(new Date());
     };
-
-    const setMineVisibility = useCallback(() => {
-        setOrdersVisibility('mine');
-    }, []);
-
-    const setAllVisibility = useCallback(() => {
-        setOrdersVisibility('all');
-    }, []);
 
     // Agrupar pedidos filtrados por vendedor
     const sections = useMemo(() => {
@@ -182,64 +156,10 @@ export default function OrderScreen() {
 
             {/* Filtros por fecha */}
             <View style={styles.dateFilterContainer}>
-                <View style={styles.scopeButtonsContainer}>
-                    <TouchableOpacity
-                        style={[
-                            styles.scopeButton,
-                            ordersVisibility === 'mine' ? styles.scopeButtonActive : styles.scopeButtonInactive,
-                        ]}
-                        onPress={setMineVisibility}
-                    >
-                        <Ionicons
-                            name="person-outline"
-                            size={16}
-                            color={ordersVisibility === 'mine' ? '#fff' : BrandColors.primary}
-                        />
-                        <Text
-                            style={[
-                                styles.scopeButtonText,
-                                ordersVisibility === 'mine' ? styles.scopeButtonTextActive : styles.scopeButtonTextInactive,
-                            ]}
-                        >
-                            Mis pedidos
-                        </Text>
-                    </TouchableOpacity>
-                    {(role === 'admin' || role === 'supervisor' ) && (
-                        <TouchableOpacity
-                            style={[
-                                styles.scopeButton,
-                                ordersVisibility === 'all' ? styles.scopeButtonActive : styles.scopeButtonInactive,
-                            ]}
-                            onPress={setAllVisibility}
-                        >
-                            <Ionicons
-                                name="people-outline"
-                                size={16}
-                                color={ordersVisibility === 'all' ? '#fff' : BrandColors.primary}
-                            />
-                            <Text
-                                style={[
-                                    styles.scopeButtonText,
-                                    ordersVisibility === 'all' ? styles.scopeButtonTextActive : styles.scopeButtonTextInactive,
-                                ]}
-                            >
-                                Todos
-                            </Text>
-                        </TouchableOpacity>
-                    )}
-                </View>
-
-                <View style={styles.rightFiltersGroup}>
-                    {selectedDate && (
-                        <TouchableOpacity
-                            style={styles.clearButton}
-                            onPress={clearDateFilter}
-                        >
-                            <Ionicons name="close-circle" size={18} color="#ef4444" />
-                            <Text style={styles.clearButtonText}>Limpiar</Text>
-                        </TouchableOpacity>
-                    )}
-                </View>
+                <TouchableOpacity style={styles.todayButton} onPress={selectToday}>
+                    <Ionicons name="today-outline" size={16} color={BrandColors.primary} />
+                    <Text style={styles.todayButtonText}>Hoy</Text>
+                </TouchableOpacity>
             </View>
 
             {showDatePicker && (
@@ -436,10 +356,26 @@ const styles = StyleSheet.create({
     dateFilterContainer: {
         flexDirection: 'row',
         paddingHorizontal: 15,
+        minHeight: 36,
         marginBottom: 8,
         gap: 8,
-        justifyContent: 'space-between',
         alignItems: 'center',
+    },
+    todayButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 5,
+        backgroundColor: '#eff6ff',
+        borderWidth: 1,
+        borderColor: '#dbeafe',
+        borderRadius: 10,
+        paddingHorizontal: 12,
+        paddingVertical: 7,
+    },
+    todayButtonText: {
+        color: BrandColors.primary,
+        fontSize: 13,
+        fontWeight: '700',
     },
     scopeButtonsContainer: {
         flexDirection: 'row',
@@ -451,28 +387,42 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         gap: 8,
         paddingHorizontal: 15,
-        marginBottom: 10,
+        paddingTop: 14,
+        marginBottom: 12,
     },
     searchBarInline: {
         flex: 1,
         marginHorizontal: 0,
         marginBottom: 0,
+        backgroundColor: '#fff',
+        borderColor: '#e2e8f0',
+        borderRadius: 12,
+        shadowColor: '#0f172a',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.06,
+        shadowRadius: 3,
+        elevation: 1,
     },
     iconButton: {
         width: 44,
         height: 44,
-        borderRadius: 10,
+        borderRadius: 12,
         borderWidth: 1,
-        borderColor: '#ececec',
-        backgroundColor: '#f4f5f7',
+        borderColor: '#e2e8f0',
+        backgroundColor: '#fff',
         alignItems: 'center',
         justifyContent: 'center',
+        shadowColor: '#0f172a',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.06,
+        shadowRadius: 3,
+        elevation: 1,
     },
     scopeButton: {
         flexDirection: 'row',
         alignItems: 'center',
         paddingHorizontal: 10,
-        paddingVertical: 8,
+        marginBottom: 10,
         borderRadius: 8,
         borderWidth: 1,
         gap: 6,
