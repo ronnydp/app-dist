@@ -879,11 +879,14 @@ export const getAllSellersWeeklySales = async (): Promise<
   return result;
 };
 
-export const getUsers = async () => {
+export const getUsers = async (): Promise<User[]> => {
   try {
-    const { data, error } = await supabase.from("users").select("*");
+    const { data, error } = await supabase
+      .from("users")
+      .select("*")
+      .order("created_at", { ascending: false });
     if (error) throw error;
-    return data;
+    return data || [];
   } catch (error) {
     console.error("Error al obtener usuarios: ", error);
     throw error;
@@ -908,7 +911,7 @@ export const getUserById = async (userId: string): Promise<User | null> => {
 
 export const updateUser = async (
   userId: string,
-  updates: Partial<Pick<User, "name" | "phone">>,
+  updates: Partial<Pick<User, "name" | "phone" | "role" | "is_active">>,
 ): Promise<User> => {
   try {
     const { data, error } = await supabase
@@ -925,6 +928,58 @@ export const updateUser = async (
     return data;
   } catch (error) {
     console.error("Error al actualizar usuario:", error);
+    throw error;
+  }
+};
+
+/**
+ * Crea el registro de perfil de un usuario en la tabla `users`.
+ * Nota: la cuenta de acceso (auth) debe crearse aparte en Supabase Auth con el mismo correo.
+ */
+export const createUser = async (user: {
+  name: string;
+  email: string;
+  role: string;
+  phone?: string;
+  is_active?: boolean;
+}): Promise<User> => {
+  try {
+    const { data, error } = await supabase
+      .from("users")
+      .insert({
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        phone: user.phone || null,
+        is_active: user.is_active ?? true,
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error("Error al crear usuario:", error);
+    throw error;
+  }
+};
+
+/**
+ * Habilita o deshabilita el acceso de un usuario (soft delete)
+ */
+export const setUserActive = async (
+  id: string,
+  isActive: boolean,
+): Promise<void> => {
+  try {
+    const { error } = await supabase
+      .from("users")
+      .update({ is_active: isActive, updated_at: new Date().toISOString() })
+      .eq("id", id);
+
+    if (error) throw error;
+  } catch (error) {
+    console.error("Error al actualizar estado de usuario:", error);
     throw error;
   }
 };

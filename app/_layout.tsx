@@ -59,6 +59,8 @@ function RootNavigator() {
     "/attendanceAdmin",
     "/detailAttendance",
     "/editProfile",
+    "/detailUser",
+    "/newUser",
   ]);
   const colorScheme = useColorScheme();
   const showSessionMenu = !hiddenSessionMenuRoutes.has(pathname);
@@ -200,6 +202,26 @@ function RootNavigator() {
               headerStyle: { backgroundColor: BrandColors.primary },
               headerTitleStyle: { fontWeight: "bold", fontSize: 18 },
               // headerTitleAlign: "center",
+              headerTintColor: "#fff",
+            }}
+          />
+          <Stack.Screen
+            name="detailUser"
+            options={{
+              presentation: "modal",
+              title: "Detalle de usuario",
+              headerStyle: { backgroundColor: BrandColors.primary },
+              headerTitleStyle: { fontWeight: "bold", fontSize: 18 },
+              headerTintColor: "#fff",
+            }}
+          />
+          <Stack.Screen
+            name="newUser"
+            options={{
+              presentation: "modal",
+              title: "Nuevo usuario",
+              headerStyle: { backgroundColor: BrandColors.primary },
+              headerTitleStyle: { fontWeight: "bold", fontSize: 18 },
               headerTintColor: "#fff",
             }}
           />
