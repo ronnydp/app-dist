@@ -5,7 +5,7 @@ import { useToast } from '@/contexts/ToastsContext';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, FlatList, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import AppSearchBar from '../../components/app-search-bar';
 import CustomerCard from '../../components/CustomerCard';
 import { useDebouncedValue } from '../../hooks/use-debounced-value';
@@ -13,6 +13,7 @@ import { getCustomersPaginated } from '../../services/database';
 import { Customer } from '../../types';
 
 const PAGE_SIZE = 30;
+type ActiveFilter = 'all' | 'active' | 'inactive';
 
 export default function CustomerScreen() {
   const [customers, setCustomers] = useState<Customer[]>([]);
@@ -21,6 +22,7 @@ export default function CustomerScreen() {
   const [hasMore, setHasMore] = useState(true);
   const pageRef = useRef(0);
   const [searchQuery, setSearchQuery] = useState('');
+  const [activeFilter, setActiveFilter] = useState<ActiveFilter>('all');
   const { role } = useAuth(); // para asegurar que la sesión esté lista antes de cargar clientes (evita error al arrancar la app)
   const debouncedQuery = useDebouncedValue(searchQuery.trim(), 300);
   const { showToast } = useToast();
@@ -35,7 +37,13 @@ export default function CustomerScreen() {
     }
     try {
       const search = debouncedQuery || undefined;
-      const result = await getCustomersPaginated(pageRef.current, PAGE_SIZE, search, role ?? undefined);
+      const result = await getCustomersPaginated(
+        pageRef.current,
+        PAGE_SIZE,
+        search,
+        role ?? undefined,
+        activeFilter === 'all' ? undefined : activeFilter === 'active',
+      );
       if (reset) {
         setCustomers(result.data);
       } else {
@@ -56,7 +64,7 @@ export default function CustomerScreen() {
       setRefreshing(false);
       setLoadingMore(false);
     }
-  }, [debouncedQuery, role]);
+  }, [activeFilter, debouncedQuery, role]);
 
   useFocusEffect(
     useCallback(() => {
@@ -102,6 +110,26 @@ export default function CustomerScreen() {
           onChangeText={setSearchQuery}
           containerStyle={styles.searchBar}
         />
+        {(role === 'admin' || role === 'supervisor') && (
+          <View style={styles.filterBar}>
+            {(['all', 'active', 'inactive'] as ActiveFilter[]).map((filter) => (
+              <Pressable
+                key={filter}
+                style={[styles.filterButton, activeFilter === filter && styles.filterButtonActive]}
+                onPress={() => setActiveFilter(filter)}
+              >
+                <Ionicons
+                  name={filter === 'all' ? 'people-outline' : filter === 'active' ? 'checkmark-circle-outline' : 'eye-off-outline'}
+                  size={16}
+                  color={activeFilter === filter ? '#fff' : '#64748b'}
+                />
+                <Text style={[styles.filterButtonText, activeFilter === filter && styles.filterButtonTextActive]}>
+                  {filter === 'all' ? 'Todos' : filter === 'active' ? 'Habilitados' : 'Deshabilitados'}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+        )}
       </View>
 
       <FlatList
@@ -148,6 +176,36 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.06,
     shadowRadius: 3,
     elevation: 1,
+  },
+  filterBar: {
+    flexDirection: 'row',
+    gap: 8,
+    paddingHorizontal: 16,
+    paddingTop: 10,
+  },
+  filterButton: {
+    flex: 1,
+    minHeight: 38,
+    borderWidth: 1,
+    borderColor: '#dbe3ec',
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    gap: 5,
+    backgroundColor: '#fff',
+  },
+  filterButtonActive: {
+    backgroundColor: BrandColors.primary,
+    borderColor: BrandColors.primary,
+  },
+  filterButtonText: {
+    color: '#64748b',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  filterButtonTextActive: {
+    color: '#fff',
   },
   listContent: {
     padding: 16,

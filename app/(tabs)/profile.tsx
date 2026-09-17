@@ -158,7 +158,7 @@ export default function ProfileScreen() {
           const isLogout = opt.label === 'Cerrar sesión';
           return (
             <TouchableOpacity key={opt.label} style={styles.option} onPress={opt.onPress}>
-              <Ionicons name={opt.icon as any} size={20} color="#374151" />
+              <Ionicons name={opt.icon as any} size={18} color="#374151" />
               <Text style={[styles.optionText, { flex: 1 }]}>{opt.label}</Text>
               {!isLogout && (
                 <Ionicons name="chevron-forward" size={18} color="#9ca3af" />
@@ -272,7 +272,7 @@ const styles = StyleSheet.create({
     borderBottomColor: '#f0f0f0',
   },
   optionText: {
-    fontSize: 15,
+    fontSize: 14,
     color: '#374151',
   },
 });

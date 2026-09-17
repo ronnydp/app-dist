@@ -2,17 +2,17 @@
 import { supabase } from "../lib/supabase";
 import { encodeOrderObservation } from "../lib/utils/orderObservation";
 import {
-  Customer,
-  NewOrder,
-  Order,
-  OrderStatus,
-  Presentation,
-  Product,
-  ProductWithPresentations,
-  SellerWeeklySales,
-  UpdateOrder,
-  User,
-  WeeklySales,
+    Customer,
+    NewOrder,
+    Order,
+    OrderStatus,
+    Presentation,
+    Product,
+    ProductWithPresentations,
+    SellerWeeklySales,
+    UpdateOrder,
+    User,
+    WeeklySales,
 } from "../types";
 
 const formatLocalDate = (date: Date): string => {
@@ -59,6 +59,7 @@ export const getCustomersPaginated = async (
   pageSize: number,
   search?: string,
   role?: string,
+  activeFilter?: boolean,
 ): Promise<{ data: Customer[]; hasMore: boolean }> => {
   const {
     data: { session },
@@ -68,6 +69,8 @@ export const getCustomersPaginated = async (
 
   if (role !== "admin" && role !== "supervisor") {
     query = query.eq("is_active", true);
+  } else if (activeFilter !== undefined) {
+    query = query.eq("is_active", activeFilter);
   }
 
   if (search && search.trim()) {
@@ -267,6 +270,7 @@ export const getProductsPaginated = async (
   pageSize: number,
   search?: string,
   role?: string,
+  activeFilter?: boolean,
 ): Promise<{ data: ProductWithPresentations[]; hasMore: boolean }> => {
   await supabase.auth.getSession();
 
@@ -276,6 +280,8 @@ export const getProductsPaginated = async (
 
   if (role !== "admin" && role !== 'supervisor') {
     query = query.eq("is_active", true);
+  } else if (activeFilter !== undefined) {
+    query = query.eq("is_active", activeFilter);
   }
 
   if (search && search.trim()) {

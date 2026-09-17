@@ -18,6 +18,7 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getCustomers, saveCustomer } from '../services/database';
 
 const DISTRITOS = ['Chimbote', 'Nuevo Chimbote'];
@@ -35,6 +36,7 @@ export default function NuevoClienteScreen() {
     const { role } = useAuth();
     const isSellerEditing = isEditing && role === 'vendedor';
     const navigation = useNavigation();
+    const insets = useSafeAreaInsets();
 
     const [nombre, setNombre] = useState(params.name || '');
     const [ruc, setRuc] = useState(params.ruc || '');
@@ -114,7 +116,10 @@ export default function NuevoClienteScreen() {
             style={styles.container}
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         >
-            <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
+            <ScrollView
+                style={styles.scrollView}
+                contentContainerStyle={[styles.content, { paddingBottom: 100 + insets.bottom }]}
+            >
                 <View style={styles.form}>
                     <View style={styles.field}>
                         <Text style={styles.label}>Nombre *</Text>
@@ -185,28 +190,33 @@ export default function NuevoClienteScreen() {
                     </View>
                 </View>
 
-                <View style={styles.actions}>
-                    <TouchableOpacity
-                        style={[styles.button, styles.cancelButton]}
-                        onPress={() => router.back()}
-                        disabled={loading}
-                    >
-                        <Text style={styles.cancelButtonText}>Cancelar</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                        style={[styles.button, styles.submitButton, loading && styles.buttonDisabled]}
-                        onPress={handleSubmit}
-                        disabled={loading}
-                    >
-                        <Text style={styles.submitButtonText}>
-                            {loading ? (
-                                <ActivityIndicator color="#fff" size="small" />
-                                ) : isEditing ? 'Actualizar' : 'Guardar'}
-                        </Text>
-                    </TouchableOpacity>
-                </View>
             </ScrollView>
+
+            <View style={[styles.actions, { paddingBottom: Math.max(insets.bottom, 16) }]}>
+                <TouchableOpacity
+                    style={styles.cancelButton}
+                    onPress={() => router.back()}
+                    disabled={loading}
+                >
+                    <Ionicons name="arrow-back-outline" size={17} color="#ef4444" />
+                    <Text style={styles.cancelButtonText}>Cancelar</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                    style={[styles.submitButton, loading && styles.buttonDisabled]}
+                    onPress={handleSubmit}
+                    disabled={loading}
+                >
+                    {loading ? (
+                        <ActivityIndicator color="#fff" size="small" />
+                    ) : (
+                        <>
+                            <Ionicons name={isEditing ? 'create-outline' : 'checkmark-outline'} size={17} color="#fff" />
+                            <Text style={styles.submitButtonText}>{isEditing ? 'Actualizar' : 'Guardar'}</Text>
+                        </>
+                    )}
+                </TouchableOpacity>
+            </View>
 
             {/* Modal para seleccionar distrito */}
             <Modal
@@ -272,7 +282,7 @@ const styles = StyleSheet.create({
         marginBottom: 20,
     },
     label: {
-        fontSize: 16,
+        fontSize: 14,
         fontWeight: '600',
         color: '#374151',
         marginBottom: 8,
@@ -319,30 +329,35 @@ const styles = StyleSheet.create({
     },
     actions: {
         flexDirection: 'row',
-        gap: 12,
-    },
-    button: {
-        flex: 1,
+        gap: 10,
         padding: 16,
-        borderRadius: 8,
-        alignItems: 'center',
+        backgroundColor: '#fff',
+        borderTopWidth: 1,
+        borderTopColor: '#e5eaf0',
     },
     cancelButton: {
-        backgroundColor: '#f3f4f6',
-    },
-    cancelButtonText: {
-        fontSize: 16,
-        fontWeight: '600',
-        color: '#6b7280',
+        flex: 1,
+        minHeight: 48,
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: '#fb7185',
+        alignItems: 'center',
+        justifyContent: 'center',
+        flexDirection: 'row',
+        gap: 7,
     },
     submitButton: {
+        flex: 1,
+        minHeight: 48,
+        borderRadius: 8,
         backgroundColor: BrandColors.primary,
+        alignItems: 'center',
+        justifyContent: 'center',
+        flexDirection: 'row',
+        gap: 7,
     },
-    submitButtonText: {
-        fontSize: 16,
-        fontWeight: '600',
-        color: '#fff',
-    },
+    cancelButtonText: { color: '#ef4444', fontSize: 12, fontWeight: '800' },
+    submitButtonText: { color: '#fff', fontSize: 12, fontWeight: '800' },
     buttonDisabled: {
         opacity: 0.5,
     },

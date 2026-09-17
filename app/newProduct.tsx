@@ -2,6 +2,7 @@ import { BrandColors } from '@/constants/theme';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastsContext';
 import { isValidPrice } from '@/lib/utils/money';
+import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams, useNavigation } from 'expo-router';
 import { useEffect, useLayoutEffect, useState } from 'react';
 import {
@@ -196,7 +197,7 @@ export default function NewProductScreen() {
             <ScrollView
                 style={styles.scrollView}
                 keyboardShouldPersistTaps="handled"
-                contentContainerStyle={[styles.content, { paddingBottom: 24 + insets.bottom }]}
+                contentContainerStyle={[styles.content, { paddingBottom: 100 + insets.bottom }]}
             >
                 <View style={styles.form}>
                     <View style={styles.field}>
@@ -304,28 +305,33 @@ export default function NewProductScreen() {
                     ))}
                 </View>
 
-                <View style={styles.actions}>
-                    <TouchableOpacity
-                        style={[styles.button, styles.cancelButton]}
-                        onPress={() => router.back()}
-                        disabled={loading}
-                    >
-                        <Text style={styles.cancelButtonText}>Cancelar</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                        style={[styles.button, styles.submitButton, loading && styles.buttonDisabled]}
-                        onPress={handleSubmit}
-                        disabled={loading}
-                    >
-                        <Text style={styles.submitButtonText}>
-                            {loading ? (
-                                <ActivityIndicator color="#fff" size="small" />
-                            ) : isEditing ? 'Actualizar' : 'Guardar'}
-                        </Text>
-                    </TouchableOpacity>
-                </View>
             </ScrollView>
+
+            <View style={[styles.actions, { paddingBottom: Math.max(insets.bottom, 16) }]}>
+                <TouchableOpacity
+                    style={styles.cancelButton}
+                    onPress={() => router.back()}
+                    disabled={loading}
+                >
+                    <Ionicons name="arrow-back-outline" size={17} color="#ef4444" />
+                    <Text style={styles.cancelButtonText}>Cancelar</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                    style={[styles.submitButton, loading && styles.buttonDisabled]}
+                    onPress={handleSubmit}
+                    disabled={loading}
+                >
+                    {loading ? (
+                        <ActivityIndicator color="#fff" size="small" />
+                    ) : (
+                        <>
+                            <Ionicons name={isEditing ? 'create-outline' : 'checkmark-outline'} size={17} color="#fff" />
+                            <Text style={styles.submitButtonText}>{isEditing ? 'Actualizar' : 'Guardar'}</Text>
+                        </>
+                    )}
+                </TouchableOpacity>
+            </View>
         </KeyboardAvoidingView>
     );
 }
@@ -373,30 +379,35 @@ const styles = StyleSheet.create({
     },
     actions: {
         flexDirection: 'row',
-        gap: 12,
-    },
-    button: {
-        flex: 1,
+        gap: 10,
         padding: 16,
-        borderRadius: 8,
-        alignItems: 'center',
+        backgroundColor: '#fff',
+        borderTopWidth: 1,
+        borderTopColor: '#e5eaf0',
     },
     cancelButton: {
-        backgroundColor: '#f3f4f6',
-    },
-    cancelButtonText: {
-        fontSize: 16,
-        fontWeight: '600',
-        color: '#6b7280',
+        flex: 1,
+        minHeight: 48,
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: '#fb7185',
+        alignItems: 'center',
+        justifyContent: 'center',
+        flexDirection: 'row',
+        gap: 7,
     },
     submitButton: {
+        flex: 1,
+        minHeight: 48,
+        borderRadius: 8,
         backgroundColor: BrandColors.primary,
+        alignItems: 'center',
+        justifyContent: 'center',
+        flexDirection: 'row',
+        gap: 7,
     },
-    submitButtonText: {
-        fontSize: 16,
-        fontWeight: '600',
-        color: '#fff',
-    },
+    cancelButtonText: { color: '#ef4444', fontSize: 12, fontWeight: '800' },
+    submitButtonText: { color: '#fff', fontSize: 12, fontWeight: '800' },
     buttonDisabled: {
         opacity: 0.5,
     },

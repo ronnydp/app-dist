@@ -391,7 +391,7 @@ const styles = StyleSheet.create({
   weekRange: {
     fontSize: 16,
     color: "#000000",
-    fontWeight: "900",
+    fontWeight: "500",
     textAlign: "center",
   },
   totalCard: {

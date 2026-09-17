@@ -66,7 +66,6 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 14,
     color: '#111827',
-    fontWeight: 'bold',
     paddingVertical: 5,
     textAlignVertical: 'center',
     includeFontPadding: false

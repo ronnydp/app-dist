@@ -38,7 +38,7 @@ export default memo(function ProductCard({ item, onOpen, onEdit, onToggleActive 
     <TouchableOpacity 
       onPress={() => onOpen(item)}
       >
-      <View style={[cardStyles.card, inactive && { opacity: 0.5 }]}>
+      <View style={[cardStyles.card, inactive && [cardStyles.inactiveCard, { opacity: 0.58 }]]}>
         <View style={{ flex: 1, flexDirection: 'row' }}>
           <View style={cardStyles.cardContent}>
             <Text style={cardStyles.nombre} numberOfLines={1} ellipsizeMode="tail">{item.name}</Text>
@@ -46,7 +46,7 @@ export default memo(function ProductCard({ item, onOpen, onEdit, onToggleActive 
             {item.image_url ? <Text style={cardStyles.info}>{item.image_url}</Text> : null}
           </View>
           <View style={{alignItems: 'center', justifyContent: 'center'}}>
-            <Ionicons name="chevron-forward-outline" size={16}></Ionicons>
+            <Ionicons name={inactive ? 'eye-off-outline' : 'chevron-forward-outline'} size={16} color={inactive ? '#94a3b8' : '#475569'} />
           </View>
         </View>
 

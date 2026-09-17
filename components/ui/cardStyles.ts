@@ -14,6 +14,11 @@ export default StyleSheet.create({
     borderWidth: 0.7,
     borderColor: '#d8d9db'
   },
+  inactiveCard: {
+    backgroundColor: '#f8fafc',
+    borderColor: '#94a3b8',
+    borderLeftWidth: 4,
+  },
   cardContent: {
     flex: 1,
     paddingRight: 8,
@@ -31,7 +36,7 @@ export default StyleSheet.create({
     marginRight: 8,
   },
   nombre: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '700',
     color: '#111827',
     flexShrink: 1,
@@ -65,7 +70,7 @@ export default StyleSheet.create({
     marginLeft: 12,
   },
   info: {
-    fontSize: 13,
+    fontSize: 11,
     color: '#6b7280',
     marginBottom: 2,
   },
@@ -82,7 +87,7 @@ export default StyleSheet.create({
     marginLeft: 8,
   },
   price: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: '600',
     color: '#16a34a',
     marginBottom: 4,
