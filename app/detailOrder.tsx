@@ -136,7 +136,7 @@ export default function DetailOrderScreen() {
                             </View>
                             <View style={styles.productCopy}>
                                 <Text style={styles.productName} numberOfLines={2}>{item.product_name}</Text>
-                                <Text style={styles.productMeta}>{item.amount} unidad{item.amount !== 1 ? 'es' : ''}{item.presentation_name ? ` · ${item.presentation_name}` : ''}</Text>
+                                <Text style={styles.productMeta}>{item.amount} x{item.presentation_name ? ` ${item.presentation_name}` : ''}</Text>
                             </View>
                             <View style={styles.productPriceCopy}>
                                 <Text style={styles.productPrice}>{formatMoney(item.sub_total)}</Text>

@@ -73,7 +73,7 @@ export default function DetailUser() {
         <View style={{ flex: 1, backgroundColor: '#ffffff', padding: 15 }}>
             <View style={{ flexDirection: 'row' }}>
                 <View style={{ paddingHorizontal: 20, paddingVertical: 10 }}>
-                    <Ionicons name="person-circle-outline" size={100} color={BrandColors.primary} />
+                    <Ionicons name="person-circle" size={80} color={BrandColors.primary} />
                 </View>
                 <View style={{ justifyContent: 'center', gap: 10, flex: 1 }}>
                     <Text style={{ fontSize: 19, fontWeight: 'bold' }} numberOfLines={1}>
@@ -95,16 +95,16 @@ export default function DetailUser() {
 
             <View style={styles.card}>
                 <View style={styles.cardHeader}>
-                    <Ionicons name="call-outline" size={18} color={BrandColors.primary} />
+                    {/* <Ionicons name="call-outline" size={18} color={BrandColors.primary} /> */}
                     <Text style={styles.cardTitle}>Información de contacto</Text>
                 </View>
-                <View style={{ gap: 12 }}>
+                <View style={{ gap: 18 }}>
                     <View style={styles.row}>
-                        <Ionicons name="mail-outline" size={16} color="#6b7280" />
+                        <Ionicons name="mail-outline" size={16} color={BrandColors.primary} />
                         <Text style={styles.rowText}>{params.email}</Text>
                     </View>
                     <View style={styles.row}>
-                        <Ionicons name="call-outline" size={16} color="#6b7280" />
+                        <Ionicons name="call-outline" size={16} color={BrandColors.primary} />
                         <Text style={styles.rowText}>{params.phone || '--'}</Text>
                     </View>
                 </View>
@@ -112,11 +112,11 @@ export default function DetailUser() {
 
             <View style={styles.card}>
                 <View style={styles.cardHeader}>
-                    <Ionicons name="shield-outline" size={18} color={BrandColors.primary} />
+                    {/* <Ionicons name="shield-outline" size={18} color={BrandColors.primary} /> */}
                     <Text style={styles.cardTitle}>Rol y permisos</Text>
                 </View>
-                <View style={{ flexDirection: 'row', gap: 10, alignItems: 'flex-start' }}>
-                    <Ionicons name="person-outline" size={16} color="#6b7280" style={{ marginTop: 2 }} />
+                <View style={{ flexDirection: 'row', gap: 18, alignItems: 'flex-start' }}>
+                    <Ionicons name="person-outline" size={16} color={BrandColors.primary} style={{ marginTop: 2 }} />
                     <View style={{ flex: 1 }}>
                         <Text style={styles.roleLabel}>{getRoleLabel(params.role)}</Text>
                         <Text style={styles.roleDescription}>{getRoleDescription(params.role)}</Text>
@@ -184,13 +184,13 @@ const styles = StyleSheet.create({
     },
     row: {
         flexDirection: 'row',
-        gap: 10,
+        gap: 18,
         alignItems: 'center',
     },
     rowText: {
         fontSize: 13,
         color: '#374151',
-        fontWeight: '500',
+        fontWeight: '500'
     },
     roleLabel: {
         fontSize: 14,
