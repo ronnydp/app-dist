@@ -2,17 +2,17 @@
 import { supabase } from "../lib/supabase";
 import { encodeOrderObservation } from "../lib/utils/orderObservation";
 import {
-    Customer,
-    NewOrder,
-    Order,
-    OrderStatus,
-    Presentation,
-    Product,
-    ProductWithPresentations,
-    SellerWeeklySales,
-    UpdateOrder,
-    User,
-    WeeklySales,
+  Customer,
+  NewOrder,
+  Order,
+  OrderStatus,
+  Presentation,
+  Product,
+  ProductWithPresentations,
+  SellerWeeklySales,
+  UpdateOrder,
+  User,
+  WeeklySales,
 } from "../types";
 
 const formatLocalDate = (date: Date): string => {
@@ -933,33 +933,47 @@ export const updateUser = async (
 };
 
 /**
- * Crea el registro de perfil de un usuario en la tabla `users`.
- * Nota: la cuenta de acceso (auth) debe crearse aparte en Supabase Auth con el mismo correo.
+ * Crea la cuenta de acceso en Supabase Auth y el registro de perfil en la tabla `users`.
+ * Nota: `supabase.auth.signUp` cambia la sesión activa del cliente al usuario recién creado.
  */
 export const createUser = async (user: {
   name: string;
   email: string;
+  password: string;
   role: string;
   phone?: string;
   is_active?: boolean;
 }): Promise<User> => {
+  const { data: authData, error: authError } = await supabase.auth.signUp({
+    email: user.email,
+    password: user.password,
+  });
+
+  if (authError || !authData.user) {
+    console.error("Error al crear cuenta en Auth:", authError);
+    throw authError || new Error("No se pudo crear la cuenta de autenticación");
+  }
+
   try {
     const { data, error } = await supabase
       .from("users")
-      .insert({
+      .update({
         name: user.name,
-        email: user.email,
         role: user.role,
         phone: user.phone || null,
         is_active: user.is_active ?? true,
       })
+      .eq("id", authData.user.id)
       .select()
       .single();
 
     if (error) throw error;
     return data;
   } catch (error) {
-    console.error("Error al crear usuario:", error);
+    console.error(
+      `Error al crear perfil de usuario en 'users' para auth.uid=${authData.user.id} (cuenta Auth ya creada, usuario huérfano):`,
+      error,
+    );
     throw error;
   }
 };

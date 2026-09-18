@@ -17,6 +17,7 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function NewUserScreen() {
     const params = useLocalSearchParams<{
@@ -33,11 +34,13 @@ export default function NewUserScreen() {
 
     const [name, setName] = useState(params.name || '');
     const [email, setEmail] = useState(params.email || '');
+    const [password, setPassword] = useState('');
     const [role, setRole] = useState(params.role || 'vendedor');
     const [isActive, setIsActive] = useState(params.is_active ? JSON.parse(params.is_active) : true);
     const [loading, setLoading] = useState(false);
     const [showRoleModal, setShowRoleModal] = useState(false);
     const [focusedField, setFocusedField] = useState<string | null>(null);
+    const insets = useSafeAreaInsets();
 
     useLayoutEffect(() => {
         navigation.setOptions({
@@ -54,6 +57,10 @@ export default function NewUserScreen() {
             showToast('El correo electrónico es obligatorio', 'error');
             return;
         }
+        if (!isEditing && password.length < 6) {
+            showToast('La contraseña debe tener al menos 6 caracteres', 'error');
+            return;
+        }
         if (!role) {
             showToast('El rol es obligatorio', 'error');
             return;
@@ -68,10 +75,11 @@ export default function NewUserScreen() {
                 await createUser({
                     name: name.trim(),
                     email: email.trim().toLowerCase(),
+                    password,
                     role,
                     is_active: isActive,
                 });
-                showToast('Usuario guardado', 'success');
+                showToast('Usuario creado. Debes volver a iniciar sesión con tu cuenta.', 'success');
             }
             router.replace('/users');
         } catch (error) {
@@ -83,8 +91,15 @@ export default function NewUserScreen() {
     };
 
     return (
-        <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-            <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
+        <KeyboardAvoidingView
+            style={styles.container}
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        >
+            <ScrollView
+                style={styles.scrollView}
+                contentContainerStyle={[styles.content, { paddingBottom: 100 + insets.bottom }]}
+                keyboardShouldPersistTaps="handled"
+            >
                 <View style={styles.form}>
                     <View style={styles.field}>
                         <Text style={styles.label}>Nombre *</Text>
@@ -119,6 +134,23 @@ export default function NewUserScreen() {
                         />
                     </View>
 
+                    {!isEditing && (
+                        <View style={styles.field}>
+                            <Text style={styles.label}>Contraseña *</Text>
+                            <TextInput
+                                style={[styles.input, focusedField === 'password' && styles.inputFocused]}
+                                value={password}
+                                onChangeText={setPassword}
+                                placeholder="Mínimo 6 caracteres"
+                                placeholderTextColor="#9ca3af"
+                                secureTextEntry
+                                autoCapitalize="none"
+                                onFocus={() => setFocusedField('password')}
+                                onBlur={() => setFocusedField(null)}
+                            />
+                        </View>
+                    )}
+
                     <View style={styles.field}>
                         <Text style={styles.label}>Rol *</Text>
                         <TouchableOpacity style={styles.dropdown} onPress={() => setShowRoleModal(true)}>
@@ -148,7 +180,7 @@ export default function NewUserScreen() {
                 </View>
             </ScrollView>
 
-            <View style={styles.actions}>
+            <View style={[styles.actions, { paddingBottom: Math.max(insets.bottom, 16) }]}>
                 <TouchableOpacity
                     style={[styles.submitButton, loading && styles.buttonDisabled]}
                     onPress={handleSubmit}
@@ -258,7 +290,8 @@ const styles = StyleSheet.create({
         color: '#fff',
     },
     actions: {
-        padding: 16,
+        paddingHorizontal: 16,
+        paddingTop: 12,
         backgroundColor: '#fff',
         borderTopWidth: 1,
         borderTopColor: '#e5eaf0',
