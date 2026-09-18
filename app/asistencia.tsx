@@ -197,9 +197,6 @@ function HistorySummaryCard({ count }: { count: number }) {
       </View>
       <View style={styles.historySummaryBody}>
         <Text style={styles.historySummaryLabel}>Historial de asistencia</Text>
-        <Text style={styles.historySummaryValue}>
-          {count > 0 ? `${count} registro${count === 1 ? '' : 's'} recientes` : 'Sin registros aún'}
-        </Text>
       </View>
       <Ionicons name="chevron-forward" size={18} color="#94a3b8" />
     </Pressable>

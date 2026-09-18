@@ -877,6 +877,7 @@ export default function NewOrderScreen() {
             onPress={handleExit}
             disabled={loading}
           >
+            <Ionicons name="arrow-back-outline" size={17} color="#ef4444" />
             <Text style={styles.cancelButtonText}>Cancelar</Text>
           </TouchableOpacity>
 
@@ -889,15 +890,20 @@ export default function NewOrderScreen() {
             onPress={handleSubmit}
             disabled={loading}
           >
-            <Text style={styles.submitButtonText}>
-              {loading ? (
-                <ActivityIndicator color="#fff" size="small" />
-              ) : isEditing ? (
-                "Guardar Cambios"
-              ) : (
-                "Guardar Pedido"
-              )}
-            </Text>
+            {loading ? (
+              <ActivityIndicator color="#fff" size="small" />
+            ) : (
+              <>
+                <Ionicons
+                  name={isEditing ? "create-outline" : "checkmark-outline"}
+                  size={17}
+                  color="#fff"
+                />
+                <Text style={styles.submitButtonText}>
+                  {isEditing ? "Guardar Cambios" : "Guardar Pedido"}
+                </Text>
+              </>
+            )}
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -1652,29 +1658,34 @@ const styles = StyleSheet.create({
   },
   actions: {
     flexDirection: "row",
-    gap: 12,
+    gap: 10,
     marginBottom: 24,
   },
   button: {
     flex: 1,
-    padding: 16,
+    minHeight: 48,
     borderRadius: 8,
     alignItems: "center",
+    justifyContent: "center",
+    flexDirection: "row",
+    gap: 7,
   },
   cancelButton: {
-    backgroundColor: "#f3f4f6",
+    borderWidth: 1,
+    borderColor: "#fb7185",
+    backgroundColor: "#fff",
   },
   cancelButtonText: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#6b7280",
+    fontSize: 12,
+    fontWeight: "800",
+    color: "#ef4444",
   },
   submitButton: {
     backgroundColor: BrandColors.primary,
   },
   submitButtonText: {
-    fontSize: 16,
-    fontWeight: "600",
+    fontSize: 12,
+    fontWeight: "800",
     color: "#fff",
   },
   buttonDisabled: {

@@ -46,14 +46,14 @@ const styles = StyleSheet.create({
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f4f5f7',
+    backgroundColor: '#fff',
     marginBottom: 10,
     paddingHorizontal: 12,
-    borderRadius: 10,
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#ececec',
+    borderColor: '#dbe3ee',
     marginHorizontal: 15,
-    height: 44
+    height: 46
   },
   searchContainerFocused: {
     borderWidth: 1.5,

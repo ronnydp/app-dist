@@ -2,18 +2,19 @@ import { BrandColors } from '@/constants/theme';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastsContext';
 import { getUserById, updateUser } from '@/services/database';
+import { Ionicons } from '@expo/vector-icons';
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import {
-    ActivityIndicator,
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 
 export default function EditProfileScreen() {
@@ -113,17 +114,18 @@ export default function EditProfileScreen() {
           </View>
         </View>
 
-        <View style={styles.buttonRow}>
+        <View style={styles.actions}>
           <TouchableOpacity
             style={styles.cancelButton}
             onPress={() => router.back()}
             disabled={isSaving}
           >
+            <Ionicons name="arrow-back-outline" size={17} color="#ef4444" />
             <Text style={styles.cancelButtonText}>Cancelar</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.saveButton, isSaving && styles.saveButtonDisabled]}
+            style={[styles.submitButton, isSaving && styles.buttonDisabled]}
             onPress={handleSave}
             disabled={isSaving}
           >
@@ -131,7 +133,8 @@ export default function EditProfileScreen() {
               <ActivityIndicator size="small" color="#fff" />
             ) : (
               <>
-                <Text style={styles.saveButtonText}>Guardar cambios</Text>
+                <Ionicons name="checkmark-outline" size={17} color="#fff" />
+                <Text style={styles.submitButtonText}>Guardar cambios</Text>
               </>
             )}
           </TouchableOpacity>
@@ -191,41 +194,45 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: '#9ca3af',
   },
-  buttonRow: {
-    marginTop: 8,
+  actions: {
     flexDirection: 'row',
-    gap: 12,
+    gap: 10,
+    paddingTop: 8,
+    paddingBottom: 8,
   },
   cancelButton: {
     flex: 1,
+    minHeight: 48,
+    borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#ecedf0',
-    borderRadius: 10,
-    paddingVertical: 14,
+    borderColor: '#fb7185',
     alignItems: 'center',
     justifyContent: 'center',
+    flexDirection: 'row',
+    gap: 7,
+    backgroundColor: '#fff',
   },
   cancelButtonText: {
-    color: '#374151',
-    fontSize: 15,
-    fontWeight: '700',
+    color: '#ef4444',
+    fontSize: 12,
+    fontWeight: '800',
   },
-  saveButton: {
+  submitButton: {
     flex: 1,
+    minHeight: 48,
+    borderRadius: 8,
     backgroundColor: BrandColors.primary,
-    borderRadius: 10,
-    paddingVertical: 14,
-    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
+    flexDirection: 'row',
+    gap: 7,
   },
-  saveButtonDisabled: {
-    opacity: 0.7,
+  buttonDisabled: {
+    opacity: 0.5,
   },
-  saveButtonText: {
+  submitButtonText: {
     color: '#fff',
-    fontSize: 15,
-    fontWeight: '700',
+    fontSize: 12,
+    fontWeight: '800',
   },
 });

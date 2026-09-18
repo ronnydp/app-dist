@@ -66,6 +66,7 @@ export default function DetailAttendance() {
   const exitMapUrl = exitLocation !== 'Ubicación no registrada'
     ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(exitLocation)}`
     : null;
+  const isAttendanceComplete = displayAttendance.entryRegistered && displayAttendance.exitRegistered;
 
   useEffect(() => {
     if (hasDetailParams) {
@@ -77,7 +78,7 @@ export default function DetailAttendance() {
     const loadHistory = async () => {
       try {
         setLoadingHistory(true);
-        const data = await attendanceService.getUserAttendanceHistory(10);
+        const data = await attendanceService.getUserAttendanceHistory(5);
         if (active) {
           setHistory(data);
         }
@@ -97,6 +98,8 @@ export default function DetailAttendance() {
     };
   }, [hasDetailParams]);
 
+  const recentHistory = history.slice(0, 5);
+
   if (!hasDetailParams) {
     return (
       <View style={styles.container}>
@@ -107,7 +110,7 @@ export default function DetailAttendance() {
             </View>
             <View style={styles.profileInfo}>
               <Text style={styles.name}>Mi historial</Text>
-              <Text style={styles.role}>Últimos registros de asistencia</Text>
+              <Text style={styles.role}>Últimos 5 registros</Text>
               <View style={styles.activeRow}>
                 <View style={styles.activeDot} />
                 <Text style={styles.activeText}>Vendedor</Text>
@@ -119,13 +122,10 @@ export default function DetailAttendance() {
             <View style={styles.historyLoadingCard}>
               <ActivityIndicator size="large" color="#1d4ed8" />
             </View>
-          ) : history.length > 0 ? (
+          ) : recentHistory.length > 0 ? (
             <View style={styles.historyListCard}>
-              {history.map((item, index) => (
-                <View key={item.id}>
-                  <HistoryRow item={item} />
-                  {index < history.length - 1 ? <View style={styles.historyDivider} /> : null}
-                </View>
+              {recentHistory.map((item) => (
+                <HistoryRow key={item.id} item={item} />
               ))}
             </View>
           ) : (
@@ -180,9 +180,14 @@ export default function DetailAttendance() {
         <View style={styles.summaryCard}>
           <SummaryRow label="Tiempo trabajado" value={workedTime} />
           <SummaryRow label="Estado del día" value={statusLabel} valueTone={statusTone} />
-          <SummaryRow label="Ubicación de entrada" value={entryLocation} />
-          <SummaryRow label="Ubicación de salida" value={exitLocation} />
-          <SummaryRow label="Registro completo" value="" icon="checkmark-circle" valueTone="success" />
+          <SummaryRow label="Entrada" value={entryTime} />
+          <SummaryRow label="Salida" value={exitTime} />
+          <SummaryRow
+            label="Registro"
+            value={isAttendanceComplete ? 'Completo' : 'Incompleto'}
+            icon={isAttendanceComplete ? 'checkmark-circle' : 'alert-circle'}
+            valueTone={isAttendanceComplete ? 'success' : 'warning'}
+          />
         </View>
       </ScrollView>
     </View>
@@ -212,13 +217,15 @@ function ActionDetail({
   return (
     <View style={styles.actionCard}>
       <View style={styles.actionHeader}>
-        <View style={[styles.actionIcon, { backgroundColor: `${color}14` }]}>
-          <Ionicons name={icon} size={20} color={color} />
+        <View style={[styles.actionIcon, { backgroundColor: `${color}18` }]}>
+          <Ionicons name={icon} size={18} color={color} />
         </View>
         <Text style={styles.actionTitle}>{title}</Text>
       </View>
+
       <Text style={styles.actionTime}>{time}</Text>
       <Text style={[styles.actionStatus, { color }]}>{label}</Text>
+
       <View style={styles.locationRow}>
         <Ionicons name="location-outline" size={16} color="#64748b" />
         <View style={styles.locationBody}>
@@ -226,6 +233,7 @@ function ActionDetail({
           <Text style={styles.locationText}>{location}</Text>
         </View>
       </View>
+
       <Pressable
         disabled={!mapUrl}
         onPress={async () => {
@@ -233,7 +241,9 @@ function ActionDetail({
           await Linking.openURL(mapUrl);
         }}
       >
-        <Text style={[styles.mapLink, !mapUrl && styles.mapLinkDisabled]}>Ver en mapa</Text>
+        <Text style={[styles.mapLink, !mapUrl && styles.mapLinkDisabled]}>
+          {mapUrl ? 'Ver en mapa' : 'Sin ubicación disponible'}
+        </Text>
       </Pressable>
     </View>
   );
@@ -248,16 +258,19 @@ function SummaryRow({
   label: string;
   value: string;
   icon?: keyof typeof Ionicons.glyphMap;
-  valueTone?: 'success' | 'warning' | 'error';
+  valueTone?: 'success' | 'warning' | 'error' | 'neutral';
 }) {
   const color =
-    valueTone === 'success' ? '#16a34a' : valueTone === 'warning' ? '#f59e0b' : valueTone === 'error' ? '#dc2626' : '#0f172a';
+    valueTone === 'success' ? '#16a34a' :
+    valueTone === 'warning' ? '#f59e0b' :
+    valueTone === 'error' ? '#dc2626' :
+    valueTone === 'neutral' ? '#64748b' : '#0f172a';
 
   return (
     <View style={styles.summaryRow}>
       <Text style={styles.summaryLabel}>{label}</Text>
       <View style={styles.summaryValueWrap}>
-        {icon ? <Ionicons name={icon} size={18} color={color} /> : null}
+        {icon ? <Ionicons name={icon} size={17} color={color} /> : null}
         {value ? <Text style={[styles.summaryValue, { color }]}>{value}</Text> : null}
       </View>
     </View>
@@ -292,7 +305,7 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 16,
-    gap: 12,
+    gap: 14,
   },
   historyLoadingCard: {
     minHeight: 180,
@@ -309,13 +322,14 @@ const styles = StyleSheet.create({
     borderColor: '#e2e8f0',
     backgroundColor: '#fff',
     overflow: 'hidden',
+    paddingVertical: 6,
   },
   emptyHistoryCard: {
     minHeight: 180,
     borderRadius: 16,
     borderWidth: 1,
     borderColor: '#e2e8f0',
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#fff',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 10,
@@ -331,13 +345,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    padding: 8,
+    padding: 14,
+    backgroundColor: '#fff',
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
   },
   avatar: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: BrandColors.surface,
+    width: 60,
+    height: 60,
+    borderRadius: 18,
+    backgroundColor: '#dbeafe',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -363,6 +381,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
+    marginTop: 2,
   },
   activeDot: {
     width: 8,
@@ -371,7 +390,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#16a34a',
   },
   activeText: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '700',
     color: '#16a34a',
   },
@@ -394,11 +413,11 @@ const styles = StyleSheet.create({
     color: '#4338ca',
   },
   actionCard: {
-    borderRadius: 16,
+    borderRadius: 18,
     borderWidth: 1,
     borderColor: '#e2e8f0',
     backgroundColor: '#fff',
-    padding: 14,
+    padding: 16,
     gap: 10,
   },
   actionHeader: {
@@ -407,20 +426,20 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   actionIcon: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
+    width: 36,
+    height: 36,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
   },
   actionTitle: {
     flex: 1,
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '800',
     color: '#0f172a',
   },
   actionTime: {
-    fontSize: 28,
+    fontSize: 27,
     fontWeight: '800',
     color: '#0f172a',
   },
@@ -431,99 +450,107 @@ const styles = StyleSheet.create({
   locationRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 8,
   },
   locationBody: {
     flex: 1,
     gap: 2,
   },
   locationLabel: {
-    fontSize: 12,
+    fontSize: 11,
     color: '#64748b',
-    fontWeight: '600',
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.3,
   },
   locationText: {
     fontSize: 13,
-    color: '#64748b',
+    color: '#475569',
+    lineHeight: 18,
   },
   mapLink: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#4338ca',
+    color: BrandColors.primary,
   },
   mapLinkDisabled: {
     color: '#94a3b8',
   },
   summaryCard: {
-    borderRadius: 16,
+    borderRadius: 18,
     borderWidth: 1,
     borderColor: '#e2e8f0',
-    backgroundColor: '#f8fafc',
-    padding: 14,
+    backgroundColor: '#fff',
+    padding: 16,
     gap: 12,
   },
   summaryRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    paddingVertical: 2,
   },
   summaryLabel: {
     fontSize: 13,
     color: '#64748b',
     fontWeight: '600',
+    flex: 1,
   },
   summaryValueWrap: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'flex-end',
     gap: 6,
+    flex: 1,
   },
   summaryValue: {
     fontSize: 13,
     fontWeight: '800',
+    textAlign: 'right',
   },
   historyRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 14,
+    gap: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f5f9',
   },
   historyStatus: {
-    width: 28,
+    width: 30,
+    height: 30,
+    borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: '#f8fafc',
   },
   historyBody: {
     flex: 1,
-    gap: 4,
+    gap: 3,
   },
   historyDate: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '800',
     color: '#0f172a',
   },
   historyTimes: {
-    fontSize: 13,
+    fontSize: 12,
     color: '#64748b',
   },
   historyMeta: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 8,
   },
   historyChip: {
     borderRadius: 999,
-    paddingHorizontal: 10,
+    paddingHorizontal: 8,
     paddingVertical: 5,
   },
   historyChipText: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '800',
-  },
-  historyDivider: {
-    height: 1,
-    backgroundColor: '#e2e8f0',
-    marginLeft: 54,
   },
 });
 
@@ -531,12 +558,12 @@ function HistoryRow({ item }: { item: AttendanceRecord }) {
   return (
     <View style={styles.historyRow}>
       <View style={styles.historyStatus}>
-        <Ionicons name="checkmark-circle-outline" size={24} color="#16a34a" />
+        <Ionicons name="checkmark-circle-outline" size={18} color="#16a34a" />
       </View>
       <View style={styles.historyBody}>
         <Text style={styles.historyDate}>{item.dateLabel}</Text>
         <Text style={styles.historyTimes}>
-          Entrada: {item.entryTime}  •  Salida: {item.exitTime}
+          {item.entryTime} - {item.exitTime}
         </Text>
       </View>
       <View style={styles.historyMeta}>
@@ -545,7 +572,6 @@ function HistoryRow({ item }: { item: AttendanceRecord }) {
             {item.statusLabel}
           </Text>
         </View>
-        <Ionicons name="chevron-forward" size={18} color="#94a3b8" />
       </View>
     </View>
   );

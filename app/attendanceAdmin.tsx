@@ -5,12 +5,13 @@ import { Ionicons } from '@expo/vector-icons';
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import {
-    ActivityIndicator,
-    FlatList,
-    Pressable,
-    StyleSheet,
-    Text,
-    View,
+  ActivityIndicator,
+  FlatList,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
 } from 'react-native';
 
 type AttendanceTone = 'success' | 'warning' | 'error';
@@ -150,10 +151,53 @@ export default function AttendanceAdminScreen() {
     );
   }
 
+  const filterOptions: Array<{ key: 'all' | AttendanceTone; label: string; count: number }> = [
+    { key: 'all', label: 'Todos', count: counts.all },
+    { key: 'success', label: 'Presentes', count: counts.success },
+    { key: 'warning', label: 'Tardanza', count: counts.warning },
+    { key: 'error', label: 'Ausentes', count: counts.error },
+  ];
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>{dayLabel}</Text>
+        <View>
+          <Text style={styles.title}>{dayLabel}</Text>
+        </View>
+
+        <View style={styles.summaryBadge}>
+          <Text style={styles.summaryBadgeText}>{attendanceItems.length}</Text>
+        </View>
+      </View>
+
+      <View style={styles.filterBar}>
+        {filterOptions.map((option) => {
+          const isActive = filter === option.key;
+          return (
+            <Pressable
+              key={option.key}
+              onPress={() => setFilter(option.key)}
+              style={[styles.filterPill, isActive ? styles.filterPillActive : styles.filterPillInactive]}
+            >
+              <Text style={[styles.filterPillText, isActive ? styles.filterPillTextActive : styles.filterPillTextInactive]}>
+                {option.label} ({option.count})
+              </Text>
+            </Pressable>
+          );
+        })}
+      </View>
+
+      <View style={styles.searchRow}>
+        <View style={styles.searchBox}>
+          <Ionicons name="search-outline" size={18} color="#94a3b8" />
+          <TextInput
+            value={query}
+            onChangeText={setQuery}
+            placeholder="Buscar empleado"
+            placeholderTextColor="#94a3b8"
+            style={styles.searchInput}
+          />
+        </View>
       </View>
 
       <FlatList
@@ -185,10 +229,13 @@ export default function AttendanceAdminScreen() {
             <View style={styles.avatar}>
               <Text style={styles.avatarText}>{item.initials}</Text>
             </View>
+
             <View style={styles.body}>
               <Text style={styles.name}>{item.name}</Text>
-              <Text style={styles.times}>Entrada: {item.entryTime}  •  Salida: {item.exitTime}</Text>
+              <Text style={styles.role}>{item.roleLabel}</Text>
+              <Text style={styles.times}>Entrada: {item.entryTime} • Salida: {item.exitTime}</Text>
             </View>
+
             <View style={styles.meta}>
               <View style={[styles.chip, chipTone[item.statusTone]]}>
                 <Text style={[styles.chipText, textTone[item.statusTone]]}>{item.statusLabel}</Text>
@@ -197,7 +244,12 @@ export default function AttendanceAdminScreen() {
             </View>
           </Pressable>
         )}
-        ItemSeparatorComponent={() => <View style={styles.separator} />}
+        ListEmptyComponent={
+          <View style={styles.emptyState}>
+            <Ionicons name="people-outline" size={28} color="#94a3b8" />
+            <Text style={styles.emptyText}>No hay registros que coincidan con la búsqueda.</Text>
+          </View>
+        }
         contentContainerStyle={styles.list}
         refreshing={loading}
         onRefresh={loadAttendanceData}
@@ -217,22 +269,36 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingBottom: 12,
+    paddingBottom: 10,
   },
-  iconButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#f8fafc',
-    alignItems: 'center',
-    justifyContent: 'center',
+  eyebrow: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#64748b',
+    textTransform: 'uppercase',
+    letterSpacing: 0.6,
   },
   title: {
-    fontSize: 18,
+    fontSize: 22,
     fontWeight: '800',
-    color: '#1e293b',
+    color: '#0f172a',
+    marginTop: 2,
   },
-  filters: {
+  summaryBadge: {
+    minWidth: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: '#e0e7ff',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 10,
+  },
+  summaryBadgeText: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#3730a3',
+  },
+  filterBar: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
@@ -243,12 +309,15 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     paddingHorizontal: 12,
     paddingVertical: 8,
+    borderWidth: 1,
   },
   filterPillActive: {
-    backgroundColor: '#4338ca',
+    backgroundColor: BrandColors.primary,
+    borderColor: BrandColors.primary,
   },
   filterPillInactive: {
-    backgroundColor: '#eef2ff',
+    backgroundColor: '#fff',
+    borderColor: '#dbe3ee',
   },
   filterPillText: {
     fontSize: 12,
@@ -258,25 +327,21 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
   filterPillTextInactive: {
-    color: '#4338ca',
+    color: '#475569',
   },
   searchRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
     paddingHorizontal: 16,
     paddingBottom: 10,
   },
   searchBox: {
-    flex: 1,
-    height: 44,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-    backgroundColor: '#f8fafc',
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+    height: 46,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#dbe3ee',
+    backgroundColor: '#fff',
     paddingHorizontal: 12,
   },
   searchInput: {
@@ -284,31 +349,26 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#0f172a',
   },
-  filterButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-    backgroundColor: '#f8fafc',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   list: {
     paddingHorizontal: 16,
     paddingBottom: 24,
+    gap: 10,
   },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    paddingVertical: 12,
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    borderRadius: 16,
+    padding: 12,
   },
   avatar: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    backgroundColor: BrandColors.surface,
+    width: 46,
+    height: 46,
+    borderRadius: 14,
+    backgroundColor: '#dbeafe',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -326,6 +386,11 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: '#0f172a',
   },
+  role: {
+    fontSize: 11,
+    color: '#64748b',
+    fontWeight: '600',
+  },
   times: {
     fontSize: 12,
     color: '#64748b',
@@ -337,16 +402,26 @@ const styles = StyleSheet.create({
   chip: {
     borderRadius: 999,
     paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingVertical: 5,
   },
   chipText: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '800',
   },
-  separator: {
-    height: 1,
-    backgroundColor: '#e2e8f0',
-    marginLeft: 54,
+  emptyState: {
+    borderRadius: 18,
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    padding: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+  },
+  emptyText: {
+    color: '#64748b',
+    fontSize: 14,
+    textAlign: 'center',
   },
 });
 
