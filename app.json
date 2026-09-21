@@ -4,7 +4,7 @@
     "slug": "app-dist",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon-mikari.png",
+    "icon": "./assets/images/mikari-icon.png",
     "scheme": "appdist",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -18,7 +18,7 @@
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#08859b",
-        "foregroundImage": "./assets/images/icon-mikari.png"
+        "foregroundImage": "./assets/images/mikari-icon.png"
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": true,
@@ -30,7 +30,7 @@
     },
     "web": {
       "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/images/icon-mikari.png"
     },
     "plugins": [
       "expo-router",

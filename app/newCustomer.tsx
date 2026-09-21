@@ -118,6 +118,7 @@ export default function NuevoClienteScreen() {
         >
             <ScrollView
                 style={styles.scrollView}
+                keyboardShouldPersistTaps="handled"
                 contentContainerStyle={[styles.content, { paddingBottom: 100 + insets.bottom }]}
             >
                 <View style={styles.form}>

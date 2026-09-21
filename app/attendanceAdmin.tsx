@@ -7,6 +7,8 @@ import { useCallback, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
+  KeyboardAvoidingView,
+  Platform,
   Pressable,
   StyleSheet,
   Text,
@@ -159,7 +161,10 @@ export default function AttendanceAdminScreen() {
   ];
 
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
       <View style={styles.header}>
         <View>
           <Text style={styles.title}>{dayLabel}</Text>
@@ -254,7 +259,7 @@ export default function AttendanceAdminScreen() {
         refreshing={loading}
         onRefresh={loadAttendanceData}
       />
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
