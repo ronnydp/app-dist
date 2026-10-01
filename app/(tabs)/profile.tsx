@@ -114,6 +114,11 @@ export default function ProfileScreen() {
       onPress: () => router.push('/users'),
     },
     {
+      icon: 'lock-closed-outline',
+      label: 'Cambiar contraseña',
+      onPress: () => router.push('/changePassword'),
+    },
+    {
       icon: 'log-out-outline',
       label: 'Cerrar sesión',
       onPress: handleLogout,

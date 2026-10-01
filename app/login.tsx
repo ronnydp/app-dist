@@ -3,6 +3,7 @@ import { useToast } from "@/contexts/ToastsContext";
 import { authService } from "@/services/auth-service";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import { router } from "expo-router";
 import { useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -164,6 +165,9 @@ export default function LoginScreen() {
             <Text style={styles.helperText}>
               Ingresa con tus credenciales de usuario
             </Text>
+            <TouchableOpacity onPress={() => router.push("/forgot-password")}>
+              <Text style={styles.forgotPasswordText}>¿Olvidaste tu contraseña?</Text>
+            </TouchableOpacity>
           </View>
 
           <View style={styles.footer}>
@@ -286,6 +290,13 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#6B7280",
     marginTop: 12,
+  },
+  forgotPasswordText: {
+    textAlign: "center",
+    fontSize: 13,
+    color: BrandColors.primary,
+    fontWeight: "600",
+    marginTop: 14,
   },
   footer: {
     paddingVertical: 16,

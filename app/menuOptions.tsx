@@ -42,6 +42,11 @@ export default function MenuOptions() {
       role: 'admin',
       onPress: () => router.push('/users')
     },
+    {
+      icon: 'lock-closed-outline',
+      label: 'Cambiar contraseña',
+      onPress: () => router.push('/changePassword')
+    },
     // {
     //   icon: 'settings-outline',
     //   label: 'Configuración'

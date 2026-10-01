@@ -61,6 +61,9 @@ function RootNavigator() {
     "/editProfile",
     "/detailUser",
     "/newUser",
+    "/forgot-password",
+    "/reset-password",
+    "/changePassword",
   ]);
   const colorScheme = useColorScheme();
   const showSessionMenu = !hiddenSessionMenuRoutes.has(pathname);
@@ -80,8 +83,10 @@ function RootNavigator() {
     >
       <Stack>
         <Stack.Screen name="index" options={{headerShown: false}} />
+        <Stack.Screen name="reset-password" options={{ headerShown: false }} />
         <Stack.Protected guard={!session}>
           <Stack.Screen name="login" options={{ headerShown: false }} />
+          <Stack.Screen name="forgot-password" options={{ headerShown: false }} />
         </Stack.Protected>
         <Stack.Protected guard={!!session}>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
@@ -220,6 +225,16 @@ function RootNavigator() {
             options={{
               presentation: "modal",
               title: "Nuevo usuario",
+              headerStyle: { backgroundColor: BrandColors.primary },
+              headerTitleStyle: { fontWeight: "bold", fontSize: 18 },
+              headerTintColor: "#fff",
+            }}
+          />
+          <Stack.Screen
+            name="changePassword"
+            options={{
+              presentation: "modal",
+              title: "Cambiar contraseña",
               headerStyle: { backgroundColor: BrandColors.primary },
               headerTitleStyle: { fontWeight: "bold", fontSize: 18 },
               headerTintColor: "#fff",

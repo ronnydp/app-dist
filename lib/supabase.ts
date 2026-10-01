@@ -1,7 +1,7 @@
 
 // lib/supabase.ts
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { createClient, processLock } from '@supabase/supabase-js';
+import { createClient } from '@supabase/supabase-js';
 
 // Reemplaza estos valores con tus credenciales de Supabase
 const SUPABASE_URL = 'https://qzbmandvbovgmwwjsrmm.supabase.co';
@@ -17,6 +17,7 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
 		autoRefreshToken: true,
 		persistSession: true,
 		detectSessionInUrl: false,
-		// lock: (isServer || isWeb) ? undefined : processLock,
+		// PKCE permite recuperar contraseña por deep link sin exponer tokens en la URL.
+		flowType: 'pkce',
 	},
 });
