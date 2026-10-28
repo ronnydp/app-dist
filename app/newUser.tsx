@@ -1,3 +1,4 @@
+import ClearableTextInput from '@/components/ClearableTextInput';
 import RoleSelectModal from '@/components/RoleSelectModal';
 import { BrandColors } from '@/constants/theme';
 import { useToast } from '@/contexts/ToastsContext';
@@ -9,15 +10,12 @@ import { useLayoutEffect, useState } from 'react';
 import {
     ActivityIndicator,
     KeyboardAvoidingView,
-    Platform,
     ScrollView,
     StyleSheet,
     Text,
-    TextInput,
     TouchableOpacity,
-    View,
+    View
 } from 'react-native';
-import ClearableTextInput from '@/components/ClearableTextInput';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function NewUserScreen() {
@@ -94,7 +92,7 @@ export default function NewUserScreen() {
     return (
         <KeyboardAvoidingView
             style={styles.container}
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            behavior="padding"
         >
             <ScrollView
                 style={styles.scrollView}

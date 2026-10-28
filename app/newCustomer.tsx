@@ -1,4 +1,5 @@
 // app/nuevo-cliente.tsx
+import ClearableTextInput from '@/components/ClearableTextInput';
 import { BrandColors } from '@/constants/theme';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastsContext';
@@ -9,16 +10,13 @@ import {
     ActivityIndicator,
     KeyboardAvoidingView,
     Modal,
-    Platform,
     Pressable,
     ScrollView,
     StyleSheet,
     Text,
-    TextInput,
     TouchableOpacity,
-    View,
+    View
 } from 'react-native';
-import ClearableTextInput from '@/components/ClearableTextInput';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getCustomers, saveCustomer } from '../services/database';
 
@@ -115,7 +113,7 @@ export default function NuevoClienteScreen() {
     return (
         <KeyboardAvoidingView
             style={styles.container}
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            behavior="padding"
         >
             <ScrollView
                 style={styles.scrollView}

@@ -1,3 +1,4 @@
+import ClearableTextInput from '@/components/ClearableTextInput';
 import { BrandColors } from '@/constants/theme';
 import * as attendanceService from '@/services/attendance';
 import { AttendanceWithUser } from '@/types';
@@ -5,17 +6,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import {
-  ActivityIndicator,
-  FlatList,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
+    ActivityIndicator,
+    FlatList,
+    KeyboardAvoidingView,
+    Pressable,
+    StyleSheet,
+    Text,
+    View
 } from 'react-native';
-import ClearableTextInput from '@/components/ClearableTextInput';
 
 type AttendanceTone = 'success' | 'warning' | 'error';
 
@@ -164,7 +162,7 @@ export default function AttendanceAdminScreen() {
   return (
     <KeyboardAvoidingView
       style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      behavior="padding"
     >
       <View style={styles.header}>
         <View>

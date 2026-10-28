@@ -9,7 +9,6 @@ import { useEffect, useRef, useState } from "react";
 import {
     ActivityIndicator,
     KeyboardAvoidingView,
-    Platform,
     Pressable,
     StyleSheet,
     Text,
@@ -88,7 +87,7 @@ export default function ResetPasswordScreen() {
       <SafeAreaView style={styles.container}>
         <KeyboardAvoidingView
           style={styles.content}
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          behavior="padding"
         >
           {isValidating && (
             <View style={styles.centered}>

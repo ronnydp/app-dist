@@ -1,3 +1,4 @@
+import ClearableTextInput from '@/components/ClearableTextInput';
 import { BrandColors } from '@/constants/theme';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastsContext';
@@ -8,15 +9,12 @@ import { useCallback, useState } from 'react';
 import {
     ActivityIndicator,
     KeyboardAvoidingView,
-    Platform,
     ScrollView,
     StyleSheet,
     Text,
-    TextInput,
     TouchableOpacity,
-    View,
+    View
 } from 'react-native';
-import ClearableTextInput from '@/components/ClearableTextInput';
 
 export default function EditProfileScreen() {
   const { session } = useAuth();
@@ -92,7 +90,7 @@ export default function EditProfileScreen() {
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      behavior="padding"
     >
       <ScrollView keyboardShouldPersistTaps="handled" style={styles.container} contentContainerStyle={styles.content}>
         <View style={styles.fieldGroup}>

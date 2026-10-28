@@ -12,7 +12,6 @@ import {
     FlatList,
     KeyboardAvoidingView,
     Modal,
-    Platform,
     Pressable,
     ScrollView,
     StyleSheet,
@@ -661,7 +660,7 @@ export default function NewOrderScreen() {
   return (
     <KeyboardAvoidingView
       style={styles.container}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      behavior="padding"
     >
       <ScrollView
         style={styles.scrollView}

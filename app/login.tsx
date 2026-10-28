@@ -10,7 +10,6 @@ import {
     ActivityIndicator,
     Image,
     KeyboardAvoidingView,
-    Platform,
     Pressable,
     StyleSheet,
     Text,
@@ -82,7 +81,7 @@ export default function LoginScreen() {
         />
         <KeyboardAvoidingView
           style={styles.content}
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          behavior="padding"
         >
           <View style={styles.header}>
             <Image

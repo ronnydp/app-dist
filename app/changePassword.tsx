@@ -1,3 +1,4 @@
+import ClearableTextInput from '@/components/ClearableTextInput';
 import { BrandColors } from '@/constants/theme';
 import { useToast } from '@/contexts/ToastsContext';
 import { authService } from '@/services/auth-service';
@@ -5,17 +6,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import {
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    KeyboardAvoidingView,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View
 } from 'react-native';
-import ClearableTextInput from '@/components/ClearableTextInput';
 import { useAuth } from '../contexts/AuthContext';
 
 const MIN_PASSWORD_LENGTH = 6;
@@ -78,7 +76,7 @@ export default function ChangePasswordScreen() {
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      behavior="padding"
     >
       <ScrollView keyboardShouldPersistTaps="handled" style={styles.container} contentContainerStyle={styles.content}>
         <View style={styles.fieldGroup}>

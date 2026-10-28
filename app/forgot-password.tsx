@@ -9,7 +9,6 @@ import { useRef, useState } from "react";
 import {
     ActivityIndicator,
     KeyboardAvoidingView,
-    Platform,
     Pressable,
     StyleSheet,
     Text,
@@ -57,7 +56,7 @@ export default function ForgotPasswordScreen() {
       <SafeAreaView style={styles.container}>
         <KeyboardAvoidingView
           style={styles.content}
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          behavior="padding"
         >
           <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
             <Ionicons name="arrow-back-outline" size={22} color="#fff" />

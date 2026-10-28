@@ -1,22 +1,20 @@
+import ClearableTextInput from '@/components/ClearableTextInput';
 import { BrandColors } from '@/constants/theme';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastsContext';
 import { isValidPrice } from '@/lib/utils/money';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams, useNavigation } from 'expo-router';
-import { useEffect, useLayoutEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import {
     ActivityIndicator,
     KeyboardAvoidingView,
-    Platform,
     ScrollView,
     StyleSheet,
     Text,
-    TextInput,
     TouchableOpacity,
-    View,
+    View
 } from 'react-native';
-import ClearableTextInput from '@/components/ClearableTextInput';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getPresentationsByProduct, getProducts, savePresentations, saveProduct } from '../services/database';
 
@@ -79,8 +77,11 @@ export default function NewProductScreen() {
         }
     }, [isEditing, params.id]);
 
+    const scrollRef = useRef<ScrollView>(null);
+
     const addPresentation = () => {
-        setPresentations((prev) => [...prev, { ...emptyPresentation }]);
+        setPresentations((prev) => [...prev, { ...emptyPresentation, is_default: prev.length === 0 }]);
+        setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 100);
     };
 
     const removePresentation = (index: number) => {
@@ -193,9 +194,10 @@ export default function NewProductScreen() {
     return (
         <KeyboardAvoidingView
             style={styles.container}
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            behavior="padding"
         >
             <ScrollView
+                ref={scrollRef}
                 style={styles.scrollView}
                 keyboardShouldPersistTaps="handled"
                 contentContainerStyle={[styles.content, { paddingBottom: 100 + insets.bottom }]}
@@ -233,21 +235,28 @@ export default function NewProductScreen() {
                 <View style={styles.section}>
                     <View style={styles.sectionHeader}>
                         <Text style={styles.sectionTitle}>Presentaciones</Text>
-                        <TouchableOpacity style={styles.addButton} onPress={addPresentation}>
-                            <Text style={styles.addButtonText}>+ Agregar</Text>
-                        </TouchableOpacity>
+                        <Text style={styles.sectionCount}>{presentations.length}</Text>
                     </View>
 
                     {presentations.length === 0 && (
-                        <Text style={styles.emptyText}>Sin presentaciones agregadas</Text>
+                        <Text style={styles.emptyText}>
+                            Sin presentaciones. Agrega una si el producto se vende en caja, bolsa, paquete, etc.
+                        </Text>
                     )}
 
                     {presentations.map((p, index) => (
                         <View key={index} style={styles.presentationCard}>
                             <View style={styles.presentationHeader}>
-                                <Text style={styles.presentationIndex}>#{index + 1}</Text>
-                                <TouchableOpacity onPress={() => removePresentation(index)}>
-                                    <Text style={styles.removeText}>Eliminar</Text>
+                                <Text style={styles.presentationIndex}>
+                                    Presentación {index + 1}{p.name.trim() ? ` · ${p.name.trim()}` : ''}
+                                </Text>
+                                <TouchableOpacity
+                                    style={styles.removeButton}
+                                    onPress={() => removePresentation(index)}
+                                    hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+                                    accessibilityLabel={`Eliminar presentación ${index + 1}`}
+                                >
+                                    <Ionicons name="trash-outline" size={20} color="#ef4444" />
                                 </TouchableOpacity>
                             </View>
 
@@ -304,6 +313,11 @@ export default function NewProductScreen() {
                             </TouchableOpacity>
                         </View>
                     ))}
+
+                    <TouchableOpacity style={styles.addPresentationButton} onPress={addPresentation}>
+                        <Ionicons name="add-circle-outline" size={22} color={BrandColors.primary} />
+                        <Text style={styles.addPresentationText}>Agregar presentación</Text>
+                    </TouchableOpacity>
                 </View>
 
             </ScrollView>
@@ -426,16 +440,38 @@ const styles = StyleSheet.create({
         fontWeight: '700',
         color: '#111827',
     },
-    addButton: {
-        backgroundColor: '#eff6ff',
-        paddingHorizontal: 14,
-        paddingVertical: 6,
-        borderRadius: 6,
+    sectionCount: {
+        fontSize: 13,
+        fontWeight: '700',
+        color: '#6b7280',
+        backgroundColor: '#f3f4f6',
+        paddingHorizontal: 10,
+        paddingVertical: 2,
+        borderRadius: 10,
     },
-    addButtonText: {
-        color: '#2563eb',
-        fontWeight: '600',
-        fontSize: 14,
+    addPresentationButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 8,
+        minHeight: 52,
+        borderRadius: 10,
+        borderWidth: 1.5,
+        borderStyle: 'dashed',
+        borderColor: BrandColors.primary,
+    },
+    addPresentationText: {
+        color: BrandColors.primary,
+        fontWeight: '700',
+        fontSize: 15,
+    },
+    removeButton: {
+        width: 36,
+        height: 36,
+        borderRadius: 8,
+        backgroundColor: '#fef2f2',
+        alignItems: 'center',
+        justifyContent: 'center',
     },
     emptyText: {
         color: '#9ca3af',
@@ -458,14 +494,10 @@ const styles = StyleSheet.create({
         marginBottom: 10,
     },
     presentationIndex: {
+        flex: 1,
         fontSize: 14,
         fontWeight: '600',
         color: '#6b7280',
-    },
-    removeText: {
-        color: '#ef4444',
-        fontWeight: '600',
-        fontSize: 14,
     },
     row: {
         flexDirection: 'row',
