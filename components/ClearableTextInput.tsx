@@ -42,7 +42,8 @@ export default class ClearableTextInput extends React.Component<TextInputProps, 
         delete inputStyle[key];
       }
     }
-    const showClear = this.state.isFocused && !!value && editable !== false;
+    const isNumeric = ['numeric', 'number-pad', 'decimal-pad', 'phone-pad'].includes(rest.keyboardType ?? '');
+    const showClear = !isNumeric && this.state.isFocused && !!value && editable !== false;
 
     return (
       <View style={wrapperStyle}>

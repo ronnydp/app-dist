@@ -6,6 +6,11 @@ export function roundMoney(amount: number): number {
   return Math.round(amount * 100) / 100;
 }
 
+/** Redondea a 1 decimal (subtotales y totales de pedidos) */
+export function roundMoney1(amount: number): number {
+  return Math.round(amount * 10) / 10;
+}
+
 /**
  * Valida que un monto sea un número positivo válido
  */

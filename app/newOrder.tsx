@@ -1,7 +1,7 @@
 import ClearableTextInput from "@/components/ClearableTextInput";
 import { BrandColors } from "@/constants/theme";
 import { useToast } from "@/contexts/ToastsContext";
-import { isValidAmount, roundMoney } from "@/lib/utils/money";
+import { isValidAmount, roundMoney1 } from "@/lib/utils/money";
 import { authService } from "@/services/auth-service";
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams, useNavigation } from "expo-router";
@@ -551,9 +551,9 @@ export default function NewOrderScreen() {
       const inputVal = quantityInputs[item.product.id];
       const parsed = parseInt(inputVal ?? "", 10);
       const amount = !isNaN(parsed) && parsed > 0 ? parsed : item.amount;
-      return sum + amount * item.unitPrice;
+      return sum + roundMoney1(amount * item.unitPrice);
     }, 0);
-    return roundMoney(total);
+    return roundMoney1(total);
   };
 
   const handleSubmit = async () => {
@@ -581,7 +581,7 @@ export default function NewOrderScreen() {
     });
 
     const total = itemsToSave.reduce(
-      (sum, item) => sum + item.amount * item.unitPrice,
+      (sum, item) => sum + roundMoney1(item.amount * item.unitPrice),
       0,
     );
 
@@ -617,13 +617,13 @@ export default function NewOrderScreen() {
           id: params.orderId,
           customer_id: selectedCustomer.id,
           seller_id: currentUserId,
-          total: roundMoney(total),
+          total: roundMoney1(total),
           note: note.trim() || undefined,
           products: itemsToSave.map((item) => ({
             product_id: item.product.id,
             amount: item.amount,
             unit_price: item.unitPrice,
-            sub_total: roundMoney(item.amount * item.unitPrice),
+            sub_total: roundMoney1(item.amount * item.unitPrice),
             presentation_name: item.presentationName,
           })),
         });
@@ -633,13 +633,13 @@ export default function NewOrderScreen() {
         await createOrder({
           customer_id: selectedCustomer.id,
           seller_id: currentUserId,
-          total: roundMoney(total),
+          total: roundMoney1(total),
           note: note.trim() || undefined,
           products: itemsToSave.map((item) => ({
             product_id: item.product.id,
             amount: item.amount,
             unit_price: item.unitPrice,
-            sub_total: roundMoney(item.amount * item.unitPrice),
+            sub_total: roundMoney1(item.amount * item.unitPrice),
             presentation_name: item.presentationName,
           })),
         });
@@ -820,7 +820,7 @@ export default function NewOrderScreen() {
                     </View>
                     <Text style={styles.equalsSign}>=</Text>
                     <Text style={styles.subtotalAmount}>
-                      S/ {(item.amount * item.unitPrice).toFixed(2)}
+                      S/ {roundMoney1(item.amount * item.unitPrice).toFixed(1)}
                     </Text>
                   </View>
                 </View>
@@ -844,7 +844,7 @@ export default function NewOrderScreen() {
           <View style={styles.totalSection}>
             <Text style={styles.totalLabel}>Total:</Text>
             <Text style={styles.totalAmount}>
-              S/ {calculateTotal().toFixed(2)}
+              S/ {calculateTotal().toFixed(1)}
             </Text>
           </View>
         )}
@@ -1283,12 +1283,12 @@ export default function NewOrderScreen() {
                       <Text style={styles.summaryLabel}>Subtotal:</Text>
                       <Text style={styles.summaryValue}>
                         S/{" "}
-                        {currentDraftItem
-                          .reduce(
+                        {roundMoney1(
+                          currentDraftItem.reduce(
                             (sum, item) => sum + item.amount * item.unitPrice,
                             0,
-                          )
-                          .toFixed(2)}
+                          ),
+                        ).toFixed(1)}
                       </Text>
                     </View>
                   </>
