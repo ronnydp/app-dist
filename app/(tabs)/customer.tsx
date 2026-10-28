@@ -9,24 +9,55 @@ import { ActivityIndicator, Alert, FlatList, Pressable, StyleSheet, Text, View }
 import AppSearchBar from '../../components/app-search-bar';
 import CustomerCard from '../../components/CustomerCard';
 import { useDebouncedValue } from '../../hooks/use-debounced-value';
-import { getCustomersPaginated } from '../../services/database';
+import {
+  getCustomersPaginated,
+  getFavoriteCustomerIds,
+  getFavoriteCustomers,
+  toggleFavoriteCustomer,
+} from '../../services/database';
 import { Customer } from '../../types';
 
 const PAGE_SIZE = 30;
 type ActiveFilter = 'all' | 'active' | 'inactive';
+type SellerFilter = 'all' | 'favorites';
+
+const DAY_NAMES = [
+  'Domingo',
+  'Lunes',
+  'Martes',
+  'Miércoles',
+  'Jueves',
+  'Viernes',
+  'Sábado',
+];
 
 export default function CustomerScreen() {
   const [customers, setCustomers] = useState<Customer[]>([]);
+  const [favoriteCustomerIds, setFavoriteCustomerIds] = useState<Set<string>>(new Set());
   const [refreshing, setRefreshing] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const pageRef = useRef(0);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<ActiveFilter>('all');
-  const { role } = useAuth(); // para asegurar que la sesión esté lista antes de cargar clientes (evita error al arrancar la app)
+  const [sellerFilter, setSellerFilter] = useState<SellerFilter>('all');
+  const { role, session } = useAuth(); // para asegurar que la sesión esté lista antes de cargar clientes (evita error al arrancar la app)
   const debouncedQuery = useDebouncedValue(searchQuery.trim(), 300);
   const { showToast } = useToast();
 
+  const isSeller = role === 'vendedor';
+  const todayDayOfWeek = new Date().getDay();
+  const todayDayName = DAY_NAMES[todayDayOfWeek];
+
+  const loadFavorites = useCallback(async () => {
+    if (!isSeller || !session?.user?.id) return;
+    try {
+      const ids = await getFavoriteCustomerIds(session.user.id, todayDayOfWeek);
+      setFavoriteCustomerIds(new Set(ids));
+    } catch (error) {
+      console.warn('Error cargando favoritos del vendedor:', error);
+    }
+  }, [isSeller, session?.user?.id, todayDayOfWeek]);
 
   const loadCustomers = useCallback(async (reset = true) => {
     if (reset) {
@@ -37,6 +68,21 @@ export default function CustomerScreen() {
     }
     try {
       const search = debouncedQuery || undefined;
+
+      if (isSeller && sellerFilter === 'favorites') {
+        if (!session?.user?.id) {
+          setCustomers([]);
+          setHasMore(false);
+          return;
+        }
+        const favCustomers = await getFavoriteCustomers(session.user.id, todayDayOfWeek, search);
+        setCustomers(favCustomers);
+        setHasMore(false);
+        const ids = favCustomers.map((c) => c.id);
+        setFavoriteCustomerIds(new Set(ids));
+        return;
+      }
+
       const result = await getCustomersPaginated(
         pageRef.current,
         PAGE_SIZE,
@@ -64,19 +110,73 @@ export default function CustomerScreen() {
       setRefreshing(false);
       setLoadingMore(false);
     }
-  }, [activeFilter, debouncedQuery, role]);
+  }, [activeFilter, debouncedQuery, isSeller, role, sellerFilter, session?.user?.id, todayDayOfWeek]);
 
   useFocusEffect(
     useCallback(() => {
       loadCustomers(true);
-    }, [loadCustomers])
+      if (isSeller) {
+        loadFavorites();
+      }
+    }, [loadCustomers, isSeller, loadFavorites])
   );
 
+  const handleToggleFavorite = useCallback(async (customer: Customer) => {
+    if (!session?.user?.id) return;
+
+    // Actualización optimista de estado local
+    const wasFavorite = favoriteCustomerIds.has(customer.id);
+    setFavoriteCustomerIds((prev) => {
+      const next = new Set(prev);
+      if (wasFavorite) {
+        next.delete(customer.id);
+      } else {
+        next.add(customer.id);
+      }
+      return next;
+    });
+
+    if (sellerFilter === 'favorites' && wasFavorite) {
+      setCustomers((prev) => prev.filter((c) => c.id !== customer.id));
+    }
+
+    try {
+      const isNowFavorite = await toggleFavoriteCustomer(
+        session.user.id,
+        customer.id,
+        todayDayOfWeek,
+      );
+
+      showToast(
+        isNowFavorite
+          ? `Marcado como frecuente de hoy ${todayDayName}`
+          : `Quitado de frecuentes de hoy ${todayDayName}`,
+        'success',
+      );
+    } catch (error) {
+      console.error('Error al alternar favorito:', error);
+      // Revertir optimismo en caso de fallo
+      setFavoriteCustomerIds((prev) => {
+        const next = new Set(prev);
+        if (wasFavorite) {
+          next.add(customer.id);
+        } else {
+          next.delete(customer.id);
+        }
+        return next;
+      });
+      if (sellerFilter === 'favorites' && wasFavorite) {
+        loadCustomers(true);
+      }
+      showToast('Error al actualizar frecuente', 'error');
+    }
+  }, [favoriteCustomerIds, loadCustomers, sellerFilter, session?.user?.id, showToast, todayDayOfWeek]);
+
   const loadMore = useCallback(() => {
-    if (loadingMore || !hasMore) return;
+    if (loadingMore || !hasMore || (isSeller && sellerFilter === 'favorites')) return;
     pageRef.current += 1;
     loadCustomers(false);
-  }, [loadingMore, hasMore, loadCustomers]);
+  }, [loadingMore, hasMore, isSeller, sellerFilter, loadCustomers]);
 
   const openCustomer = useCallback((c: Customer) => {
     router.push({
@@ -98,8 +198,11 @@ export default function CustomerScreen() {
     <CustomerCard 
       item={item} 
       onOpen={openCustomer} 
-      />
-  ), [openCustomer]);
+      showFavorite={isSeller}
+      isFavorite={favoriteCustomerIds.has(item.id)}
+      onToggleFavorite={handleToggleFavorite}
+    />
+  ), [openCustomer, isSeller, favoriteCustomerIds, handleToggleFavorite]);
 
   return (
     <View style={styles.container}>
@@ -130,6 +233,53 @@ export default function CustomerScreen() {
             ))}
           </View>
         )}
+
+        {isSeller && (
+          <View style={styles.filterBar}>
+            <Pressable
+              style={[
+                styles.filterButton,
+                styles.sellerAllButton,
+                sellerFilter === 'all' && styles.filterButtonActive,
+              ]}
+              onPress={() => setSellerFilter('all')}
+            >
+              <Ionicons
+                name="people-outline"
+                size={16}
+                color={sellerFilter === 'all' ? '#fff' : '#64748b'}
+              />
+              <Text style={[styles.filterButtonText, sellerFilter === 'all' && styles.filterButtonTextActive]}>
+                Todos
+              </Text>
+            </Pressable>
+            <Pressable
+              style={[
+                styles.filterButton,
+                styles.sellerFavoritesButton,
+                sellerFilter === 'favorites' && styles.favoriteFilterButtonActive,
+              ]}
+              onPress={() => setSellerFilter('favorites')}
+            >
+              <Ionicons
+                name={sellerFilter === 'favorites' ? 'star' : 'star-outline'}
+                size={16}
+                color={sellerFilter === 'favorites' ? '#fff' : '#ca8a04'}
+              />
+              <Text
+                style={[
+                  styles.filterButtonText,
+                  sellerFilter === 'favorites'
+                    ? styles.filterButtonTextActive
+                    : { color: '#ca8a04' },
+                ]}
+                numberOfLines={1}
+              >
+                Frecuentes hoy {todayDayName}
+              </Text>
+            </Pressable>
+          </View>
+        )}
       </View>
 
       <FlatList
@@ -137,7 +287,12 @@ export default function CustomerScreen() {
         renderItem={renderCustomer}
         keyExtractor={(item) => item.id}
         refreshing={refreshing}
-        onRefresh={() => loadCustomers(true)}
+        onRefresh={() => {
+          loadCustomers(true);
+          if (isSeller) {
+            loadFavorites();
+          }
+        }}
         onEndReached={loadMore}
         onEndReachedThreshold={0.3}
         ListFooterComponent={
@@ -149,9 +304,21 @@ export default function CustomerScreen() {
         }
         ListEmptyComponent={
           <View style={styles.empty}>
-            <Ionicons name="people-outline" size={64} color="#d1d5db" />
-            <Text style={styles.emptyText}>No hay clientes registrados</Text>
-            <Text style={styles.emptySubtext}>Presiona el botón + para agregar uno</Text>
+            <Ionicons
+              name={sellerFilter === 'favorites' ? 'star-outline' : 'people-outline'}
+              size={64}
+              color="#d1d5db"
+            />
+            <Text style={styles.emptyText}>
+              {sellerFilter === 'favorites'
+                ? `No tienes clientes frecuentes para hoy ${todayDayName}`
+                : 'No hay clientes registrados'}
+            </Text>
+            <Text style={styles.emptySubtext}>
+              {sellerFilter === 'favorites'
+                ? `Marca la estrella en un cliente para agregarlo a los frecuentes de hoy ${todayDayName}`
+                : 'Presiona el botón + para agregar uno'}
+            </Text>
           </View>
         }
         contentContainerStyle={customers.length === 0 ? styles.emptyContainer : styles.listContent}
@@ -195,9 +362,19 @@ const styles = StyleSheet.create({
     gap: 5,
     backgroundColor: '#fff',
   },
+  sellerAllButton: {
+    flex: 0.38,
+  },
+  sellerFavoritesButton: {
+    flex: 0.62,
+  },
   filterButtonActive: {
     backgroundColor: BrandColors.primary,
     borderColor: BrandColors.primary,
+  },
+  favoriteFilterButtonActive: {
+    backgroundColor: '#ca8a04',
+    borderColor: '#ca8a04',
   },
   filterButtonText: {
     color: '#64748b',

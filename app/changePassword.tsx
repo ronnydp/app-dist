@@ -15,6 +15,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import ClearableTextInput from '@/components/ClearableTextInput';
 import { useAuth } from '../contexts/AuthContext';
 
 const MIN_PASSWORD_LENGTH = 6;
@@ -82,7 +83,7 @@ export default function ChangePasswordScreen() {
       <ScrollView keyboardShouldPersistTaps="handled" style={styles.container} contentContainerStyle={styles.content}>
         <View style={styles.fieldGroup}>
           <Text style={styles.label}>Contraseña actual</Text>
-          <TextInput
+          <ClearableTextInput
             style={[styles.input, isCurrentFocused && styles.inputFocused]}
             value={currentPassword}
             onChangeText={setCurrentPassword}
@@ -97,7 +98,7 @@ export default function ChangePasswordScreen() {
 
         <View style={styles.fieldGroup}>
           <Text style={styles.label}>Nueva contraseña</Text>
-          <TextInput
+          <ClearableTextInput
             style={[styles.input, isNewFocused && styles.inputFocused]}
             value={newPassword}
             onChangeText={setNewPassword}
@@ -112,7 +113,7 @@ export default function ChangePasswordScreen() {
 
         <View style={styles.fieldGroup}>
           <Text style={styles.label}>Confirmar nueva contraseña</Text>
-          <TextInput
+          <ClearableTextInput
             style={[styles.input, isConfirmFocused && styles.inputFocused]}
             value={confirmPassword}
             onChangeText={setConfirmPassword}

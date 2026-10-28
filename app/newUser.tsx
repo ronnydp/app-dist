@@ -17,6 +17,7 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
+import ClearableTextInput from '@/components/ClearableTextInput';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function NewUserScreen() {
@@ -103,7 +104,7 @@ export default function NewUserScreen() {
                 <View style={styles.form}>
                     <View style={styles.field}>
                         <Text style={styles.label}>Nombre *</Text>
-                        <TextInput
+                        <ClearableTextInput
                             style={[styles.input, focusedField === 'name' && styles.inputFocused]}
                             value={name}
                             onChangeText={setName}
@@ -116,7 +117,7 @@ export default function NewUserScreen() {
 
                     <View style={styles.field}>
                         <Text style={styles.label}>Correo electrónico *</Text>
-                        <TextInput
+                        <ClearableTextInput
                             style={[
                                 styles.input,
                                 isEditing && styles.inputDisabled,
@@ -137,7 +138,7 @@ export default function NewUserScreen() {
                     {!isEditing && (
                         <View style={styles.field}>
                             <Text style={styles.label}>Contraseña *</Text>
-                            <TextInput
+                            <ClearableTextInput
                                 style={[styles.input, focusedField === 'password' && styles.inputFocused]}
                                 value={password}
                                 onChangeText={setPassword}

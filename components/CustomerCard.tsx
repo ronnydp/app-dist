@@ -8,9 +8,12 @@ import cardStyles from './ui/cardStyles';
 type Props = {
   item: Customer;
   onOpen: (c: Customer) => void;
+  isFavorite?: boolean;
+  onToggleFavorite?: (c: Customer) => void;
+  showFavorite?: boolean;
 };
 
-export default memo(function CustomerCard({ item, onOpen }: Props) {
+export default memo(function CustomerCard({ item, onOpen, isFavorite, onToggleFavorite, showFavorite }: Props) {
   const inactive = !item.is_active;
 
   return (
@@ -41,7 +44,20 @@ export default memo(function CustomerCard({ item, onOpen }: Props) {
               <Text style={cardStyles.info} numberOfLines={2} ellipsizeMode="tail">{item.address}</Text>
             </View>
           </View>
-          <View style={{alignItems: 'center', justifyContent: 'center'}}>
+          <View style={{alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 6}}>
+            {showFavorite && onToggleFavorite && (
+              <TouchableOpacity
+                onPress={() => onToggleFavorite(item)}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                style={{ padding: 4 }}
+              >
+                <Ionicons
+                  name={isFavorite ? 'star' : 'star-outline'}
+                  size={22}
+                  color={isFavorite ? '#eab308' : '#94a3b8'}
+                />
+              </TouchableOpacity>
+            )}
             <Ionicons name={inactive ? 'eye-off-outline' : 'chevron-forward'} size={16} color={inactive ? '#94a3b8' : '#475569'} />
           </View>
         </View>
@@ -56,6 +72,8 @@ export default memo(function CustomerCard({ item, onOpen }: Props) {
     prev.item.phone === next.item.phone &&
     prev.item.address === next.item.address &&
     prev.item.cod_customer === next.item.cod_customer &&
-    prev.item.is_active === next.item.is_active
+    prev.item.is_active === next.item.is_active &&
+    prev.isFavorite === next.isFavorite &&
+    prev.showFavorite === next.showFavorite
   );
 });

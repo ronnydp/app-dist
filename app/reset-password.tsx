@@ -1,3 +1,4 @@
+import ClearableTextInput from "@/components/ClearableTextInput";
 import { BrandColors } from "@/constants/theme";
 import { useToast } from "@/contexts/ToastsContext";
 import { authService } from "@/services/auth-service";
@@ -6,15 +7,14 @@ import { LinearGradient } from "expo-linear-gradient";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import {
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    KeyboardAvoidingView,
+    Platform,
+    Pressable,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -34,8 +34,8 @@ export default function ResetPasswordScreen() {
   const [isConfirmFocused, setIsConfirmFocused] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [done, setDone] = useState(false);
-  const passwordInputRef = useRef<TextInput>(null);
-  const confirmInputRef = useRef<TextInput>(null);
+  const passwordInputRef = useRef<ClearableTextInput>(null);
+  const confirmInputRef = useRef<ClearableTextInput>(null);
 
   useEffect(() => {
     const validateLink = async () => {
@@ -125,7 +125,7 @@ export default function ResetPasswordScreen() {
                   onPress={() => passwordInputRef.current?.focus()}
                 >
                   <Ionicons name="lock-closed-outline" size={20} color="#6B7280" style={styles.inputIcon} />
-                  <TextInput
+                  <ClearableTextInput
                     ref={passwordInputRef}
                     style={styles.input}
                     value={password}
@@ -147,7 +147,7 @@ export default function ResetPasswordScreen() {
                   onPress={() => confirmInputRef.current?.focus()}
                 >
                   <Ionicons name="lock-closed-outline" size={20} color="#6B7280" style={styles.inputIcon} />
-                  <TextInput
+                  <ClearableTextInput
                     ref={confirmInputRef}
                     style={styles.input}
                     value={confirmPassword}

@@ -119,6 +119,15 @@ export interface User {
   updated_at: string;
 }
 
+// Tabla: vendedor_favoritos
+export interface VendedorFavorito {
+  id: string;
+  usuario_id: string;
+  cliente_id: string;
+  dia_semana: number; // 0=Domingo, 1=Lunes, ..., 6=Sábado
+  created_at?: string;
+}
+
 // Tipos para resumen semanal de ventas
 export interface DailySale {
   date: string;

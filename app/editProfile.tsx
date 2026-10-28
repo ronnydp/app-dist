@@ -16,6 +16,7 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
+import ClearableTextInput from '@/components/ClearableTextInput';
 
 export default function EditProfileScreen() {
   const { session } = useAuth();
@@ -96,7 +97,7 @@ export default function EditProfileScreen() {
       <ScrollView keyboardShouldPersistTaps="handled" style={styles.container} contentContainerStyle={styles.content}>
         <View style={styles.fieldGroup}>
           <Text style={styles.label}>Nombre</Text>
-          <TextInput
+          <ClearableTextInput
             style={[styles.input, isNameFocused && styles.inputFocused]}
             value={name}
             onChangeText={setName}

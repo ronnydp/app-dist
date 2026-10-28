@@ -236,6 +236,129 @@ export const activateCustomer = async (id: string): Promise<void> => {
 };
 
 // ==========================================
+// FUNCIONES PARA VENDEDOR FAVORITOS
+// ==========================================
+
+/**
+ * Obtiene los IDs de clientes favoritos para un usuario en un día de la semana específico
+ */
+export const getFavoriteCustomerIds = async (
+  usuarioId: string,
+  diaSemana: number,
+): Promise<string[]> => {
+  try {
+    const { data, error } = await supabase
+      .from("vendedor_favoritos")
+      .select("cliente_id")
+      .eq("usuario_id", usuarioId)
+      .eq("dia_semana", diaSemana);
+
+    if (error) throw error;
+    return (data || []).map((row: { cliente_id: string }) => row.cliente_id);
+  } catch (error) {
+    console.error("Error al obtener clientes favoritos:", error);
+    throw error;
+  }
+};
+
+/**
+ * Alterna (toggle) el estado de favorito de un cliente para un usuario en un día determinado.
+ * Operación idempotente: si existe se elimina; si no, se inserta.
+ * Devuelve true si quedó como favorito, o false si se eliminó.
+ */
+export const toggleFavoriteCustomer = async (
+  usuarioId: string,
+  clienteId: string,
+  diaSemana: number,
+): Promise<boolean> => {
+  try {
+    // Verificar si ya existe
+    const { data: existing, error: selectError } = await supabase
+      .from("vendedor_favoritos")
+      .select("id")
+      .eq("usuario_id", usuarioId)
+      .eq("cliente_id", clienteId)
+      .eq("dia_semana", diaSemana)
+      .maybeSingle();
+
+    if (selectError) throw selectError;
+
+    if (existing) {
+      // Si existe, eliminarlo
+      const { error: deleteError } = await supabase
+        .from("vendedor_favoritos")
+        .delete()
+        .eq("id", existing.id);
+
+      if (deleteError) throw deleteError;
+      return false;
+    } else {
+      // Si no existe, insertarlo
+      const { error: insertError } = await supabase
+        .from("vendedor_favoritos")
+        .insert({
+          usuario_id: usuarioId,
+          cliente_id: clienteId,
+          dia_semana: diaSemana,
+        });
+
+      if (insertError) throw insertError;
+      return true;
+    }
+  } catch (error) {
+    console.error("Error en toggleFavoriteCustomer:", error);
+    throw error;
+  }
+};
+
+/**
+ * Obtiene los clientes favoritos de un vendedor para un día de la semana específico,
+ * con soporte para búsqueda de texto opcional.
+ */
+export const getFavoriteCustomers = async (
+  usuarioId: string,
+  diaSemana: number,
+  search?: string,
+): Promise<Customer[]> => {
+  try {
+    const favoriteIds = await getFavoriteCustomerIds(usuarioId, diaSemana);
+    if (favoriteIds.length === 0) return [];
+
+    let query = supabase
+      .from("customers")
+      .select("*")
+      .in("id", favoriteIds)
+      .eq("is_active", true);
+
+    if (search && search.trim()) {
+      const term = search.trim();
+      const normalizedTerm = normalizeText(term);
+      if (/^\d+$/.test(term)) {
+        query = query.or(`name.ilike.%${term}%,cod_customer.eq.${term}`);
+      } else {
+        query = query.ilike("name", `%${normalizedTerm}%`);
+      }
+    }
+
+    const { data, error } = await query.order("name", { ascending: true });
+    if (error) throw error;
+
+    let filteredData = data || [];
+    if (search && search.trim() && !/^\d+$/.test(search.trim())) {
+      const normalizedSearch = normalizeText(search.trim());
+      filteredData = filteredData.filter((item) =>
+        normalizeText(item.name).includes(normalizedSearch),
+      );
+    }
+
+    return filteredData;
+  } catch (error) {
+    console.error("Error al obtener lista de clientes favoritos:", error);
+    throw error;
+  }
+};
+
+// ==========================================
 // FUNCIONES PARA PRODUCTOS (PRODUCTS)
 // ==========================================
 

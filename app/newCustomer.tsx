@@ -18,6 +18,7 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
+import ClearableTextInput from '@/components/ClearableTextInput';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getCustomers, saveCustomer } from '../services/database';
 
@@ -124,7 +125,7 @@ export default function NuevoClienteScreen() {
                 <View style={styles.form}>
                     <View style={styles.field}>
                         <Text style={styles.label}>Nombre *</Text>
-                        <TextInput
+                        <ClearableTextInput
                             style={[styles.input, isSellerEditing && styles.inputDisabled, focusedField === 'nombre' && styles.inputFocused]}
                             value={nombre}
                             onChangeText={setNombre}
@@ -137,7 +138,7 @@ export default function NuevoClienteScreen() {
 
                     <View style={styles.field}>
                         <Text style={styles.label}>RUC (opcional)</Text>
-                        <TextInput
+                        <ClearableTextInput
                             style={[styles.input, focusedField === 'ruc' && styles.inputFocused]}
                             value={ruc}
                             onChangeText={setRuc}
@@ -152,7 +153,7 @@ export default function NuevoClienteScreen() {
 
                     <View style={styles.field}>
                         <Text style={styles.label}>Dirección *</Text>
-                        <TextInput
+                        <ClearableTextInput
                             style={[styles.input, styles.textArea, focusedField === 'direccion' && styles.inputFocused]}
                             value={direccion}
                             onChangeText={setDireccion}
@@ -178,7 +179,7 @@ export default function NuevoClienteScreen() {
 
                     <View style={styles.field}>
                         <Text style={styles.label}>Teléfono</Text>
-                        <TextInput
+                        <ClearableTextInput
                             style={[styles.input, focusedField === 'telefono' && styles.inputFocused]}
                             value={telefono}
                             onChangeText={setTelefono}

@@ -16,6 +16,7 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
+import ClearableTextInput from '@/components/ClearableTextInput';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getPresentationsByProduct, getProducts, savePresentations, saveProduct } from '../services/database';
 
@@ -202,7 +203,7 @@ export default function NewProductScreen() {
                 <View style={styles.form}>
                     <View style={styles.field}>
                         <Text style={styles.label}>Nombre *</Text>
-                        <TextInput
+                        <ClearableTextInput
                             style={[styles.input, focusedField === 'name' && styles.inputFocused]}
                             value={name}
                             onChangeText={setName}
@@ -215,7 +216,7 @@ export default function NewProductScreen() {
 
                     <View style={styles.field}>
                         <Text style={styles.label}>Precio *</Text>
-                        <TextInput
+                        <ClearableTextInput
                             style={[styles.input, focusedField === 'price' && styles.inputFocused]}
                             value={price}
                             onChangeText={setPrice}
@@ -252,7 +253,7 @@ export default function NewProductScreen() {
 
                             <View style={styles.field}>
                                 <Text style={styles.label}>Nombre *</Text>
-                                <TextInput
+                                <ClearableTextInput
                                     style={[styles.input, focusedField === `presentation-${index}-name` && styles.inputFocused]}
                                     value={p.name}
                                     onChangeText={(v) => updatePresentation(index, 'name', v)}
@@ -266,7 +267,7 @@ export default function NewProductScreen() {
                             <View style={styles.row}>
                                 <View style={[styles.field, { flex: 1 }]}>
                                     <Text style={styles.label}>Unidades *</Text>
-                                    <TextInput
+                                    <ClearableTextInput
                                         style={[styles.input, focusedField === `presentation-${index}-unit` && styles.inputFocused]}
                                         value={p.unit_quantity}
                                         onChangeText={(v) => updatePresentation(index, 'unit_quantity', v)}
@@ -279,7 +280,7 @@ export default function NewProductScreen() {
                                 </View>
                                 <View style={[styles.field, { flex: 1 }]}>
                                     <Text style={styles.label}>Precio *</Text>
-                                    <TextInput
+                                    <ClearableTextInput
                                         style={[styles.input, focusedField === `presentation-${index}-price` && styles.inputFocused]}
                                         value={p.sale_price}
                                         onChangeText={(v) => updatePresentation(index, 'sale_price', v)}

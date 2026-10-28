@@ -1,3 +1,4 @@
+import ClearableTextInput from "@/components/ClearableTextInput";
 import { BrandColors } from "@/constants/theme";
 import { useToast } from "@/contexts/ToastsContext";
 import { authService } from "@/services/auth-service";
@@ -6,16 +7,15 @@ import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { useRef, useState } from "react";
 import {
-  ActivityIndicator,
-  Image,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    Image,
+    KeyboardAvoidingView,
+    Platform,
+    Pressable,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -28,8 +28,8 @@ export default function LoginScreen() {
   const [isPasswordFocused, setIsPasswordFocused] = useState(false);
   const { showToast } = useToast();
   const current_year = new Date().getFullYear();
-  const emailInputRef = useRef<TextInput>(null);
-  const passwordInputRef = useRef<TextInput>(null);
+  const emailInputRef = useRef<ClearableTextInput>(null);
+  const passwordInputRef = useRef<ClearableTextInput>(null);
 
   const handleContinue = async () => {
     if (!email.trim() || !password.trim()) {
@@ -104,7 +104,7 @@ export default function LoginScreen() {
                 color="#9ca3af"
                 style={styles.inputIcon}
               />
-              <TextInput
+              <ClearableTextInput
                 ref={emailInputRef}
                 style={styles.input}
                 value={email}
@@ -127,7 +127,7 @@ export default function LoginScreen() {
                 color="#6B7280"
                 style={styles.inputIcon}
               />
-              <TextInput
+              <ClearableTextInput
                 ref={passwordInputRef}
                 style={styles.input}
                 value={password}

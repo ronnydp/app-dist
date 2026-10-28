@@ -15,6 +15,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import ClearableTextInput from '@/components/ClearableTextInput';
 
 type AttendanceTone = 'success' | 'warning' | 'error';
 
@@ -195,7 +196,7 @@ export default function AttendanceAdminScreen() {
       <View style={styles.searchRow}>
         <View style={styles.searchBox}>
           <Ionicons name="search-outline" size={18} color="#94a3b8" />
-          <TextInput
+          <ClearableTextInput
             value={query}
             onChangeText={setQuery}
             placeholder="Buscar empleado"

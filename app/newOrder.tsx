@@ -1,3 +1,4 @@
+import ClearableTextInput from "@/components/ClearableTextInput";
 import { BrandColors } from "@/constants/theme";
 import { useToast } from "@/contexts/ToastsContext";
 import { isValidAmount, roundMoney } from "@/lib/utils/money";
@@ -16,9 +17,8 @@ import {
     ScrollView,
     StyleSheet,
     Text,
-    TextInput,
     TouchableOpacity,
-    View,
+    View
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useDebouncedValue } from "../hooks/use-debounced-value";
@@ -154,8 +154,8 @@ export default function NewOrderScreen() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null); // Estado para almacenar el producto seleccionado antes de mostrar las presentaciones
   const [selectedPresentation, setSelectedPresentation] =
     useState<Presentation | null>(null); // Estado para almacenar la presentación seleccionada
-  const customerSearchInputRef = useRef<TextInput>(null);
-  const productSearchInputRef = useRef<TextInput>(null);
+  const customerSearchInputRef = useRef<ClearableTextInput>(null);
+  const productSearchInputRef = useRef<ClearableTextInput>(null);
   const [currentDraftItem, setCurrentDraftItem] = useState<
     Array<{
       product: Product;
@@ -291,7 +291,7 @@ export default function NewOrderScreen() {
     }
   };
 
-  const focusInputWhenModalShown = (inputRef: RefObject<TextInput | null>) => {
+  const focusInputWhenModalShown = (inputRef: RefObject<ClearableTextInput | null>) => {
     setTimeout(() => {
       inputRef.current?.focus();
     }, 150);
@@ -793,7 +793,7 @@ export default function NewOrderScreen() {
                       >
                         <Ionicons name="remove" size={18} color="#ef4444" />
                       </TouchableOpacity>
-                      <TextInput
+                      <ClearableTextInput
                         style={[styles.amountInput, focusedField === `amount-${item.product.id}` && styles.amountInputFocused]}
                         value={
                           quantityInputs[item.product.id] ??
@@ -857,7 +857,7 @@ export default function NewOrderScreen() {
               Nota <Text style={styles.optionalLabel}>(opcional)</Text>
             </Text>
           </View>
-          <TextInput
+          <ClearableTextInput
             style={[styles.input, styles.textArea, focusedField === 'note' && styles.inputFocused]}
             value={note}
             onChangeText={setNote}
@@ -929,7 +929,7 @@ export default function NewOrderScreen() {
                 <Ionicons name="close-outline" size={25} />
               </TouchableOpacity>
             </View>
-            <TextInput
+            <ClearableTextInput
               ref={customerSearchInputRef}
               style={[styles.searchInput, focusedField === 'customerSearch' && styles.searchInputFocused]}
               placeholder="Buscar cliente..."
@@ -1041,7 +1041,7 @@ export default function NewOrderScreen() {
                 <Ionicons name="close-outline" size={25} />
               </TouchableOpacity>
             </View>
-            <TextInput
+            <ClearableTextInput
               ref={productSearchInputRef}
               style={[styles.searchInput, focusedField === 'productSearch' && styles.searchInputFocused]}
               placeholder="Buscar producto..."
@@ -1232,7 +1232,7 @@ export default function NewOrderScreen() {
                         >
                           <Ionicons name="remove" size={20} color={BrandColors.primary} />
                         </TouchableOpacity>
-                        <TextInput
+                        <ClearableTextInput
                           style={[
                             {
                               fontWeight: "bold",

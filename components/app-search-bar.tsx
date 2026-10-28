@@ -1,7 +1,8 @@
+import ClearableTextInput from '@/components/ClearableTextInput';
 import { BrandColors } from '@/constants/theme';
 import { Ionicons } from '@expo/vector-icons';
 import { useRef, useState } from 'react';
-import { Pressable, StyleProp, StyleSheet, TextInput, TextStyle, ViewStyle } from 'react-native';
+import { Pressable, StyleProp, StyleSheet, TextStyle, ViewStyle } from 'react-native';
 
 type AppSearchBarProps = {
   placeholder: string;
@@ -21,20 +22,19 @@ export default function AppSearchBar({
   inputStyle,
 }: AppSearchBarProps) {
   const [isFocused, setIsFocused] = useState(false);
-  const searchInputRef = useRef<TextInput>(null)
+  const searchInputRef = useRef<ClearableTextInput>(null)
 
   return (
     <Pressable style={[styles.searchContainer, isFocused && styles.searchContainerFocused, containerStyle]}
     onPress={() => {searchInputRef.current?.focus()}}>
       <Ionicons name="search" size={iconSize} color="#6b7280" style={styles.icon} />
-      <TextInput
+      <ClearableTextInput
       ref={searchInputRef}
         placeholder={placeholder}
         placeholderTextColor="#9ca3af"
         style={[styles.searchInput, inputStyle]}
         value={value}
         onChangeText={onChangeText}
-        clearButtonMode="while-editing"
         onFocus={() => setIsFocused(true)}
         onBlur={() => setIsFocused(false)}
       />
