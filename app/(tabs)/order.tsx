@@ -4,7 +4,7 @@ import { useToast } from '@/contexts/ToastsContext';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { router, useFocusEffect } from 'expo-router';
-import { useCallback, useMemo, useState } from 'react';
+import { createElement, useCallback, useMemo, useState } from 'react';
 import { Platform, SectionList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import AppSearchBar from '../../components/app-search-bar';
 import OrderCard from '../../components/OrderCard';
@@ -12,6 +12,13 @@ import { useDebouncedValue } from '../../hooks/use-debounced-value';
 import { normalizeString } from '../../lib/utils/string';
 import { getOrders, sendOrderToSystem } from '../../services/database';
 import { OrderWithDetails } from '../../types';
+
+const formatDateInputValue = (date: Date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+};
 
 export default function OrderScreen() {
     const { role, session } = useAuth();
@@ -144,13 +151,38 @@ export default function OrderScreen() {
                     containerStyle={styles.searchBarInline}
                 />
 
-                <TouchableOpacity
-                    style={[styles.iconButton]}
-                    onPress={() => setShowDatePicker(true)}
-                    accessibilityLabel="Seleccionar fecha"
-                >
-                    <Ionicons name="calendar-outline" size={18} color="#6b7280" />
-                </TouchableOpacity>
+                {Platform.OS === 'web' ? (
+                    createElement('input', {
+                        type: 'date',
+                        'aria-label': 'Seleccionar fecha',
+                        value: formatDateInputValue(selectedDate ?? new Date()),
+                        max: formatDateInputValue(new Date()),
+                        onChange: (event) => {
+                            const [year, month, day] = event.currentTarget.value.split('-').map(Number);
+                            if (year && month && day) {
+                                setSelectedDate(new Date(year, month - 1, day));
+                            }
+                        },
+                        style: {
+                            width: 150,
+                            height: 44,
+                            padding: '0 8px',
+                            border: '1px solid #e2e8f0',
+                            borderRadius: 12,
+                            backgroundColor: '#fff',
+                            color: '#374151',
+                            fontSize: 14,
+                        },
+                    })
+                ) : (
+                    <TouchableOpacity
+                        style={styles.iconButton}
+                        onPress={() => setShowDatePicker(true)}
+                        accessibilityLabel="Seleccionar fecha"
+                    >
+                        <Ionicons name="calendar-outline" size={18} color="#6b7280" />
+                    </TouchableOpacity>
+                )}
             </View>
 
             {/* Filtros por fecha */}
@@ -161,7 +193,7 @@ export default function OrderScreen() {
                 </TouchableOpacity>
             </View>
 
-            {showDatePicker && (
+            {Platform.OS !== 'web' && showDatePicker && (
                 <DateTimePicker
                     value={selectedDate || new Date()}
                     mode="date"
