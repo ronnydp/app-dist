@@ -71,11 +71,10 @@ export const getCustomersPaginated = async (
 
   if (search && search.trim()) {
     const term = search.trim();
-    const normalizedTerm = normalizeText(term);
     if (/^\d+$/.test(term)) {
       query = query.or(`name.ilike.%${term}%,cod_customer.eq.${term}`);
     } else {
-      query = query.ilike("name", `%${normalizedTerm}%`);
+      query = query.ilike("name", `%${term}%`);
     }
   }
 
@@ -121,11 +120,10 @@ export const searchCustomers = async (
       .eq("is_active", true);
 
     const isNumeric = /^\d+$/.test(trimmed);
-    const normalizedTerm = normalizeText(trimmed);
     if (isNumeric) {
       query = query.or(`name.ilike.%${trimmed}%,cod_customer.eq.${trimmed}`);
     } else {
-      query = query.ilike("name", `%${normalizedTerm}%`);
+      query = query.ilike("name", `%${trimmed}%`);
     }
 
     const from = page * pageSize;
@@ -139,6 +137,7 @@ export const searchCustomers = async (
     // Aplicar filtro normalizador en client-side para búsquedas de texto
     let filteredData = data || [];
     if (!isNumeric) {
+      const normalizedTerm = normalizeText(trimmed);
       filteredData = filteredData.filter((item) =>
         normalizeText(item.name).includes(normalizedTerm),
       );
@@ -332,11 +331,10 @@ export const getFavoriteCustomers = async (
 
     if (search && search.trim()) {
       const term = search.trim();
-      const normalizedTerm = normalizeText(term);
       if (/^\d+$/.test(term)) {
         query = query.or(`name.ilike.%${term}%,cod_customer.eq.${term}`);
       } else {
-        query = query.ilike("name", `%${normalizedTerm}%`);
+        query = query.ilike("name", `%${term}%`);
       }
     }
 
@@ -404,8 +402,7 @@ export const getProductsPaginated = async (
   }
 
   if (search && search.trim()) {
-    const normalizedSearch = normalizeText(search.trim());
-    query = query.ilike("name", `%${normalizedSearch}%`);
+    query = query.ilike("name", `%${search.trim()}%`);
   }
 
   const from = page * pageSize;
