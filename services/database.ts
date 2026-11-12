@@ -71,11 +71,10 @@ export const getCustomersPaginated = async (
 
   if (search && search.trim()) {
     const term = search.trim();
-    const normalizedTerm = normalizeText(term);
     if (/^\d+$/.test(term)) {
       query = query.or(`name.ilike.%${term}%,cod_customer.eq.${term}`);
     } else {
-      query = query.ilike("name", `%${normalizedTerm}%`);
+      query = query.ilike("name", `%${term}%`);
     }
   }
 
@@ -121,11 +120,10 @@ export const searchCustomers = async (
       .eq("is_active", true);
 
     const isNumeric = /^\d+$/.test(trimmed);
-    const normalizedTerm = normalizeText(trimmed);
     if (isNumeric) {
       query = query.or(`name.ilike.%${trimmed}%,cod_customer.eq.${trimmed}`);
     } else {
-      query = query.ilike("name", `%${normalizedTerm}%`);
+      query = query.ilike("name", `%${trimmed}%`);
     }
 
     const from = page * pageSize;
@@ -139,6 +137,7 @@ export const searchCustomers = async (
     // Aplicar filtro normalizador en client-side para búsquedas de texto
     let filteredData = data || [];
     if (!isNumeric) {
+      const normalizedTerm = normalizeText(trimmed);
       filteredData = filteredData.filter((item) =>
         normalizeText(item.name).includes(normalizedTerm),
       );
@@ -332,11 +331,10 @@ export const getFavoriteCustomers = async (
 
     if (search && search.trim()) {
       const term = search.trim();
-      const normalizedTerm = normalizeText(term);
       if (/^\d+$/.test(term)) {
         query = query.or(`name.ilike.%${term}%,cod_customer.eq.${term}`);
       } else {
-        query = query.ilike("name", `%${normalizedTerm}%`);
+        query = query.ilike("name", `%${term}%`);
       }
     }
 
@@ -404,8 +402,7 @@ export const getProductsPaginated = async (
   }
 
   if (search && search.trim()) {
-    const normalizedSearch = normalizeText(search.trim());
-    query = query.ilike("name", `%${normalizedSearch}%`);
+    query = query.ilike("name", `%${search.trim()}%`);
   }
 
   const from = page * pageSize;
@@ -596,7 +593,7 @@ export const getOrders = async (params: GetOrdersParams = {}) => {
   try {
     const { sellerId } = params;
 
-    // Traer pedidos con product_orders
+    // Traer pedidos con product_orders y productos relacionados
     let query = supabase
       .from("orders")
       .select(
@@ -604,7 +601,7 @@ export const getOrders = async (params: GetOrdersParams = {}) => {
         *,
         customers (name, address, district, cod_customer, phone),
         users!seller_id (name),
-        product_orders (*)
+        product_orders (*, products (name))
       `,
       )
       .order("created_at", { ascending: false });
@@ -617,19 +614,6 @@ export const getOrders = async (params: GetOrdersParams = {}) => {
 
     if (error) throw error;
 
-    // Traer todos los productos para mapeo
-    const { data: productsData, error: productsError } = await supabase
-      .from("products")
-      .select("id, name");
-
-    if (productsError) throw productsError;
-
-    // Crear mapa de productos para búsqueda rápida
-    const productMap = new Map(
-      
-      productsData?.map((p: any) => [p.id, p.name]) || [],
-    );
-
     // Transformar datos para que coincidan con OrderWithDetails
     const transformedData = (data || []).map((order: any) => ({
       ...order,
@@ -641,8 +625,7 @@ export const getOrders = async (params: GetOrdersParams = {}) => {
       seller_name: order.users?.name || "",
       products: (order.product_orders || []).map((po: any) => ({
         ...po,
-        
-        product_name: productMap.get(po.product_id) || "Producto desconocido",
+        product_name: po.products?.name || "Producto desconocido",
       })),
     }));
     return transformedData;
