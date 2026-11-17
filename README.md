@@ -2,6 +2,13 @@
 
 This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
 
+## Filtro de pedidos por vendedor
+
+En la pantalla Pedidos, los administradores y supervisores pueden seleccionar
+un vendedor o ver todos. El selector muestra los vendedores con pedidos
+registrados. Los conteos de pedidos por vendedor y el total consideran la fecha
+seleccionada (por defecto, hoy) y la búsqueda de clientes.
+
 ## Get started
 
 1. Install dependencies

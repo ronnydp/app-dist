@@ -24,6 +24,9 @@ export default function ChangePasswordScreen() {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isCurrentFocused, setIsCurrentFocused] = useState(false);
   const [isNewFocused, setIsNewFocused] = useState(false);
   const [isConfirmFocused, setIsConfirmFocused] = useState(false);
@@ -81,47 +84,80 @@ export default function ChangePasswordScreen() {
       <ScrollView keyboardShouldPersistTaps="handled" style={styles.container} contentContainerStyle={styles.content}>
         <View style={styles.fieldGroup}>
           <Text style={styles.label}>Contraseña actual</Text>
-          <ClearableTextInput
-            style={[styles.input, isCurrentFocused && styles.inputFocused]}
-            value={currentPassword}
-            onChangeText={setCurrentPassword}
-            placeholder="Ingresa tu contraseña actual"
-            placeholderTextColor="#9ca3af"
-            secureTextEntry
-            textContentType="password"
-            onFocus={() => setIsCurrentFocused(true)}
-            onBlur={() => setIsCurrentFocused(false)}
-          />
+          <View style={[styles.inputRow, isCurrentFocused && styles.inputFocused]}>
+            <ClearableTextInput
+              style={styles.input}
+              value={currentPassword}
+              onChangeText={setCurrentPassword}
+              placeholder="Ingresa tu contraseña actual"
+              placeholderTextColor="#9ca3af"
+              secureTextEntry={!showCurrentPassword}
+              textContentType="password"
+              onFocus={() => setIsCurrentFocused(true)}
+              onBlur={() => setIsCurrentFocused(false)}
+            />
+            <TouchableOpacity
+              style={styles.visibilityButton}
+              onPress={() => setShowCurrentPassword(!showCurrentPassword)}
+              accessibilityRole="button"
+              accessibilityLabel={showCurrentPassword ? 'Ocultar contraseña actual' : 'Mostrar contraseña actual'}
+              hitSlop={8}
+            >
+              <Ionicons name={showCurrentPassword ? 'eye-off-outline' : 'eye-outline'} size={20} color="#6b7280" />
+            </TouchableOpacity>
+          </View>
         </View>
 
         <View style={styles.fieldGroup}>
           <Text style={styles.label}>Nueva contraseña</Text>
-          <ClearableTextInput
-            style={[styles.input, isNewFocused && styles.inputFocused]}
-            value={newPassword}
-            onChangeText={setNewPassword}
-            placeholder="Mínimo 6 caracteres"
-            placeholderTextColor="#9ca3af"
-            secureTextEntry
-            textContentType="newPassword"
-            onFocus={() => setIsNewFocused(true)}
-            onBlur={() => setIsNewFocused(false)}
-          />
+          <View style={[styles.inputRow, isNewFocused && styles.inputFocused]}>
+            <ClearableTextInput
+              style={styles.input}
+              value={newPassword}
+              onChangeText={setNewPassword}
+              placeholder="Mínimo 6 caracteres"
+              placeholderTextColor="#9ca3af"
+              secureTextEntry={!showNewPassword}
+              textContentType="newPassword"
+              onFocus={() => setIsNewFocused(true)}
+              onBlur={() => setIsNewFocused(false)}
+            />
+            <TouchableOpacity
+              style={styles.visibilityButton}
+              onPress={() => setShowNewPassword(!showNewPassword)}
+              accessibilityRole="button"
+              accessibilityLabel={showNewPassword ? 'Ocultar nueva contraseña' : 'Mostrar nueva contraseña'}
+              hitSlop={8}
+            >
+              <Ionicons name={showNewPassword ? 'eye-off-outline' : 'eye-outline'} size={20} color="#6b7280" />
+            </TouchableOpacity>
+          </View>
         </View>
 
         <View style={styles.fieldGroup}>
           <Text style={styles.label}>Confirmar nueva contraseña</Text>
-          <ClearableTextInput
-            style={[styles.input, isConfirmFocused && styles.inputFocused]}
-            value={confirmPassword}
-            onChangeText={setConfirmPassword}
-            placeholder="Repite la nueva contraseña"
-            placeholderTextColor="#9ca3af"
-            secureTextEntry
-            textContentType="newPassword"
-            onFocus={() => setIsConfirmFocused(true)}
-            onBlur={() => setIsConfirmFocused(false)}
-          />
+          <View style={[styles.inputRow, isConfirmFocused && styles.inputFocused]}>
+            <ClearableTextInput
+              style={styles.input}
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
+              placeholder="Repite la nueva contraseña"
+              placeholderTextColor="#9ca3af"
+              secureTextEntry={!showConfirmPassword}
+              textContentType="newPassword"
+              onFocus={() => setIsConfirmFocused(true)}
+              onBlur={() => setIsConfirmFocused(false)}
+            />
+            <TouchableOpacity
+              style={styles.visibilityButton}
+              onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+              accessibilityRole="button"
+              accessibilityLabel={showConfirmPassword ? 'Ocultar confirmación de contraseña' : 'Mostrar confirmación de contraseña'}
+              hitSlop={8}
+            >
+              <Ionicons name={showConfirmPassword ? 'eye-off-outline' : 'eye-outline'} size={20} color="#6b7280" />
+            </TouchableOpacity>
+          </View>
         </View>
 
         <View style={styles.actions}>
@@ -171,10 +207,16 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#374151',
   },
-  input: {
+  inputRow: {
     borderWidth: 1,
     borderColor: '#ecedf0',
     borderRadius: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  input: {
+    flex: 1,
+    borderWidth: 0,
     paddingHorizontal: 14,
     paddingVertical: 12,
     fontSize: 15,
@@ -184,6 +226,10 @@ const styles = StyleSheet.create({
   inputFocused: {
     borderColor: BrandColors.primary,
     borderWidth: 1.5,
+  },
+  visibilityButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 10,
   },
   actions: {
     flexDirection: 'row',

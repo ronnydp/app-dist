@@ -5,7 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { router, useFocusEffect } from 'expo-router';
 import { createElement, useCallback, useMemo, useState } from 'react';
-import { Platform, SectionList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { FlatList, Modal, Platform, SectionList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import AppSearchBar from '../../components/app-search-bar';
 import OrderCard from '../../components/OrderCard';
 import { useDebouncedValue } from '../../hooks/use-debounced-value';
@@ -28,8 +28,11 @@ export default function OrderScreen() {
     const debouncedQuery = useDebouncedValue(searchQuery.trim(), 250);
     const [selectedDate, setSelectedDate] = useState<Date | null>(null);
     const [showDatePicker, setShowDatePicker] = useState(false);
+    const [selectedSellerId, setSelectedSellerId] = useState<string | null>(null);
+    const [showSellerPicker, setShowSellerPicker] = useState(false);
     const {showToast} = useToast();
-    const sellerIdFilter = role === 'admin' || role === 'supervisor'
+    const canFilterSellers = role === 'admin' || role === 'supervisor';
+    const sellerIdFilter = canFilterSellers
         ? undefined
         : session?.user?.id;
 
@@ -58,8 +61,22 @@ export default function OrderScreen() {
         }, [loadOrders])
     );
 
+    const sellers = useMemo(() => {
+        const sellersById = new Map<string, { id: string; name: string }>();
+        for (const order of orders) {
+            if (!sellersById.has(order.seller_id)) {
+                sellersById.set(order.seller_id, {
+                    id: order.seller_id,
+                    name: order.seller_name || 'Sin nombre',
+                });
+            }
+        }
+        return Array.from(sellersById.values()).sort((a, b) => a.name.localeCompare(b.name));
+    }, [orders]);
+    const selectedSeller = sellers.find((seller) => seller.id === selectedSellerId);
+
     // Filtrado optimizado con useMemo
-    const filteredOrders = useMemo(() => {
+    const ordersMatchingFilters = useMemo(() => {
         let result = orders;
         const activeDate = selectedDate ?? new Date();
 
@@ -81,6 +98,24 @@ export default function OrderScreen() {
 
         return result;
     }, [orders, selectedDate, debouncedQuery]);
+
+    const sellerOrderCounts = useMemo(() => {
+        const counts = new Map<string, number>();
+        for (const order of ordersMatchingFilters) {
+            counts.set(order.seller_id, (counts.get(order.seller_id) ?? 0) + 1);
+        }
+        return counts;
+    }, [ordersMatchingFilters]);
+
+    const filteredOrders = useMemo(() => (
+        canFilterSellers && selectedSellerId
+            ? ordersMatchingFilters.filter(order => order.seller_id === selectedSellerId)
+            : ordersMatchingFilters
+    ), [ordersMatchingFilters, canFilterSellers, selectedSellerId]);
+    const sellerFilterName = selectedSeller?.name || (selectedSellerId ? 'Vendedor seleccionado' : 'Todos los vendedores');
+    const sellerFilterCount = selectedSellerId
+        ? (sellerOrderCounts.get(selectedSellerId) ?? 0)
+        : ordersMatchingFilters.length;
 
     const handleDateChange = (event: any, date?: Date) => {
         if (Platform.OS === 'android') {
@@ -104,13 +139,14 @@ export default function OrderScreen() {
 
     // Agrupar pedidos filtrados por vendedor
     const sections = useMemo(() => {
-        const groups: Record<string, OrderWithDetails[]> = {};
+        const groups = new Map<string, { title: string; data: OrderWithDetails[] }>();
         for (const order of filteredOrders) {
-            const seller = order.seller_name || 'Sin vendedor';
-            if (!groups[seller]) groups[seller] = [];
-            groups[seller].push(order);
+            if (!groups.has(order.seller_id)) {
+                groups.set(order.seller_id, { title: order.seller_name || 'Sin vendedor', data: [] });
+            }
+            groups.get(order.seller_id)!.data.push(order);
         }
-        return Object.entries(groups).map(([title, data]) => ({ title, data }));
+        return Array.from(groups.values());
     }, [filteredOrders]);
 
     const renderOrder = ({ item }: { item: OrderWithDetails }) => (
@@ -191,7 +227,69 @@ export default function OrderScreen() {
                     <Ionicons name="today-outline" size={16} color={BrandColors.primary} />
                     <Text style={styles.todayButtonText}>Hoy</Text>
                 </TouchableOpacity>
+                {canFilterSellers && (
+                    <TouchableOpacity
+                        style={styles.sellerFilterButton}
+                        onPress={() => setShowSellerPicker(true)}
+                        accessibilityRole="button"
+                        accessibilityLabel={`Filtrar por vendedor: ${sellerFilterName}, ${sellerFilterCount} pedidos`}
+                    >
+                        <Ionicons name="people-outline" size={16} color={BrandColors.primary} />
+                        <Text style={styles.sellerFilterText} numberOfLines={1}>
+                            {sellerFilterName}
+                        </Text>
+                        <Text style={styles.sellerFilterText}>({sellerFilterCount})</Text>
+                        <Ionicons name="chevron-down" size={16} color={BrandColors.primary} />
+                    </TouchableOpacity>
+                )}
             </View>
+
+            {canFilterSellers && (
+                <Modal visible={showSellerPicker} transparent animationType="fade" onRequestClose={() => setShowSellerPicker(false)}>
+                    <View style={styles.modalOverlay}>
+                        <View style={styles.sellerModalCard}>
+                            <View style={styles.sellerModalHeader}>
+                                <Text style={styles.modalTitle}>Filtrar por vendedor</Text>
+                                <TouchableOpacity onPress={() => setShowSellerPicker(false)} accessibilityRole="button" accessibilityLabel="Cerrar">
+                                    <Ionicons name="close" size={24} color="#6b7280" />
+                                </TouchableOpacity>
+                            </View>
+                            <TouchableOpacity
+                                style={styles.sellerOption}
+                                onPress={() => {
+                                    setSelectedSellerId(null);
+                                    setShowSellerPicker(false);
+                                }}
+                                accessibilityRole="button"
+                                accessibilityState={{ selected: selectedSellerId === null }}
+                            >
+                                <Text style={styles.sellerOptionText}>Todos los vendedores ({ordersMatchingFilters.length})</Text>
+                                {selectedSellerId === null && <Ionicons name="checkmark" size={20} color={BrandColors.primary} />}
+                            </TouchableOpacity>
+                            <FlatList
+                                data={sellers}
+                                keyExtractor={(seller) => seller.id}
+                                keyboardShouldPersistTaps="handled"
+                                renderItem={({ item }) => (
+                                    <TouchableOpacity
+                                        style={styles.sellerOption}
+                                        onPress={() => {
+                                            setSelectedSellerId(item.id);
+                                            setShowSellerPicker(false);
+                                        }}
+                                        accessibilityRole="button"
+                                        accessibilityState={{ selected: selectedSellerId === item.id }}
+                                    >
+                                        <Text style={styles.sellerOptionText}>{item.name} ({sellerOrderCounts.get(item.id) ?? 0})</Text>
+                                        {selectedSellerId === item.id && <Ionicons name="checkmark" size={20} color={BrandColors.primary} />}
+                                    </TouchableOpacity>
+                                )}
+                                ListEmptyComponent={<Text style={styles.sellerEmptyText}>No se encontraron vendedores con pedidos</Text>}
+                            />
+                        </View>
+                    </View>
+                </Modal>
+            )}
 
             {Platform.OS !== 'web' && showDatePicker && (
                 <DateTimePicker
@@ -217,8 +315,10 @@ export default function OrderScreen() {
                 ListEmptyComponent={
                     <View style={styles.empty}>
                         <Ionicons name="receipt-outline" size={64} color="#d1d5db" />
-                        <Text style={styles.emptyText}>No hay pedidos registrados</Text>
-                        <Text style={styles.emptySubtext}>Presiona el botón + para agregar uno</Text>
+                        <Text style={styles.emptyText}>{canFilterSellers ? 'No hay pedidos para mostrar' : 'No hay pedidos registrados'}</Text>
+                        <Text style={styles.emptySubtext}>
+                            {canFilterSellers ? 'Prueba con otra fecha, vendedor o búsqueda' : 'Presiona el botón + para agregar uno'}
+                        </Text>
                     </View>
                 }
                 contentContainerStyle={sections.length === 0 ? styles.emptyContainer : styles.listContent}
@@ -406,6 +506,58 @@ const styles = StyleSheet.create({
         color: BrandColors.primary,
         fontSize: 13,
         fontWeight: '700',
+    },
+    sellerFilterButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        flexShrink: 1,
+        gap: 5,
+        backgroundColor: '#eff6ff',
+        borderWidth: 1,
+        borderColor: '#dbeafe',
+        borderRadius: 10,
+        paddingHorizontal: 12,
+        paddingVertical: 7,
+    },
+    sellerFilterText: {
+        color: BrandColors.primary,
+        fontSize: 13,
+        fontWeight: '700',
+        flexShrink: 1,
+    },
+    sellerModalCard: {
+        width: '100%',
+        maxWidth: 420,
+        maxHeight: '75%',
+        backgroundColor: '#fff',
+        borderRadius: 14,
+        padding: 16,
+    },
+    sellerModalHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: 12,
+    },
+    sellerOption: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingVertical: 12,
+        borderBottomWidth: 1,
+        borderBottomColor: '#e5e7eb',
+        gap: 8,
+    },
+    sellerOptionText: {
+        color: '#111827',
+        fontSize: 14,
+        flex: 1,
+    },
+    sellerEmptyText: {
+        color: '#6b7280',
+        fontSize: 14,
+        paddingVertical: 16,
+        textAlign: 'center',
     },
     scopeButtonsContainer: {
         flexDirection: 'row',

@@ -43,7 +43,8 @@ export default class ClearableTextInput extends React.Component<TextInputProps, 
       }
     }
     const isNumeric = ['numeric', 'number-pad', 'decimal-pad', 'phone-pad'].includes(rest.keyboardType ?? '');
-    const showClear = !isNumeric && this.state.isFocused && !!value && editable !== false;
+    const isPassword = rest.secureTextEntry || rest.textContentType === 'password' || rest.textContentType === 'newPassword';
+    const showClear = !isNumeric && !isPassword && this.state.isFocused && !!value && editable !== false;
 
     return (
       <View style={wrapperStyle}>
